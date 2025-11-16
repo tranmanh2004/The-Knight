@@ -67,7 +67,7 @@ namespace MoreMountains.TopDownEngine
 					}
 					break;
 			}
-            
+
 		}
 
 		/// <summary>

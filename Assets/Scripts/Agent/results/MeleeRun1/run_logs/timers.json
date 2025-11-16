@@ -1,0 +1,47 @@
+{
+    "name": "root",
+    "metadata": {
+        "timer_format_version": "0.1.0",
+        "start_time_seconds": "1763264714",
+        "python_version": "3.10.12 | packaged by Anaconda, Inc. | (main, Jul  5 2023, 19:01:18) [MSC v.1916 64 bit (AMD64)]",
+        "command_line_arguments": "C:\\Users\\Acer\\anaconda3\\envs\\unity\\Scripts\\mlagents-learn melee_config.yaml --run-id=MeleeRun1 --force",
+        "mlagents_version": "1.1.0",
+        "mlagents_envs_version": "1.1.0",
+        "communication_protocol_version": "1.5.0",
+        "pytorch_version": "2.9.1+cpu",
+        "numpy_version": "1.23.5",
+        "end_time_seconds": "1763264736"
+    },
+    "total": 21.41279719999875,
+    "count": 1,
+    "self": 0.007233699987409636,
+    "children": {
+        "run_training.setup": {
+            "total": 0.08970199999748729,
+            "count": 1,
+            "self": 0.08970199999748729
+        },
+        "TrainerController.start_learning": {
+            "total": 21.315861500013852,
+            "count": 1,
+            "self": 0.00043560001358855516,
+            "children": {
+                "TrainerController._reset_env": {
+                    "total": 21.315405200002715,
+                    "count": 1,
+                    "self": 21.315405200002715
+                },
+                "trainer_threads": {
+                    "total": 1.100008375942707e-06,
+                    "count": 1,
+                    "self": 1.100008375942707e-06
+                },
+                "TrainerController._save_models": {
+                    "total": 1.959998917300254e-05,
+                    "count": 1,
+                    "self": 1.959998917300254e-05
+                }
+            }
+        }
+    }
+}

@@ -389,7 +389,7 @@ namespace MoreMountains.TopDownEngine
 		{
 			if (Players.Count < 2)
 			{
-				StartCoroutine (PlayerDeadCo ());
+				//StartCoroutine (PlayerDeadCo ());
 			}
 		}
 
