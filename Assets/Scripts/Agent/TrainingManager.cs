@@ -4,31 +4,30 @@ using MoreMountains.Tools;
 using System.Collections.Generic;
 
 // Lớp này lắng nghe sự kiện của game
-public class TrainingManager : MonoBehaviour, MMEventListener<MMGameEvent> 
+public class TrainingManager : MonoBehaviour,  MMEventListener<TopDownEngineEvent> 
 {
     // (Các biến khác của bạn có thể giữ nguyên)
 
     // Bắt đầu lắng nghe sự kiện khi được bật
     void OnEnable()
     {
-        this.MMEventStartListening<MMGameEvent>();
+        this.MMEventStartListening<TopDownEngineEvent>();
     }
 
     // Ngừng lắng nghe khi bị tắt
     void OnDisable()
     {
-        this.MMEventStopListening<MMGameEvent>();
+        this.MMEventStopListening<TopDownEngineEvent>();
     }
 
     // Hàm này sẽ được gọi mỗi khi có một MMGameEvent được bắn ra
-    public void OnMMEvent(MMGameEvent gameEvent)
+    public void OnMMEvent(TopDownEngineEvent engineEvent)
     {
         // Kiểm tra xem có phải là sự kiện "PlayerDeath" không
-        if (gameEvent.EventName == "PlayerDeath")
+        if (engineEvent.EventType == TopDownEngineEventTypes.PlayerDeath)
         {
             // --- LOGIC MỚI NẰM Ở ĐÂY ---
-            
-            Debug.Log("TrainingManager detected PlayerDeath, triggering instant respawn.");
+            Debug.LogError("TrainingManager detected PlayerDeath, triggering instant respawn.");
 
             // Ngay lập tức bắn ra sự kiện yêu cầu respawn
             TopDownEngineEvent.Trigger(TopDownEngineEventTypes.RespawnStarted, null);

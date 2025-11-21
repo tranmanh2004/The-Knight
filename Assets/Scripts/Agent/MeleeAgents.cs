@@ -2,19 +2,38 @@ using UnityEngine;
 using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
-using MoreMountains.Tools; // Cần thiết để truy cập AIBrain
-using MoreMountains.TopDownEngine; // Cần thiết để truy cập Health
+using MoreMountains.Tools;
+using MoreMountains.TopDownEngine;
 
-[RequireComponent(typeof(AIBrain), typeof(Health))]
+[RequireComponent(typeof(AIBrain), typeof(Health), typeof(AIDecisionDetectTargetRadius2D))]
 public class MeleeAgent : Agent
 {
+    [Header("Reward Shaping Settings")]
+    [Tooltip("Phần thưởng khi gây được sát thương lên người chơi.")]
+    public float DealDamageReward = 0.5f;
+    [Tooltip("Hình phạt khi nhận sát thương từ người chơi.")]
+    public float TakeDamagePenalty = -0.5f;
+    [Tooltip("Phần thưởng khi tiêu diệt được người chơi.")]
+    public float KillPlayerReward = 1.0f;
+    [Tooltip("Hình phạt khi bị người chơi tiêu diệt.")]
+    public float AgentDiedPenalty = -1.0f;
+    [Tooltip("Hình phạt nhỏ mỗi bước để khuyến khích AI hành động nhanh.")]
+    public float TimePenalty = -0.001f;
+
+    // --- CÁC THÀNH PHẦN CỐT LÕI ---
     private AIBrain aiBrain;
-    private Transform player;
-    private Health playerHealth; // Biến để theo dõi máu người chơi
-    private Health agentHealth; // Biến để theo dõi máu của chính AI
+    private Health agentHealth;
+    private AIDecisionDetectTargetRadius2D detectTargetDecision; // "Đôi mắt" của AI
 
-    private Vector3 startingPosition; // Vị trí ban đầu của AI
+    // --- BIẾN THEO DÕI TRẠNG THÁI ---
+    private float previousPlayerHealth;
+    private float previousAgentHealth;
+    
+    // --- BIẾN ĐỂ RESET ---
+    private Vector3 agentStartingPosition;
+    // Chúng ta không cần lưu vị trí player nữa, vì sẽ dùng Checkpoint hoặc TrainingManager
 
+    // --- HẰNG SỐ ĐỊNH DANH HÀNH ĐỘNG ---
     private const int STATE_DETECTING = 0;
     private const int STATE_MOVING = 1;
     private const int STATE_ATTACKING = 2;
@@ -23,147 +42,148 @@ public class MeleeAgent : Agent
     {
         aiBrain = GetComponent<AIBrain>();
         agentHealth = GetComponent<Health>();
-        aiBrain.BrainActive = false;
-        
-        startingPosition = transform.position; // Lưu vị trí ban đầu
+        detectTargetDecision = GetComponent<AIDecisionDetectTargetRadius2D>();
+
+        if (detectTargetDecision == null)
+        {
+            Debug.LogError("Lỗi nghiêm trọng: MeleeAgent không tìm thấy component AIDecisionDetectTargetRadius2D! Hãy thêm component này vào agent.", this.gameObject);
+        }
+
+        aiBrain.BrainActive = false; // Giao quyền điều khiển cho ML-Agents
+        agentStartingPosition = transform.position;
     }
 
     public override void OnEpisodeBegin()
     {
-        // --- PHẦN RESET MÔI TRƯỜNG ---
-
-        // Reset lại máu và vị trí của AI
+        // Yêu cầu này nên được xử lý bởi một Manager riêng để có thể reset cả Player và quái vật khác
+        // Ở đây, chúng ta sẽ tự reset bản thân AI trước
         agentHealth.Revive(); 
-        transform.position = startingPosition;
+        transform.position = agentStartingPosition;
 
-        GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
-        if (playerObject != null)
-        {
-            player = playerObject.transform;
-            playerHealth = playerObject.GetComponent<Health>();
-            aiBrain.Target = player;
+        // Reset các biến theo dõi
+        previousAgentHealth = agentHealth.MaximumHealth;
+        previousPlayerHealth = 0f; // Sẽ được cập nhật khi thấy player
 
-            // Reset lại máu và vị trí của người chơi
-            playerHealth.Revive();
-            // TODO: Bạn nên có một script quản lý để đặt lại vị trí người chơi về điểm xuất phát của họ
-            // Ví dụ: player.position = new Vector3(0, 1, 0); 
-        }
-        else
-        {
-            Debug.LogError("Không tìm thấy đối tượng có tag 'Player'.");
-        }
-
+        // Reset "não" AI
+        aiBrain.Target = null;
         aiBrain.TransitionToState("Detecting");
     }
 
     public override void CollectObservations(VectorSensor sensor)
     {
-        if (player == null || playerHealth == null || playerHealth.CurrentHealth <= 0)
+        // 1. Dùng "giác quan" để kiểm tra xem có phát hiện được mục tiêu không
+        bool isTargetDetected = detectTargetDecision.Decide();
+
+        if (isTargetDetected && aiBrain.Target != null)
         {
-            // Nếu không có người chơi, gửi dữ liệu rỗng
-            sensor.AddObservation(0f); // Khoảng cách
-            sensor.AddObservation(Vector3.zero); // Hướng
-            sensor.AddObservation(-1); // Trạng thái AI
-            sensor.AddObservation(0f); // Máu của AI
-            return;
+            // Nếu CÓ, cung cấp thông tin thực tế
+            Health targetHealth = aiBrain.Target.GetComponent<Health>();
+            if (targetHealth != null && targetHealth.CurrentHealth > 0)
+            {
+                sensor.AddObservation(Vector3.Distance(transform.position, aiBrain.Target.position));
+                sensor.AddObservation((aiBrain.Target.position - transform.position).normalized);
+                sensor.AddObservation(targetHealth.CurrentHealth / targetHealth.MaximumHealth); // Quan sát máu của mục tiêu
+            }
+            else
+            {
+                AddObservation_TargetNotAvailable(sensor); // Mục tiêu đã chết hoặc không hợp lệ
+            }
+        }
+        else
+        {
+            // Nếu KHÔNG, cung cấp "thông tin rỗng"
+            AddObservation_TargetNotAvailable(sensor);
         }
 
-        // 1. Khoảng cách tới người chơi
-        sensor.AddObservation(Vector3.Distance(transform.position, player.position));
-        // 2. Hướng tới người chơi
-        sensor.AddObservation((player.position - transform.position).normalized);
-        // 3. Trạng thái hiện tại của AIBrain
-        int currentStateIndex = -1;
-        if (aiBrain.CurrentState.StateName == "Detecting") currentStateIndex = STATE_DETECTING;
-        else if (aiBrain.CurrentState.StateName == "Moving") currentStateIndex = STATE_MOVING;
-        else if (aiBrain.CurrentState.StateName == "Attacking") currentStateIndex = STATE_ATTACKING;
-        sensor.AddObservation(currentStateIndex);
-        // 4. Máu hiện tại của AI (đã chuẩn hóa)
+        // 2. Luôn cung cấp thông tin về bản thân
         sensor.AddObservation(agentHealth.CurrentHealth / agentHealth.MaximumHealth);
+    }
+
+    private void AddObservation_TargetNotAvailable(VectorSensor sensor)
+    {
+        sensor.AddObservation(-1.0f); // Khoảng cách không hợp lệ
+        sensor.AddObservation(Vector3.zero); // Hướng không xác định
+        sensor.AddObservation(-1.0f); // Máu mục tiêu không xác định
     }
 
     public override void OnActionReceived(ActionBuffers actions)
     {
         // --- KIỂM TRA ĐIỀU KIỆN KẾT THÚC EPISODE ---
-
-        // THẤT BẠI: Nếu AI chết
+        if (agentHealth.CurrentHealth < previousAgentHealth)
+        {
+            AddReward(TakeDamagePenalty);
+        }
         if (agentHealth.CurrentHealth <= 0)
         {
-            AddReward(-1.0f); // Phạt nặng vì đã chết
+            AddReward(AgentDiedPenalty);
             EndEpisode();
-            return; // Dừng ngay lập tức
+            return;
         }
 
-        // THÀNH CÔNG: Nếu người chơi chết
-        if (playerHealth != null && playerHealth.CurrentHealth <= 0)
+        // --- LOGIC THƯỞNG/PHẠT CHỈ HOẠT ĐỘNG KHI CÓ MỤC TIÊU ---
+        if (aiBrain.Target != null)
         {
-            AddReward(1.0f); // Thưởng lớn vì đã tiêu diệt được mục tiêu
-            EndEpisode();
-            return; // Dừng ngay lập tức
+            Health playerHealth = aiBrain.Target.GetComponent<Health>();
+            if (playerHealth != null)
+            {
+                // Thưởng khi gây sát thương
+                if (playerHealth.CurrentHealth < previousPlayerHealth)
+                {
+                    AddReward(DealDamageReward);
+                }
+                
+                // Thưởng lớn khi tiêu diệt được mục tiêu
+                if (playerHealth.CurrentHealth <= 0)
+                {
+                    AddReward(KillPlayerReward);
+                    EndEpisode();
+                    return;
+                }
+                
+                // Cập nhật máu của player cho lượt sau
+                previousPlayerHealth = playerHealth.CurrentHealth;
+            }
         }
+        
+        // Phạt theo thời gian để khuyến khích hành động
+        AddReward(TimePenalty);
+        
+        // Cập nhật máu của agent cho lượt sau
+        previousAgentHealth = agentHealth.CurrentHealth;
 
-        // --- PHẦN LOGIC HÀNH ĐỘNG VÀ THƯỞNG/PHẠT (như cũ) ---
-        int chosenState = actions.DiscreteActions[0];
-        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
-        float attackRange = 2.0f;
-        float detectionRange = 10.0f;
-
-        if (chosenState == STATE_ATTACKING)
-        {
-            if (distanceToPlayer <= attackRange)
-            {
-                // Thưởng nhẹ vì chọn tấn công đúng lúc, phần thưởng chính sẽ là khi giết được player
-                AddReward(0.1f); 
-                aiBrain.TransitionToState("Attacking");
-                // Không nên EndEpisode() ở đây nữa, chỉ kết thúc khi player chết
-            }
-            else
-            {
-                AddReward(-0.5f);
-            }
-        }
-        else if (chosenState == STATE_MOVING)
-        {
-            if (distanceToPlayer > attackRange && distanceToPlayer <= detectionRange)
-            {
-                AddReward(0.05f);
-                aiBrain.TransitionToState("Moving");
-            }
-            else
-            {
-                AddReward(-0.1f);
-            }
-        }
-        else if (chosenState == STATE_DETECTING)
-        {
-            if (distanceToPlayer > detectionRange)
-            {
-                AddReward(0.01f);
-                aiBrain.TransitionToState("Detecting");
-            }
-            else
-            {
-                AddReward(-1.0f);
-            }
-        }
-        AddReward(-0.001f);
+        // --- THỰC THI HÀNH ĐỘNG ---
+        ExecuteAction(actions.DiscreteActions[0]);
     }
 
-    // Dùng để test bằng cách điều khiển thủ công
+    private void ExecuteAction(int chosenAction)
+    {
+        float attackRange = 2.0f; // Ngưỡng này nên khớp với AIDecisionDistanceToTarget của bạn
+
+        if (chosenAction == STATE_ATTACKING)
+        {
+            // Chỉ tấn công khi có mục tiêu và ở trong tầm
+            if (aiBrain.Target != null && Vector3.Distance(transform.position, aiBrain.Target.position) <= attackRange)
+            {
+                aiBrain.TransitionToState("Attacking");
+            }
+            // Nếu không, AI đã ra quyết định sai, và hàm phần thưởng sẽ tự xử lý việc trừng phạt.
+            // Chúng ta không cần làm gì thêm.
+        }
+        else if (chosenAction == STATE_MOVING)
+        {
+            aiBrain.TransitionToState("Moving");
+        }
+        else if (chosenAction == STATE_DETECTING)
+        {
+            aiBrain.TransitionToState("Detecting");
+        }
+    }
+
     public override void Heuristic(in ActionBuffers actionsOut)
     {
         var discreteActionsOut = actionsOut.DiscreteActions;
-        if (Input.GetKeyDown(KeyCode.Alpha1))
-        {
-            discreteActionsOut[0] = STATE_DETECTING;
-        }
-        else if (Input.GetKeyDown(KeyCode.Alpha2))
-        {
-            discreteActionsOut[0] = STATE_MOVING;
-        }
-        else if (Input.GetKeyDown(KeyCode.Alpha3))
-        {
-            discreteActionsOut[0] = STATE_ATTACKING;
-        }
+        if (Input.GetKeyDown(KeyCode.Alpha1)) { discreteActionsOut[0] = STATE_DETECTING; }
+        else if (Input.GetKeyDown(KeyCode.Alpha2)) { discreteActionsOut[0] = STATE_MOVING; }
+        else if (Input.GetKeyDown(KeyCode.Alpha3)) { discreteActionsOut[0] = STATE_ATTACKING; }
     }
 }
