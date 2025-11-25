@@ -229,6 +229,7 @@ namespace MoreMountains.TopDownEngine
 
 		/// the name of the inventory item corresponding to this weapon. Automatically set (if needed) by InventoryEngineWeapon
 		public virtual string WeaponID { get; set; }
+		public virtual float CooldownTimeLeft => _delayBetweenUsesCounter;
 		/// the weapon's owner
 		public virtual Character Owner { get; protected set; }
 		/// the weapon's owner's CharacterHandleWeapon component

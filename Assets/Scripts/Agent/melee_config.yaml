@@ -2,20 +2,20 @@ behaviors:
   MeleeAgent:
     trainer_type: ppo
     hyperparameters:
-      batch_size: 128
-      buffer_size: 2048
-      learning_rate: 0.0003
-      beta: 0.005
+      batch_size: 32
+      buffer_size: 512
+      learning_rate: 0.001
+      beta: 0.001
       epsilon: 0.2
-      lambd: 0.95
-      num_epoch: 3
+      lambd: 0.9
+      num_epoch: 1
     network_settings:
-      hidden_units: 128
-      num_layers: 2
+      hidden_units: 32
+      num_layers: 1
     reward_signals:
       extrinsic:
         gamma: 0.99
         strength: 1.0
-    max_steps: 500000
-    time_horizon: 64
-    summary_freq: 10000
+    max_steps: 5000
+    time_horizon: 32
+    summary_freq: 1000

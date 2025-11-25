@@ -60,17 +60,29 @@ public class MeleeAgent : Agent
         transform.position = agentStartingPosition;
         
         previousAgentHealth = agentHealth.MaximumHealth;
-        previousPlayerHealth = 0f;
 
         // --- MỚI --- Cập nhật tham chiếu đến vũ khí khi bắt đầu episode
         _currentWeapon = characterHandleWeapon.CurrentWeapon;
-
-        // Reset người chơi
+        
+        // Reset người chơi và lấy previousPlayerHealth đúng cách
         GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
         if (playerObject != null)
         {
-            playerObject.GetComponent<Health>().Revive();
-            // TODO: Đặt người chơi về vị trí ban đầu của họ
+            Health playerHealth = playerObject.GetComponent<Health>();
+            if (playerHealth != null)
+            {
+                playerHealth.Revive();
+                previousPlayerHealth = playerHealth.MaximumHealth;
+                // TODO: Đặt người chơi về vị trí ban đầu của họ
+            }
+            else
+            {
+                previousPlayerHealth = 0f;
+            }
+        }
+        else
+        {
+            previousPlayerHealth = 0f;
         }
 
         aiBrain.Target = null;
@@ -80,6 +92,12 @@ public class MeleeAgent : Agent
     // === PHẦN QUAN SÁT ĐÃ ĐƯỢC NÂNG CẤP ===
     public override void CollectObservations(VectorSensor sensor)
     {
+        // Cập nhật tham chiếu vũ khí trước khi quan sát (phòng trường hợp vũ khí thay đổi)
+        if (characterHandleWeapon != null)
+        {
+            _currentWeapon = characterHandleWeapon.CurrentWeapon;
+        }
+        
         // 1. Quan sát mục tiêu (nếu có)
         bool isTargetDetected = detectTargetDecision.Decide();
         if (isTargetDetected && aiBrain.Target != null)
@@ -129,6 +147,12 @@ public class MeleeAgent : Agent
     // --- MỚI --- Thêm logic Action Masking
     public override void WriteDiscreteActionMask(IDiscreteActionMask actionMask)
     {
+        // Cập nhật tham chiếu vũ khí trước khi kiểm tra (phòng trường hợp vũ khí thay đổi)
+        if (characterHandleWeapon != null)
+        {
+            _currentWeapon = characterHandleWeapon.CurrentWeapon;
+        }
+        
         if (_currentWeapon == null || _currentWeapon.WeaponState.CurrentState != Weapon.WeaponStates.WeaponIdle)
         {
             // Che hành động Attack nếu không có vũ khí hoặc vũ khí đang không rảnh rỗi (đang tấn công, đang cooldown)
@@ -187,6 +211,23 @@ public class MeleeAgent : Agent
 
     public override void Heuristic(in ActionBuffers actionsOut)
     {
-        // ... (phần code này giữ nguyên) ...
+        // Heuristic để test agent bằng cách điều khiển thủ công
+        int action = STATE_DETECTING;
+        
+        // Kiểm tra input từ bàn phím
+        if (Input.GetKey(KeyCode.Alpha1))
+        {
+            action = STATE_DETECTING;
+        }
+        else if (Input.GetKey(KeyCode.Alpha2))
+        {
+            action = STATE_MOVING;
+        }
+        else if (Input.GetKey(KeyCode.Alpha3))
+        {
+            action = STATE_ATTACKING;
+        }
+        
+        actionsOut.DiscreteActions.Array[0] = action;
     }
 }
