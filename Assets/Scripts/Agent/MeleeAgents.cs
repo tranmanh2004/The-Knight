@@ -4,7 +4,23 @@ using Unity.MLAgents.Sensors;
 using MoreMountains.Tools;
 using MoreMountains.TopDownEngine;
 using Unity.MLAgents.Actuators;
+using System;
+using System.Collections.Generic;
 
+
+/// <summary>
+/// Cấu hình cho một hành động có thể đợi
+/// </summary>
+[Serializable]
+public class ActionConfig
+{
+    public string StateName;           // Tên state trong AIBrain (ví dụ: "Attacking", "Dashing")
+    public float LockDuration = 0.5f;  // Thời gian khóa tối thiểu
+    public bool RequiresWeaponIdle = true; // Có cần weapon idle không?
+    
+    [HideInInspector] public float Timer;
+    [HideInInspector] public bool IsLocked;
+}
 
 [RequireComponent(typeof(AIBrain))]
 [RequireComponent(typeof(Health))]
@@ -19,38 +35,77 @@ public class MeleeAgent : Agent
     public float AgentDiedPenalty = -1.0f;
     public float TimePenalty = -0.001f;
 
+    [Header("Action Configurations")]
+    [Tooltip("Cấu hình cho từng hành động cần đợi. Index tương ứng với action ID (0=Detecting, 1=Moving, 2=Attacking, 3=Dashing...)")]
+    public List<ActionConfig> ActionConfigs = new List<ActionConfig>
+    {
+        new ActionConfig { StateName = "Detecting", LockDuration = 0f, RequiresWeaponIdle = false },
+        new ActionConfig { StateName = "Moving", LockDuration = 0f, RequiresWeaponIdle = false },
+        new ActionConfig { StateName = "Attacking", LockDuration = 0.5f, RequiresWeaponIdle = true }
+        // Thêm các action khác ở đây: Dashing, Skill1, Skill2...
+    };
+
     // --- CÁC THÀNH PHẦN CỐT LÕI ---
     private AIBrain aiBrain;
     private Health agentHealth;
     private AIDecisionDetectTargetRadius2D detectTargetDecision;
-    private CharacterHandleWeapon characterHandleWeapon; // --- MỚI --- Tham chiếu đến "đôi tay" cầm vũ khí
-    private Weapon _currentWeapon; // --- MỚI --- Vũ khí hiện tại
+    private CharacterHandleWeapon characterHandleWeapon;
+    private Weapon _currentWeapon;
 
     // --- BIẾN THEO DÕI TRẠNG THÁI ---
     private float previousPlayerHealth;
     private float previousAgentHealth;
+    private int _currentLockedAction = -1; // -1 = không có action nào đang lock
     
     // --- BIẾN ĐỂ RESET ---
     private Vector3 agentStartingPosition;
 
-    // --- HẰNG SỐ ĐỊNH DANH HÀNH ĐỘNG ---
-    private const int STATE_DETECTING = 0;
-    private const int STATE_MOVING = 1;
-    private const int STATE_ATTACKING = 2;
+    // --- HẰNG SỐ ĐỊNH DANH HÀNH ĐỘNG (phải khớp với thứ tự trong ActionConfigs) ---
+    private const int ACTION_DETECTING = 0;
+    private const int ACTION_MOVING = 1;
+    private const int ACTION_ATTACKING = 2;
+    // Thêm các hằng số khác nếu cần: ACTION_DASHING = 3, ACTION_SKILL1 = 4...
 
-    public override void Initialize()
+    private bool _brainInitialized = false;
+
+    /// <summary>
+    /// Awake chạy trước Update của các component khác, đảm bảo AIBrain được init sớm
+    /// </summary>
+    private void Awake()
     {
         aiBrain = GetComponent<AIBrain>();
         agentHealth = GetComponent<Health>();
         detectTargetDecision = GetComponent<AIDecisionDetectTargetRadius2D>();
-        characterHandleWeapon = GetComponent<CharacterHandleWeapon>(); // --- MỚI --- Lấy component HandleWeapon
+        characterHandleWeapon = GetComponent<CharacterHandleWeapon>();
+
+        if (aiBrain != null && !_brainInitialized)
+        {
+            // Gọi ResetBrain sớm để các AIAction/AIDecision được Initialization()
+            aiBrain.ResetBrain();
+            _brainInitialized = true;
+        }
+    }
+
+    public override void Initialize()
+    {
+        // Đảm bảo components đã được cache (phòng trường hợp Awake chưa chạy)
+        if (aiBrain == null) aiBrain = GetComponent<AIBrain>();
+        if (agentHealth == null) agentHealth = GetComponent<Health>();
+        if (detectTargetDecision == null) detectTargetDecision = GetComponent<AIDecisionDetectTargetRadius2D>();
+        if (characterHandleWeapon == null) characterHandleWeapon = GetComponent<CharacterHandleWeapon>();
 
         if (characterHandleWeapon == null)
         {
             Debug.LogError("Lỗi nghiêm trọng: MeleeAgent không tìm thấy component CharacterHandleWeapon!", this.gameObject);
         }
 
-        aiBrain.BrainActive = false;
+        // Khởi tạo AIBrain nếu chưa được init trong Awake
+        if (!_brainInitialized && aiBrain != null)
+        {
+            aiBrain.ResetBrain();
+            _brainInitialized = true;
+        }
+        
         agentStartingPosition = transform.position;
     }
 
@@ -60,6 +115,14 @@ public class MeleeAgent : Agent
         transform.position = agentStartingPosition;
         
         previousAgentHealth = agentHealth.MaximumHealth;
+        _currentLockedAction = -1;
+        
+        // Reset tất cả action locks
+        foreach (var config in ActionConfigs)
+        {
+            config.Timer = 0f;
+            config.IsLocked = false;
+        }
 
         // --- MỚI --- Cập nhật tham chiếu đến vũ khí khi bắt đầu episode
         _currentWeapon = characterHandleWeapon.CurrentWeapon;
@@ -143,33 +206,52 @@ public class MeleeAgent : Agent
         sensor.AddObservation(Vector3.zero);
         sensor.AddObservation(-1.0f);
     }
+
+    private bool IsWeaponReady()
+    {
+        return _currentWeapon != null && _currentWeapon.WeaponState.CurrentState == Weapon.WeaponStates.WeaponIdle;
+    }
     
     // --- MỚI --- Thêm logic Action Masking
     public override void WriteDiscreteActionMask(IDiscreteActionMask actionMask)
     {
-        // Cập nhật tham chiếu vũ khí trước khi kiểm tra (phòng trường hợp vũ khí thay đổi)
+        // Cập nhật tham chiếu vũ khí
         if (characterHandleWeapon != null)
         {
             _currentWeapon = characterHandleWeapon.CurrentWeapon;
         }
         
-        if (_currentWeapon == null || _currentWeapon.WeaponState.CurrentState != Weapon.WeaponStates.WeaponIdle)
+        // Nếu đang có action bị lock, che tất cả action khác
+        if (_currentLockedAction >= 0)
         {
-            // Che hành động Attack nếu không có vũ khí hoặc vũ khí đang không rảnh rỗi (đang tấn công, đang cooldown)
-            actionMask.SetActionEnabled(0, STATE_ATTACKING, false);
+            for (int i = 0; i < ActionConfigs.Count; i++)
+            {
+                if (i != ACTION_DETECTING) // Giữ ít nhất 1 action enabled
+                {
+                    actionMask.SetActionEnabled(0, i, false);
+                }
+            }
+            return;
         }
         
-        // (Tùy chọn) Bạn cũng có thể che Attack nếu ở ngoài tầm, nhưng để AI tự học cách bị phạt cũng là một cách hay.
-        // float attackRange = 2.0f;
-        // if (aiBrain.Target == null || Vector3.Distance(transform.position, aiBrain.Target.position) > attackRange)
-        // {
-        //     actionMasker.SetActionEnabled(0, STATE_ATTACKING, false);
-        // }
+        // Che các action cần weapon idle nhưng weapon chưa sẵn sàng
+        for (int i = 0; i < ActionConfigs.Count; i++)
+        {
+            if (ActionConfigs[i].RequiresWeaponIdle && !IsWeaponReady())
+            {
+                actionMask.SetActionEnabled(0, i, false);
+            }
+        }
     }
 
     public override void OnActionReceived(ActionBuffers actions)
     {
-        // ... (phần code này giữ nguyên) ...
+        if (characterHandleWeapon != null)
+        {
+            _currentWeapon = characterHandleWeapon.CurrentWeapon;
+        }
+
+        // === LUÔN TÍNH REWARD TRƯỚC (dù đang đợi action hay không) ===
         if (agentHealth.CurrentHealth < previousAgentHealth) { AddReward(TakeDamagePenalty); }
         if (agentHealth.CurrentHealth <= 0) { AddReward(AgentDiedPenalty); EndEpisode(); return; }
 
@@ -185,48 +267,72 @@ public class MeleeAgent : Agent
         }
         AddReward(TimePenalty);
         previousAgentHealth = agentHealth.CurrentHealth;
+
+        // === KIỂM TRA ACTION LOCK ===
+        if (_currentLockedAction >= 0)
+        {
+            var lockedConfig = ActionConfigs[_currentLockedAction];
+            lockedConfig.Timer -= Time.fixedDeltaTime;
+            
+            bool timerDone = lockedConfig.Timer <= 0f;
+            bool weaponReady = !lockedConfig.RequiresWeaponIdle || IsWeaponReady();
+            
+            if (timerDone && weaponReady)
+            {
+                // Action đã hoàn tất
+                lockedConfig.IsLocked = false;
+                _currentLockedAction = -1;
+            }
+            else
+            {
+                // Vẫn đang trong quá trình thực hiện action, bỏ qua quyết định mới
+                return;
+            }
+        }
+
         ExecuteAction(actions.DiscreteActions[0]);
     }
 
     private void ExecuteAction(int chosenAction)
     {
-        // Vì đã dùng Action Masking, chúng ta có thể tin tưởng hơn vào quyết định của AI
-        // Logic kiểm tra ở đây chỉ để dự phòng
-        if (chosenAction == STATE_ATTACKING)
+        if (chosenAction < 0 || chosenAction >= ActionConfigs.Count)
         {
-            if (_currentWeapon != null && _currentWeapon.WeaponState.CurrentState == Weapon.WeaponStates.WeaponIdle)
-            {
-                 aiBrain.TransitionToState("Attacking");
-            }
+            Debug.LogWarning($"Action {chosenAction} không hợp lệ!");
+            return;
         }
-        else if (chosenAction == STATE_MOVING)
+        
+        var config = ActionConfigs[chosenAction];
+        
+        // Kiểm tra điều kiện thực hiện action
+        if (config.RequiresWeaponIdle && !IsWeaponReady())
         {
-            aiBrain.TransitionToState("Moving");
+            return; // Weapon chưa sẵn sàng
         }
-        else if (chosenAction == STATE_DETECTING)
+        
+        // Chuyển state
+        aiBrain.TransitionToState(config.StateName);
+        
+        // Nếu action có lock duration > 0, bật lock
+        if (config.LockDuration > 0f)
         {
-            aiBrain.TransitionToState("Detecting");
+            config.Timer = config.LockDuration;
+            config.IsLocked = true;
+            _currentLockedAction = chosenAction;
         }
     }
 
     public override void Heuristic(in ActionBuffers actionsOut)
     {
         // Heuristic để test agent bằng cách điều khiển thủ công
-        int action = STATE_DETECTING;
+        int action = ACTION_DETECTING;
         
-        // Kiểm tra input từ bàn phím
-        if (Input.GetKey(KeyCode.Alpha1))
-        {
-            action = STATE_DETECTING;
-        }
-        else if (Input.GetKey(KeyCode.Alpha2))
-        {
-            action = STATE_MOVING;
-        }
-        else if (Input.GetKey(KeyCode.Alpha3))
-        {
-            action = STATE_ATTACKING;
-        }
+        // Kiểm tra input từ bàn phím (phím số tương ứng với action index)
+        if (Input.GetKey(KeyCode.Alpha1)) action = ACTION_DETECTING;
+        else if (Input.GetKey(KeyCode.Alpha2)) action = ACTION_MOVING;
+        else if (Input.GetKey(KeyCode.Alpha3)) action = ACTION_ATTACKING;
+        // Thêm các phím khác nếu cần:
+        // else if (Input.GetKey(KeyCode.Alpha4)) action = ACTION_DASHING;
+        // else if (Input.GetKey(KeyCode.Alpha5)) action = ACTION_SKILL1;
         
         actionsOut.DiscreteActions.Array[0] = action;
     }

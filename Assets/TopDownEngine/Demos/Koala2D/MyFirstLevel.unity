@@ -53123,6 +53123,22 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 1363693651}
+    - targetCorrespondingSourceObject: {fileID: 1170912388798894, guid: 98edec60f2f30a549b13fae3251650c8,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1363693673}
+    - targetCorrespondingSourceObject: {fileID: 1170912388798894, guid: 98edec60f2f30a549b13fae3251650c8,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1363693672}
+    - targetCorrespondingSourceObject: {fileID: 1170912388798894, guid: 98edec60f2f30a549b13fae3251650c8,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1363693671}
+    - targetCorrespondingSourceObject: {fileID: 1170912388798894, guid: 98edec60f2f30a549b13fae3251650c8,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1363693693}
   m_SourcePrefab: {fileID: 100100000, guid: 98edec60f2f30a549b13fae3251650c8, type: 3}
 --- !u!1 &1363693627 stripped
 GameObject:
@@ -53218,6 +53234,111 @@ MonoBehaviour:
     CurrentDurationLeft: 0
   InvincibleWhileDashing: 1
   DashFeedback: {fileID: 0}
+--- !u!114 &1363693671
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1363693627}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a5c9d521e5ef4759a8246a07d52221e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  DecisionPeriod: 5
+  DecisionStep: 0
+  TakeActionsBetweenDecisions: 1
+--- !u!114 &1363693672
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1363693627}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 12ea97638b2d9c74882c003121fa5d10, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_PolicyFactory: {fileID: 1363693673}
+  agentParameters:
+    maxStep: 0
+  hasUpgradedFromAgentParameters: 1
+  MaxStep: 0
+  m_Reward: 0
+  m_GroupReward: 0
+  m_CumulativeReward: 0
+  m_RequestAction: 0
+  m_RequestDecision: 0
+  m_StepCount: 0
+  m_CompletedEpisodes: 0
+  m_EpisodeId: 0
+  m_Initialized: 0
+  m_GroupId: 0
+  DealDamageReward: 0.5
+  TakeDamagePenalty: -0.5
+  KillPlayerReward: 1
+  AgentDiedPenalty: -1
+  TimePenalty: -0.001
+  aiBrain: {fileID: 0}
+  agentHealth: {fileID: 0}
+  detectTargetDecision: {fileID: 0}
+  characterHandleWeapon: {fileID: 0}
+  _currentWeapon: {fileID: 0}
+  previousPlayerHealth: 0
+  previousAgentHealth: 0
+  _waitingForAttackFinish: 0
+  _attackLockTimer: 0
+  AttackLockDuration: 0.5
+  agentStartingPosition: {x: 0, y: 0, z: 0}
+--- !u!114 &1363693673
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1363693627}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d1c4e0b1822b495aa52bc52839ecb30, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_BrainParameters:
+    VectorObservationSize: 8
+    NumStackedVectorObservations: 1
+    m_ActionSpec:
+      m_NumContinuousActions: 0
+      BranchSizes: 03000000
+    VectorActionSize: 03000000
+    VectorActionDescriptions: []
+    VectorActionSpaceType: 0
+    hasUpgradedBrainParametersWithActionSpec: 1
+  m_Model: {fileID: 5022602860645237092, guid: 5146d4bf39cafa94e9fda37922e11bdf, type: 3}
+  m_InferenceDevice: 0
+  m_BehaviorType: 0
+  m_BehaviorName: MeleeAgent
+  TeamId: 0
+  m_UseChildSensors: 1
+  m_UseChildActuators: 1
+  m_DeterministicInference: 0
+  m_ObservableAttributeHandling: 0
+--- !u!114 &1363693693
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1363693627}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88b6042bc9a5d4aa58d931eae49442e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  agentParameters:
+    maxStep: 0
+  hasUpgradedFromAgentParameters: 1
+  MaxStep: 0
 --- !u!1001 &1377366496
 PrefabInstance:
   m_ObjectHideFlags: 0
