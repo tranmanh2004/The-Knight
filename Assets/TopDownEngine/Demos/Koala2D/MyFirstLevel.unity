@@ -21205,7 +21205,6 @@ MonoBehaviour:
   CurrentCheckpoint: {fileID: 0}
   PointsOfEntry:
   - {fileID: 1056449638}
-  - {fileID: 0}
   IntroFadeDuration: 0.1
   SpawnDelay: 0
   OutroFadeDuration: 0.1
@@ -50943,6 +50942,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1902679922109532, guid: d73aa2d3898a69541852a65f3a8e14e0, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4229352479014310, guid: d73aa2d3898a69541852a65f3a8e14e0, type: 3}
       propertyPath: m_LocalPosition.x
       value: 10.799999
@@ -51017,6 +51020,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_DefaultBlend.m_Time
       value: 0.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 199525803886270006, guid: d73aa2d3898a69541852a65f3a8e14e0,
+        type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 224001197845738650, guid: d73aa2d3898a69541852a65f3a8e14e0,
         type: 3}
@@ -51782,6 +51790,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4143879649782153219, guid: d73aa2d3898a69541852a65f3a8e14e0,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4909442774358969784, guid: d73aa2d3898a69541852a65f3a8e14e0,
         type: 3}
@@ -53108,7 +53121,32 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 114432313976730658, guid: 98edec60f2f30a549b13fae3251650c8,
         type: 3}
+      propertyPath: States.Array.data[0].Transitions.array.Array.data[0].TrueState
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 114432313976730658, guid: 98edec60f2f30a549b13fae3251650c8,
+        type: 3}
+      propertyPath: States.Array.data[1].Transitions.array.Array.data[2].TrueState
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 114432313976730658, guid: 98edec60f2f30a549b13fae3251650c8,
+        type: 3}
       propertyPath: States.Array.data[1].Transitions.array.Array.data[3].TrueState
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 114432313976730658, guid: 98edec60f2f30a549b13fae3251650c8,
+        type: 3}
+      propertyPath: States.Array.data[2].Transitions.array.Array.data[0].TrueState
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 114432313976730658, guid: 98edec60f2f30a549b13fae3251650c8,
+        type: 3}
+      propertyPath: States.Array.data[1].Transitions.array.Array.data[0].FalseState
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 114432313976730658, guid: 98edec60f2f30a549b13fae3251650c8,
+        type: 3}
+      propertyPath: States.Array.data[1].Transitions.array.Array.data[1].FalseState
       value: 
       objectReference: {fileID: 0}
     m_RemovedComponents: []
@@ -53308,7 +53346,7 @@ MonoBehaviour:
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 5022602860645237092, guid: 5146d4bf39cafa94e9fda37922e11bdf, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: b6f613a9b6f22244daffc81d7687cbb5, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: MeleeAgent

@@ -1,0 +1,29 @@
+{
+    "MeleeAgent": {
+        "checkpoints": [
+            {
+                "steps": 5032,
+                "file_path": "results\\MeleeRun4\\MeleeAgent\\MeleeAgent-5032.onnx",
+                "reward": 2.090333431959152,
+                "creation_time": 1764351389.7437499,
+                "auxillary_file_paths": [
+                    "results\\MeleeRun4\\MeleeAgent\\MeleeAgent-5032.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 5032,
+            "file_path": "results\\MeleeRun4\\MeleeAgent.onnx",
+            "reward": 2.090333431959152,
+            "creation_time": 1764351389.7437499,
+            "auxillary_file_paths": [
+                "results\\MeleeRun4\\MeleeAgent\\MeleeAgent-5032.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.9.1+cpu"
+    }
+}

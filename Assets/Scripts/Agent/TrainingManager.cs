@@ -27,7 +27,7 @@ public class TrainingManager : MonoBehaviour,  MMEventListener<TopDownEngineEven
         if (engineEvent.EventType == TopDownEngineEventTypes.PlayerDeath)
         {
             // --- LOGIC MỚI NẰM Ở ĐÂY ---
-            Debug.LogError("TrainingManager detected PlayerDeath, triggering instant respawn.");
+            // Debug.LogError("TrainingManager detected PlayerDeath, triggering instant respawn.");
 
             // Ngay lập tức bắn ra sự kiện yêu cầu respawn
             TopDownEngineEvent.Trigger(TopDownEngineEventTypes.RespawnStarted, null);

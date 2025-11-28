@@ -1,0 +1,47 @@
+{
+    "name": "root",
+    "metadata": {
+        "timer_format_version": "0.1.0",
+        "start_time_seconds": "1764349988",
+        "python_version": "3.10.12 | packaged by Anaconda, Inc. | (main, Jul  5 2023, 19:01:18) [MSC v.1916 64 bit (AMD64)]",
+        "command_line_arguments": "C:\\Users\\Acer\\anaconda3\\envs\\unity\\Scripts\\mlagents-learn Assets/Scripts/Agent/melee_config.yaml --run-id=MeleeRun3 --env=Build\\TheKnight.exe --no-graphics --time-scale=20",
+        "mlagents_version": "1.1.0",
+        "mlagents_envs_version": "1.1.0",
+        "communication_protocol_version": "1.5.0",
+        "pytorch_version": "2.9.1+cpu",
+        "numpy_version": "1.23.5",
+        "end_time_seconds": "1764349990"
+    },
+    "total": 2.533602699986659,
+    "count": 1,
+    "self": 0.006087000016123056,
+    "children": {
+        "run_training.setup": {
+            "total": 0.09854139998788014,
+            "count": 1,
+            "self": 0.09854139998788014
+        },
+        "TrainerController.start_learning": {
+            "total": 2.428974299982656,
+            "count": 1,
+            "self": 0.0003279999946244061,
+            "children": {
+                "TrainerController._reset_env": {
+                    "total": 2.4286350999609567,
+                    "count": 1,
+                    "self": 2.4286350999609567
+                },
+                "trainer_threads": {
+                    "total": 9.00006853044033e-07,
+                    "count": 1,
+                    "self": 9.00006853044033e-07
+                },
+                "TrainerController._save_models": {
+                    "total": 1.0300020221620798e-05,
+                    "count": 1,
+                    "self": 1.0300020221620798e-05
+                }
+            }
+        }
+    }
+}
