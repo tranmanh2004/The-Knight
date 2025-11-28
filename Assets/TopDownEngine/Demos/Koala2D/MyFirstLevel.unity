@@ -53074,7 +53074,7 @@ PrefabInstance:
     - target: {fileID: 114432313976730658, guid: 98edec60f2f30a549b13fae3251650c8,
         type: 3}
       propertyPath: ResetBrainOnStart
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 114432313976730658, guid: 98edec60f2f30a549b13fae3251650c8,
         type: 3}
@@ -53261,37 +53261,31 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 12ea97638b2d9c74882c003121fa5d10, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_PolicyFactory: {fileID: 1363693673}
   agentParameters:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
   MaxStep: 0
-  m_Reward: 0
-  m_GroupReward: 0
-  m_CumulativeReward: 0
-  m_RequestAction: 0
-  m_RequestDecision: 0
-  m_StepCount: 0
-  m_CompletedEpisodes: 0
-  m_EpisodeId: 0
-  m_Initialized: 0
-  m_GroupId: 0
   DealDamageReward: 0.5
   TakeDamagePenalty: -0.5
   KillPlayerReward: 1
   AgentDiedPenalty: -1
   TimePenalty: -0.001
-  aiBrain: {fileID: 0}
-  agentHealth: {fileID: 0}
-  detectTargetDecision: {fileID: 0}
-  characterHandleWeapon: {fileID: 0}
-  _currentWeapon: {fileID: 0}
-  previousPlayerHealth: 0
-  previousAgentHealth: 0
-  _waitingForAttackFinish: 0
-  _attackLockTimer: 0
-  AttackLockDuration: 0.5
-  agentStartingPosition: {x: 0, y: 0, z: 0}
+  ActionConfigs:
+  - StateName: Detecting
+    LockDuration: 0
+    RequiresWeaponIdle: 0
+    Timer: 0
+    IsLocked: 0
+  - StateName: Moving
+    LockDuration: 0
+    RequiresWeaponIdle: 0
+    Timer: 0
+    IsLocked: 0
+  - StateName: Attacking
+    LockDuration: 0.5
+    RequiresWeaponIdle: 1
+    Timer: 0
+    IsLocked: 0
 --- !u!114 &1363693673
 MonoBehaviour:
   m_ObjectHideFlags: 0
