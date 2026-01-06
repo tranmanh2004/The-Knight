@@ -129,6 +129,7 @@ GameObject:
   m_Component:
   - component: {fileID: 44880364}
   - component: {fileID: 44880365}
+  - component: {fileID: 44880366}
   m_Layer: 5
   m_Name: MapPGC
   m_TagString: Untagged
@@ -168,6 +169,25 @@ Grid:
   m_CellGap: {x: 0, y: 0, z: 0}
   m_CellLayout: 0
   m_CellSwizzle: 0
+--- !u!114 &44880366
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 44880363}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ffbe17e5b5244c0f87ea8104d971a21d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tilemap: {fileID: 1841380012}
+  tiles:
+  - {fileID: 11400000, guid: b53f17e6d0fd1c04ea120f7e069d7fd3, type: 2}
+  - {fileID: 11400000, guid: 4b392dfc33513ec48a3e447bd1aaab34, type: 2}
+  - {fileID: 11400000, guid: b53f17e6d0fd1c04ea120f7e069d7fd3, type: 2}
+  - {fileID: 11400000, guid: 35aafcb394adf9c46955a6e514171829, type: 2}
+  mapSize: {x: 10, y: 10}
 --- !u!1 &750612856
 GameObject:
   m_ObjectHideFlags: 0
@@ -461,7 +481,7 @@ GameObject:
   - component: {fileID: 1841380010}
   - component: {fileID: 1841380009}
   - component: {fileID: 1841380008}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: WallLayer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -540,7 +560,7 @@ Rigidbody2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1841380006}
-  m_BodyType: 0
+  m_BodyType: 2
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
