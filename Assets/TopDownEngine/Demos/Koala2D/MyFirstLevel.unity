@@ -51804,12 +51804,22 @@ PrefabInstance:
     - target: {fileID: 5398178833225175955, guid: d73aa2d3898a69541852a65f3a8e14e0,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 44.3
+      value: -7.6000004
       objectReference: {fileID: 0}
     - target: {fileID: 5398178833225175955, guid: d73aa2d3898a69541852a65f3a8e14e0,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: -21.67
+      value: -65.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 8880118822450754286, guid: d73aa2d3898a69541852a65f3a8e14e0,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -7.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 8880118822450754286, guid: d73aa2d3898a69541852a65f3a8e14e0,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -65.4
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -53082,7 +53092,7 @@ PrefabInstance:
     - target: {fileID: 114432313976730658, guid: 98edec60f2f30a549b13fae3251650c8,
         type: 3}
       propertyPath: BrainActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 114432313976730658, guid: 98edec60f2f30a549b13fae3251650c8,
         type: 3}
@@ -53141,6 +53151,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 114432313976730658, guid: 98edec60f2f30a549b13fae3251650c8,
         type: 3}
+      propertyPath: States.Array.data[0].Transitions.array.Array.data[0].FalseState
+      value: Moving
+      objectReference: {fileID: 0}
+    - target: {fileID: 114432313976730658, guid: 98edec60f2f30a549b13fae3251650c8,
+        type: 3}
       propertyPath: States.Array.data[1].Transitions.array.Array.data[0].FalseState
       value: 
       objectReference: {fileID: 0}
@@ -53148,6 +53163,16 @@ PrefabInstance:
         type: 3}
       propertyPath: States.Array.data[1].Transitions.array.Array.data[1].FalseState
       value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 7663184633764920224, guid: 98edec60f2f30a549b13fae3251650c8,
+        type: 3}
+      propertyPath: managedReferences[0].OriginalLabel
+      value: Sound
+      objectReference: {fileID: 0}
+    - target: {fileID: 7663184633764920224, guid: 98edec60f2f30a549b13fae3251650c8,
+        type: 3}
+      propertyPath: managedReferences[1].OriginalLabel
+      value: Particles Play
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -53173,6 +53198,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 1363693671}
+    - targetCorrespondingSourceObject: {fileID: 1170912388798894, guid: 98edec60f2f30a549b13fae3251650c8,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1363693674}
   m_SourcePrefab: {fileID: 100100000, guid: 98edec60f2f30a549b13fae3251650c8, type: 3}
 --- !u!1 &1363693627 stripped
 GameObject:
@@ -53275,7 +53304,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1363693627}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3a5c9d521e5ef4759a8246a07d52221e, type: 3}
   m_Name: 
@@ -53290,7 +53319,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1363693627}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 12ea97638b2d9c74882c003121fa5d10, type: 3}
   m_Name: 
@@ -53299,7 +53328,7 @@ MonoBehaviour:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
   MaxStep: 0
-  DealDamageReward: 0.5
+  DealDamageReward: 0.1
   TakeDamagePenalty: -0.5
   KillPlayerReward: 1
   AgentDiedPenalty: -1
@@ -53327,7 +53356,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1363693627}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5d1c4e0b1822b495aa52bc52839ecb30, type: 3}
   m_Name: 
@@ -53351,6 +53380,31 @@ MonoBehaviour:
   m_UseChildActuators: 1
   m_DeterministicInference: 0
   m_ObservableAttributeHandling: 0
+--- !u!114 &1363693674
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1363693627}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b81dc1a6e4b189d4bae2faab8a2a1a25, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CycleOption: 0
+  LoopInitialMovementDirection: 0
+  PathElements:
+  - PathElementPosition: {x: 0, y: 0, z: 0}
+    Delay: 0
+  - PathElementPosition: {x: 2, y: 2, z: 0}
+    Delay: 0
+  ReferenceMMPath: {fileID: 0}
+  AbsoluteReferencePath: 0
+  MinDistanceToGoal: 0.1
+  LockHandlesOnXAxis: 0
+  LockHandlesOnYAxis: 0
+  LockHandlesOnZAxis: 0
 --- !u!1001 &1377366496
 PrefabInstance:
   m_ObjectHideFlags: 0

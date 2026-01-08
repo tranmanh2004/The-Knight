@@ -42,7 +42,6 @@ public class MeleeAgent : Agent
         new ActionConfig { StateName = "Detecting", LockDuration = 0f, RequiresWeaponIdle = false },
         new ActionConfig { StateName = "Moving", LockDuration = 0f, RequiresWeaponIdle = false },
         new ActionConfig { StateName = "Attacking", LockDuration = 0.5f, RequiresWeaponIdle = true }
-        // Thêm các action khác ở đây: Dashing, Skill1, Skill2...
     };
 
     // --- CÁC THÀNH PHẦN CỐT LÕI ---
@@ -155,13 +154,12 @@ public class MeleeAgent : Agent
     // === PHẦN QUAN SÁT ĐÃ ĐƯỢC NÂNG CẤP ===
     public override void CollectObservations(VectorSensor sensor)
     {
-        // Cập nhật tham chiếu vũ khí trước khi quan sát (phòng trường hợp vũ khí thay đổi)
         if (characterHandleWeapon != null)
         {
             _currentWeapon = characterHandleWeapon.CurrentWeapon;
         }
         
-        // 1. Quan sát mục tiêu (nếu có)
+
         bool isTargetDetected = detectTargetDecision.Decide();
         if (isTargetDetected && aiBrain.Target != null)
         {
@@ -176,17 +174,13 @@ public class MeleeAgent : Agent
         }
         else { AddObservation_TargetNotAvailable(sensor); }
 
-        // 2. Quan sát bản thân
         sensor.AddObservation(agentHealth.CurrentHealth / agentHealth.MaximumHealth);
         
-        // --- MỚI --- 3. Quan sát trạng thái cooldown của vũ khí
         if (_currentWeapon != null)
         {
-            // Trạng thái sẵn sàng (1.0f nếu sẵn sàng, 0.0f nếu không)
             bool isWeaponReady = _currentWeapon.WeaponState.CurrentState == Weapon.WeaponStates.WeaponIdle;
             sensor.AddObservation(isWeaponReady ? 1.0f : 0.0f);
 
-            // Thời gian cooldown còn lại (đã chuẩn hóa về 0-1)
             float cooldownLeft = _currentWeapon.CooldownTimeLeft;
             float totalCooldown = _currentWeapon.TimeBetweenUses;
             float normalizedCooldown = (totalCooldown > 0) ? (cooldownLeft / totalCooldown) : 0f;
@@ -194,9 +188,8 @@ public class MeleeAgent : Agent
         }
         else
         {
-            // Nếu không có vũ khí
-            sensor.AddObservation(0.0f); // Không sẵn sàng
-            sensor.AddObservation(0.0f); // Không có cooldown
+            sensor.AddObservation(0.0f); 
+            sensor.AddObservation(0.0f);
         }
     }
 
