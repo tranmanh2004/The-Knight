@@ -2,22 +2,22 @@
     "MeleeAgent": {
         "checkpoints": [
             {
-                "steps": 30011,
-                "file_path": "results\\MeleeRun4\\MeleeAgent\\MeleeAgent-30011.onnx",
-                "reward": 2.295750098923842,
-                "creation_time": 1764493537.4827998,
+                "steps": 200030,
+                "file_path": "results\\MeleeRun4\\MeleeAgent\\MeleeAgent-200030.onnx",
+                "reward": 2.318500131368637,
+                "creation_time": 1765996318.463944,
                 "auxillary_file_paths": [
-                    "results\\MeleeRun4\\MeleeAgent\\MeleeAgent-30011.pt"
+                    "results\\MeleeRun4\\MeleeAgent\\MeleeAgent-200030.pt"
                 ]
             }
         ],
         "final_checkpoint": {
-            "steps": 30011,
+            "steps": 200030,
             "file_path": "results\\MeleeRun4\\MeleeAgent.onnx",
-            "reward": 2.295750098923842,
-            "creation_time": 1764493537.4827998,
+            "reward": 2.318500131368637,
+            "creation_time": 1765996318.463944,
             "auxillary_file_paths": [
-                "results\\MeleeRun4\\MeleeAgent\\MeleeAgent-30011.pt"
+                "results\\MeleeRun4\\MeleeAgent\\MeleeAgent-200030.pt"
             ]
         }
     },
