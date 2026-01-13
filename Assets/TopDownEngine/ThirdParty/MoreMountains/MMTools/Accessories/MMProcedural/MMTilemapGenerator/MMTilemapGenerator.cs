@@ -66,6 +66,7 @@ namespace MoreMountains.Tools
 			RandomWalkAvoider,
 			RandomWalkGround,
 			Path,
+			CellularAutomata,
 			Copy
 		}
         
@@ -173,6 +174,15 @@ namespace MoreMountains.Tools
 					_grid = MMGridGeneratorPath.Generate(width, height, seed, layer.PathDirection, layer.PathStartPosition, layer.PathMinWidth,
 						layer.PathMaxWidth, layer.PathDirectionChangeDistance, layer.PathWidthChangePercentage,
 						layer.PathDirectionChangePercentage);
+					layer.Grid = _grid;
+					break;
+				case GenerateMethods.CellularAutomata:
+					_grid = MMGridGeneratorCellularAutomata.Generate(width, height, seed,
+						layer.CellularAutomataFillPercentage,
+						layer.CellularAutomataBirthThreshold,
+						layer.CellularAutomataSurvivalThreshold,
+						layer.CellularAutomataIterations,
+						layer.CellularAutomataForceBorders);
 					layer.Grid = _grid;
 					break;
 				case GenerateMethods.Copy:

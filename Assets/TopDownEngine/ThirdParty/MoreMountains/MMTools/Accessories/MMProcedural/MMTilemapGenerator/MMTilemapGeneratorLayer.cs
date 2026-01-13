@@ -70,6 +70,7 @@ namespace MoreMountains.Tools
 		         "Random Walk : starts at point A then moves randomly, carving a path\n" +
 		         "Random Walk Avoider : same, but avoids obstacles\n" +
 		         "Path : starts at Point A, and carves a path in the selected direction\n" +
+		         "Cellular Automata : fills randomly, then smoothens the map using CA rules\n" +
 		         "Copy : copies another tilemap to generate a grid")]
 		public MMTilemapGenerator.GenerateMethods GenerateMethod = MMTilemapGenerator.GenerateMethods.Perlin;
 		/// if this is true, global seed won't be used for this layer
@@ -172,6 +173,28 @@ namespace MoreMountains.Tools
 		[Tooltip("in random walk avoider mode,the max amount of iterations this algorithm will iterate on")]
 		[MMEnumCondition("GenerateMethod", (int)MMTilemapGenerator.GenerateMethods.RandomWalkAvoider)]
 		public int RandomWalkAvoiderMaxIterations = 100;
+
+		// cellular automata
+		/// in cellular automata mode, the percentage of the grid that starts filled
+		[Tooltip("in cellular automata mode, the percentage of the grid that starts filled")]
+		[MMEnumCondition("GenerateMethod", (int)MMTilemapGenerator.GenerateMethods.CellularAutomata)]
+		public int CellularAutomataFillPercentage = 45;
+		/// in cellular automata mode, the neighbor count that turns an empty cell into a wall
+		[Tooltip("in cellular automata mode, the neighbor count that turns an empty cell into a wall")]
+		[MMEnumCondition("GenerateMethod", (int)MMTilemapGenerator.GenerateMethods.CellularAutomata)]
+		public int CellularAutomataBirthThreshold = 5;
+		/// in cellular automata mode, the neighbor count required for a wall to survive
+		[Tooltip("in cellular automata mode, the neighbor count required for a wall to survive")]
+		[MMEnumCondition("GenerateMethod", (int)MMTilemapGenerator.GenerateMethods.CellularAutomata)]
+		public int CellularAutomataSurvivalThreshold = 4;
+		/// in cellular automata mode, the amount of simulation steps to perform
+		[Tooltip("in cellular automata mode, the amount of simulation steps to perform")]
+		[MMEnumCondition("GenerateMethod", (int)MMTilemapGenerator.GenerateMethods.CellularAutomata)]
+		public int CellularAutomataIterations = 5;
+		/// in cellular automata mode, whether the border should remain solid during the simulation
+		[Tooltip("in cellular automata mode, whether the border should remain solid during the simulation")]
+		[MMEnumCondition("GenerateMethod", (int)MMTilemapGenerator.GenerateMethods.CellularAutomata)]
+		public bool CellularAutomataForceBorders = true;
         
 		// path
 		/// in path mode, the start position of the path
@@ -278,6 +301,11 @@ namespace MoreMountains.Tools
 				RandomWalkAvoiderObstaclesTilemap = null;
 				RandomWalkAvoiderObstaclesDistance = 1;
 				RandomWalkAvoiderMaxIterations = 100;
+				CellularAutomataFillPercentage = 45;
+				CellularAutomataBirthThreshold = 5;
+				CellularAutomataSurvivalThreshold = 4;
+				CellularAutomataIterations = 5;
+				CellularAutomataForceBorders = true;
 				BoundsTop = false; 
 				BoundsBottom = false; 
 				BoundsLeft = false; 

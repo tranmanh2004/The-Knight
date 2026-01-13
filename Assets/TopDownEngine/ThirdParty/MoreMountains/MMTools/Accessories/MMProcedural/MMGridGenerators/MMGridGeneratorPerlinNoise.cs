@@ -25,7 +25,7 @@ namespace MoreMountains.Tools
 			{
 				for (int j = 0; j < height; j++)
 				{
-					int value = Mathf.RoundToInt(Mathf.PerlinNoise(i * seed, j * seed)*2);
+					int value = Mathf.RoundToInt(Mathf.PerlinNoise(i*0.1f + seed, j*.1f + seed));
 					SetGridCoordinate(grid, i, j, value);
 				}
 			}
