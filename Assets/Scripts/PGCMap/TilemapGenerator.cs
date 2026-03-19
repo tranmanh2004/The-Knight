@@ -2,9 +2,19 @@
 using UnityEngine.Tilemaps;
 using MoreMountains.TopDownEngine;
 using System.Collections.Generic;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 public class RoomGenerator : MonoBehaviour
 {
+    public enum MapSelectionMode
+    {
+        SingleTextAsset,
+        FolderByIndex,
+        FolderRandom
+    }
+
     [Header("Tilemap References")]
     public Tilemap tilemap;
     public Tilemap collisionTilemap;
@@ -15,7 +25,15 @@ public class RoomGenerator : MonoBehaviour
     public Vector2Int startPosition = new Vector2Int(0, 0);
 
     [Header("Text Map Settings")]
+    public MapSelectionMode mapSelectionMode = MapSelectionMode.SingleTextAsset;
     public TextAsset roomLayoutText;
+    public int selectedFolderMapIndex = 0;
+    [SerializeField] private TextAsset[] folderTextMaps;
+
+    #if UNITY_EDITOR
+    public DefaultAsset textMapFolder;
+    public bool autoRefreshFolderMaps = false;
+    #endif
 
     [Header("Spawn Point Reference")]
     public Transform playerSpawnPointTransform;
@@ -47,10 +65,72 @@ public class RoomGenerator : MonoBehaviour
         }
 
         tilemap.ClearAllTiles();
+        if (collisionTilemap != null)
+        {
+            collisionTilemap.ClearAllTiles();
+        }
         RenderToTilemap(roomGrid);
         UpdateLevelManagerSpawnPointIfNeeded();
         SpawnEnemiesFromTextIfNeeded();
     }
+
+#if UNITY_EDITOR
+    [ContextMenu("Refresh Text Maps From Folder")]
+    public void RefreshTextMapsFromFolder()
+    {
+        if (textMapFolder == null)
+        {
+            folderTextMaps = new TextAsset[0];
+            return;
+        }
+
+        string folderPath = AssetDatabase.GetAssetPath(textMapFolder);
+        if (string.IsNullOrEmpty(folderPath) || !AssetDatabase.IsValidFolder(folderPath))
+        {
+            folderTextMaps = new TextAsset[0];
+            return;
+        }
+
+        string[] guids = AssetDatabase.FindAssets("t:TextAsset", new[] { folderPath });
+        List<TextAsset> found = new List<TextAsset>();
+
+        for (int i = 0; i < guids.Length; i++)
+        {
+            string assetPath = AssetDatabase.GUIDToAssetPath(guids[i]);
+            if (!assetPath.EndsWith(".txt", System.StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            TextAsset textAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(assetPath);
+            if (textAsset != null)
+            {
+                found.Add(textAsset);
+            }
+        }
+
+        folderTextMaps = found.ToArray();
+
+        if (selectedFolderMapIndex < 0)
+        {
+            selectedFolderMapIndex = 0;
+        }
+        if (folderTextMaps.Length > 0 && selectedFolderMapIndex >= folderTextMaps.Length)
+        {
+            selectedFolderMapIndex = folderTextMaps.Length - 1;
+        }
+    }
+
+    private void OnValidate()
+    {
+        if (!autoRefreshFolderMaps)
+        {
+            return;
+        }
+
+        RefreshTextMapsFromFolder();
+    }
+#endif
 
     void RenderToTilemap(int[,] grid)
     {
@@ -70,7 +150,8 @@ public class RoomGenerator : MonoBehaviour
 
     private int[,] BuildGridFromText()
     {
-        if (roomLayoutText == null)
+        TextAsset sourceMap = GetSelectedMapTextAsset();
+        if (sourceMap == null)
         {
             return null;
         }
@@ -78,7 +159,7 @@ public class RoomGenerator : MonoBehaviour
         _hasPlayerSpawn = false;
         _enemySpawnCells.Clear();
 
-        string text = roomLayoutText.text.Replace("\r\n", "\n").TrimEnd('\n');
+        string text = sourceMap.text.Replace("\r\n", "\n").TrimEnd('\n');
         string[] lines = text.Split(new[] { '\n' }, System.StringSplitOptions.RemoveEmptyEntries);
         if (lines.Length == 0)
         {
@@ -122,6 +203,35 @@ public class RoomGenerator : MonoBehaviour
         return grid;
     }
 
+    private TextAsset GetSelectedMapTextAsset()
+    {
+        switch (mapSelectionMode)
+        {
+            case MapSelectionMode.SingleTextAsset:
+                return roomLayoutText;
+
+            case MapSelectionMode.FolderByIndex:
+                if (folderTextMaps == null || folderTextMaps.Length == 0)
+                {
+                    return null;
+                }
+
+                int clampedIndex = Mathf.Clamp(selectedFolderMapIndex, 0, folderTextMaps.Length - 1);
+                return folderTextMaps[clampedIndex];
+
+            case MapSelectionMode.FolderRandom:
+                if (folderTextMaps == null || folderTextMaps.Length == 0)
+                {
+                    return null;
+                }
+
+                return folderTextMaps[Random.Range(0, folderTextMaps.Length)];
+
+            default:
+                return roomLayoutText;
+        }
+    }
+
     private void UpdateLevelManagerSpawnPointIfNeeded()
     {
         if (!_hasPlayerSpawn)
@@ -163,12 +273,12 @@ public class RoomGenerator : MonoBehaviour
 
     private void SpawnEnemiesFromTextIfNeeded()
     {
+        ClearSpawnedEnemies();
+
         if (!spawnEnemiesFromText)
         {
             return;
         }
-
-        ClearSpawnedEnemies();
 
         if (_enemySpawnCells.Count == 0)
         {
