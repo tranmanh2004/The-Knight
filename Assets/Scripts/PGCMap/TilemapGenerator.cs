@@ -314,6 +314,27 @@ public class RoomGenerator : MonoBehaviour
 
     private void ClearSpawnedEnemies()
     {
+        if (enemyParent != null)
+        {
+            for (int i = enemyParent.childCount - 1; i >= 0; i--)
+            {
+                Transform child = enemyParent.GetChild(i);
+                if (child == null)
+                {
+                    continue;
+                }
+
+                if (Application.isPlaying)
+                {
+                    Destroy(child.gameObject);
+                }
+                else
+                {
+                    DestroyImmediate(child.gameObject);
+                }
+            }
+        }
+
         for (int i = _spawnedEnemies.Count - 1; i >= 0; i--)
         {
             if (_spawnedEnemies[i] == null)
