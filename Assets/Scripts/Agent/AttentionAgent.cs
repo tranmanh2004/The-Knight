@@ -55,17 +55,6 @@ public class AttentionActionConfig
 /// CRITICAL: If changing MaxEnemies, MaxBullets, MaxItems, MaxHazards,
 /// update ML-Agents YAML config to match this observation size!
 /// 
-/// BUG FIXES IN v4 (current):
-/// - v3: Fixed syntax error (Heuristic method header was missing)
-/// - BUG #1: Removed redundant GetEnemiesNearby/Bullets/Items/Hazards calls (5x Physics.OverlapSphere → 1x)
-/// - BUG #2: Dodge reward now tracked in FixedUpdate with bool flag (avoids missed windows + heal false positives)
-/// - BUG #3: Item type detection uses tags + name fallback (robust)
-/// - BUG #4: Enemy velocity uses Character (TopDown Engine), not CharacterController
-/// - BUG #5: GetComponent<Projectile> cached (not called twice)
-/// - BUG #6: Observation size documented (321 dims) and corrected
-/// - BUG #7: Removed redundant _brainInitialized flag
-/// - BUG #8: Time normalization uses Agent.MaxStep, not Academy.MaxStepCount
-/// - BUG #9: GetHazardTypeIndex uses tags (same as items) + name fallback
 /// </summary>
 [RequireComponent(typeof(AIBrain))]
 [RequireComponent(typeof(Health))]
