@@ -130,8 +130,9 @@ public class AttentionAgent : Agent
     // --- Character reference ---
     private Character _character;
 
-    private void Awake()
+    protected override void Awake()
     {
+        base.Awake();
         aiBrain = GetComponent<AIBrain>();
         agentHealth = GetComponent<Health>();
         detectTargetDecision = GetComponent<AIDecisionDetectTargetRadius2D>();
@@ -277,11 +278,11 @@ public class AttentionAgent : Agent
         {
             // Try to get actual ammo; if not available, use 1.0f (infinite ammo)
             float ammoNorm = 1.0f;
-            if (weapon.HasAmmoDictionary && weapon.CurrentWeaponAmmo != null)
+            if (weapon.WeaponAmmo != null)
             {
-                float currentAmmo = weapon.CurrentWeaponAmmo.CurrentAmmo;
-                float maxAmmo = weapon.CurrentWeaponAmmo.MaxAmmo;
-                ammoNorm = maxAmmo > 0 ? currentAmmo / maxAmmo : 1.0f;
+                int currentAmmo = weapon.WeaponAmmo.CurrentAmmoAvailable;
+                int maxAmmo = weapon.WeaponAmmo.MaxAmmo;
+                ammoNorm = maxAmmo > 0 ? currentAmmo / (float)maxAmmo : 1.0f;
             }
             sensor.AddObservation(ammoNorm);
 
@@ -305,8 +306,16 @@ public class AttentionAgent : Agent
         // Movement speed (use Character from TopDown Engine, not CharacterController)
         if (_character != null)
         {
-            float speedNorm = _character.m_Velocity.magnitude / Mathf.Max(1f, _character.m_MaxVelocity.magnitude);
-            sensor.AddObservation(speedNorm);
+            TopDownController controller = _character.GetComponent<TopDownController>();
+            if (controller != null)
+            {
+                float speedNorm = controller.Velocity.magnitude / Mathf.Max(1f, 10f); // Assuming max speed around 10
+                sensor.AddObservation(Mathf.Clamp01(speedNorm));
+            }
+            else
+            {
+                sensor.AddObservation(0.0f);
+            }
         }
         else
         {
@@ -319,7 +328,15 @@ public class AttentionAgent : Agent
         sensor.AddObservation(healthDelta < 0 ? 1.0f : 0.0f);
 
         // Player velocity direction (normalized, 2D)
-        Vector3 velocity = (_character != null) ? _character.m_Velocity : Vector3.zero;
+        Vector3 velocity = Vector3.zero;
+        if (_character != null)
+        {
+            TopDownController controller = _character.GetComponent<TopDownController>();
+            if (controller != null)
+            {
+                velocity = controller.Velocity;
+            }
+        }
         Vector3 velDir = velocity.magnitude > 0.1f ? velocity.normalized : Vector3.zero;
         sensor.AddObservation(velDir.x);
         sensor.AddObservation(velDir.z);
@@ -351,10 +368,10 @@ public class AttentionAgent : Agent
         float hazardFraction = Mathf.Clamp01((float)hazardCount / Mathf.Max(1, MaxHazards));
         sensor.AddObservation(hazardFraction);
 
-        // Time in episode (normalized) - BUG FIX #8: use Agent's MaxStep, not global Academy.MaxStepCount
+        // Time in episode (normalized) - BUG FIX #8: use Agent's MaxStep, not global Academy properties
         float timeNorm = 0f;
-        int maxSteps = MaxStep > 0 ? MaxStep : Academy.Instance.MaxStepCount;
-        timeNorm = Academy.Instance.EpisodeFrameCounter / Mathf.Max(1f, maxSteps);
+        int maxSteps = MaxStep > 0 ? MaxStep : 1000; // Default fallback if no max step set
+        timeNorm = Mathf.Clamp01(Academy.Instance.StepCount / Mathf.Max(1f, maxSteps));
         sensor.AddObservation(timeNorm);
 
         // Recent deaths nearby (placeholder)
@@ -409,7 +426,11 @@ public class AttentionAgent : Agent
         Vector3 relVel = Vector3.zero;
         if (enemyCharacter != null)
         {
-            relVel = enemyCharacter.m_Velocity;
+            TopDownController enemyController = enemyCharacter.GetComponent<TopDownController>();
+            if (enemyController != null)
+            {
+                relVel = enemyController.Velocity;
+            }
         }
         sensor.AddObservation(Mathf.Clamp(relVel.x / 10f, -1f, 1f));
         sensor.AddObservation(Mathf.Clamp(relVel.z / 10f, -1f, 1f));
@@ -480,7 +501,7 @@ public class AttentionAgent : Agent
         sensor.AddObservation(Mathf.Clamp(relativePos.z / VisionRadius, -1f, 1f));
 
         // Velocity (absolute, as bullet speed is independent)
-        Vector3 bulletVel = bullet.GetComponent<Rigidbody>()?.velocity ?? Vector3.zero;
+        Vector3 bulletVel = bullet.GetComponent<Rigidbody>()?.linearVelocity ?? Vector3.zero;
         sensor.AddObservation(Mathf.Clamp(bulletVel.x / 20f, -1f, 1f));
         sensor.AddObservation(Mathf.Clamp(bulletVel.z / 20f, -1f, 1f));
 
