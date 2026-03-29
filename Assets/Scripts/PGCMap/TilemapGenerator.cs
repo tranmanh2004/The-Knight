@@ -234,41 +234,8 @@ public class RoomGenerator : MonoBehaviour
 
     private void UpdateLevelManagerSpawnPointIfNeeded()
     {
-        if (!_hasPlayerSpawn)
-        {
-            return;
-        }
-
-        if (!LevelManager.HasInstance)
-        {
-            return;
-        }
-
         Vector3 worldSpawnPosition = tilemap.GetCellCenterWorld(_playerSpawnCell);
-
-        Transform targetSpawnTransform = playerSpawnPointTransform;
-        if (targetSpawnTransform == null)
-        {
-            CheckPoint spawnPoint = LevelManager.Instance.InitialSpawnPoint;
-            if (spawnPoint != null)
-            {
-                targetSpawnTransform = spawnPoint.transform;
-            }
-        }
-
-        if (targetSpawnTransform == null)
-        {
-            Debug.LogWarning("Chưa gán playerSpawnPointTransform và LevelManager cũng chưa có InitialSpawnPoint.", this);
-            return;
-        }
-
-        targetSpawnTransform.position = worldSpawnPosition;
-
-        CheckPoint initialSpawnPoint = LevelManager.Instance.InitialSpawnPoint;
-        if (initialSpawnPoint != null && LevelManager.Instance.CurrentCheckpoint == null)
-        {
-            LevelManager.Instance.CurrentCheckpoint = initialSpawnPoint;
-        }
+        playerSpawnPointTransform.position = worldSpawnPosition;
     }
 
     private void SpawnEnemiesFromTextIfNeeded()

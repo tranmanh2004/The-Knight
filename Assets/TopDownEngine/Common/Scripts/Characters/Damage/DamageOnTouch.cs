@@ -323,7 +323,7 @@ namespace MoreMountains.TopDownEngine
 		protected virtual void InitalizeGizmos()
 		{
 			_gizmosColor = Color.red;
-			_gizmosColor.a = 0.25f;
+			_gizmosColor.a = 1.0f;
 		}
 		
 		/// <summary>
