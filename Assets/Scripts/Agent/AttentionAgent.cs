@@ -22,6 +22,13 @@ public class AttentionActionConfig
     [HideInInspector] public bool IsLocked;
 }
 
+[Serializable]
+public class WeaponAttackDelayConfig
+{
+    public string WeaponName;
+    public float LockDuration = 0.3f;
+}
+
 /// <summary>
 /// AttentionAgent - RL Agent for 2D roguelike shooter (Soul Knight-like)
 /// 
@@ -90,9 +97,29 @@ public class AttentionAgent : Agent
     {
         new AttentionActionConfig { StateName = "Idle", LockDuration = 0f, RequiresWeaponIdle = false },
         new AttentionActionConfig { StateName = "Moving", LockDuration = 0f, RequiresWeaponIdle = false },
-        new AttentionActionConfig { StateName = "Attacking", LockDuration = 0.3f, RequiresWeaponIdle = true },
+        new AttentionActionConfig { StateName = "Attacking", LockDuration = 0f, RequiresWeaponIdle = true },
         new AttentionActionConfig { StateName = "Dashing", LockDuration = 0.4f, RequiresWeaponIdle = false },
     };
+
+    [Header("Weapon Randomization")]
+    [Tooltip("Danh sách vũ khí sẽ được chọn ngẫu nhiên khi bắt đầu episode.")]
+    public List<Weapon> RandomWeaponPool = new List<Weapon>();
+    [Tooltip("Nếu bật, agent sẽ equip ngẫu nhiên một vũ khí từ pool ở mỗi episode.")]
+    public bool RandomizeWeaponOnEpisodeBegin = true;
+
+    [Header("Attack Lock Settings")]
+    [Tooltip("Nhân hệ số này vào cooldown của vũ khí (TimeBetweenUses).")]
+    public float AttackLockDurationMultiplier = 1f;
+    [Tooltip("Nếu có config theo WeaponName thì sẽ ưu tiên dùng giá trị này thay vì cooldown của vũ khí.")]
+    public List<WeaponAttackDelayConfig> WeaponAttackDelayOverrides = new List<WeaponAttackDelayConfig>();
+
+    [Header("Episode Map Generation")]
+    [Tooltip("Nếu bật, agent sẽ generate map mới khi bắt đầu episode.")]
+    public bool GenerateRandomMapOnEpisodeBegin = false;
+    [Tooltip("RoomGenerator dùng để generate map theo text.")]
+    public RoomGenerator EpisodeRoomGenerator;
+    [Tooltip("Tự chuyển RoomGenerator sang FolderRandom trước khi generate.")]
+    public bool ForceFolderRandomMode = true;
 
     // --- Hằng số định danh hành động ---
     private const int ACTION_IDLE = 0;
@@ -135,6 +162,7 @@ public class AttentionAgent : Agent
         base.Awake();
         aiBrain = GetComponent<AIBrain>();
         agentHealth = GetComponent<Health>();
+        EquipRandomWeaponIfConfigured();
         detectTargetDecision = GetComponent<AIDecisionDetectTargetRadius2D>();
         characterHandleWeapon = GetComponent<CharacterHandleWeapon>();
     }
@@ -162,8 +190,12 @@ public class AttentionAgent : Agent
 
     public override void OnEpisodeBegin()
     {
+        GenerateEpisodeMapIfConfigured();
+
         agentHealth.Revive();
         transform.position = agentStartingPosition;
+
+        EquipRandomWeaponIfConfigured();
 
         _previousHealth = agentHealth.MaximumHealth;
         _isDodging = false;
@@ -199,6 +231,52 @@ public class AttentionAgent : Agent
 
         aiBrain.Target = null;
         aiBrain.TransitionToState("Idle");
+    }
+
+    private void GenerateEpisodeMapIfConfigured()
+    {
+        if (!GenerateRandomMapOnEpisodeBegin || EpisodeRoomGenerator == null)
+        {
+            return;
+        }
+
+        if (ForceFolderRandomMode)
+        {
+            EpisodeRoomGenerator.mapSelectionMode = RoomGenerator.MapSelectionMode.FolderRandom;
+        }
+
+        EpisodeRoomGenerator.GenerateRoom();
+    }
+
+    private void EquipRandomWeaponIfConfigured()
+    {
+        if (!RandomizeWeaponOnEpisodeBegin || characterHandleWeapon == null)
+        {
+            return;
+        }
+
+        if (RandomWeaponPool == null || RandomWeaponPool.Count == 0)
+        {
+            return;
+        }
+
+        List<Weapon> validWeapons = new List<Weapon>();
+        for (int i = 0; i < RandomWeaponPool.Count; i++)
+        {
+            if (RandomWeaponPool[i] != null)
+            {
+                validWeapons.Add(RandomWeaponPool[i]);
+            }
+        }
+
+        if (validWeapons.Count == 0)
+        {
+            return;
+        }
+
+        Weapon selectedWeapon = validWeapons[UnityEngine.Random.Range(0, validWeapons.Count)];
+        characterHandleWeapon.ChangeWeapon(selectedWeapon, selectedWeapon.WeaponName, false);
+        _currentWeapon = characterHandleWeapon.CurrentWeapon;
     }
 
     /// <summary>
@@ -834,12 +912,54 @@ public class AttentionAgent : Agent
 
         aiBrain.TransitionToState(config.StateName);
 
-        if (config.LockDuration > 0f)
+        float lockDuration = GetEffectiveLockDuration(chosenAction, config);
+        if (lockDuration > 0f)
         {
-            config.Timer = config.LockDuration;
+            config.Timer = lockDuration;
             config.IsLocked = true;
             _currentLockedAction = chosenAction;
         }
+    }
+
+    private float GetEffectiveLockDuration(int chosenAction, AttentionActionConfig config)
+    {
+        float baseDuration = Mathf.Max(0f, config.LockDuration);
+
+        if (chosenAction != ACTION_ATTACKING)
+        {
+            return baseDuration;
+        }
+
+        if (_currentWeapon == null)
+        {
+            return baseDuration;
+        }
+
+        string currentWeaponName = _currentWeapon.WeaponName;
+        if (!string.IsNullOrWhiteSpace(currentWeaponName) && WeaponAttackDelayOverrides != null)
+        {
+            for (int i = 0; i < WeaponAttackDelayOverrides.Count; i++)
+            {
+                WeaponAttackDelayConfig overrideConfig = WeaponAttackDelayOverrides[i];
+                if (overrideConfig == null || string.IsNullOrWhiteSpace(overrideConfig.WeaponName))
+                {
+                    continue;
+                }
+
+                if (string.Equals(overrideConfig.WeaponName, currentWeaponName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return Mathf.Max(0f, overrideConfig.LockDuration);
+                }
+            }
+        }
+
+        float weaponCooldown = _currentWeapon.TimeBetweenUses * Mathf.Max(0f, AttackLockDurationMultiplier);
+        if (weaponCooldown <= 0f)
+        {
+            return baseDuration;
+        }
+
+        return weaponCooldown;
     }
 
     private bool IsWeaponReady()

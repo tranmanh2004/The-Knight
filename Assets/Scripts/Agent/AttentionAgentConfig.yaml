@@ -1,5 +1,5 @@
 behaviors:
-  MeleeAgent:
+  AttentionAgentConfig:
     trainer_type: ppo
     hyperparameters:
       batch_size: 32
