@@ -95,10 +95,11 @@ public class AttentionAgent : Agent
     [Tooltip("Cấu hình cho từng hành động")]
     public List<AttentionActionConfig> ActionConfigs = new List<AttentionActionConfig>
     {
-        new AttentionActionConfig { StateName = "Idle", LockDuration = 0f, RequiresWeaponIdle = false },
-        new AttentionActionConfig { StateName = "Moving", LockDuration = 0f, RequiresWeaponIdle = false },
-        new AttentionActionConfig { StateName = "Attacking", LockDuration = 0f, RequiresWeaponIdle = true },
-        new AttentionActionConfig { StateName = "Dashing", LockDuration = 0.4f, RequiresWeaponIdle = false },
+        new AttentionActionConfig { StateName = "Idle",      LockDuration = 0f,   RequiresWeaponIdle = false },
+        new AttentionActionConfig { StateName = "Moving",    LockDuration = 0f,   RequiresWeaponIdle = false },
+        new AttentionActionConfig { StateName = "Attacking", LockDuration = 0f,   RequiresWeaponIdle = true  },
+        new AttentionActionConfig { StateName = "Dashing",   LockDuration = 0.4f, RequiresWeaponIdle = false },
+        new AttentionActionConfig { StateName = "MoveAway",  LockDuration = 0f,   RequiresWeaponIdle = false },
     };
 
     [Header("Weapon Randomization")]
@@ -117,7 +118,7 @@ public class AttentionAgent : Agent
     [Tooltip("Nếu bật, agent sẽ generate map mới khi bắt đầu episode.")]
     public bool GenerateRandomMapOnEpisodeBegin = false;
     [Tooltip("RoomGenerator dùng để generate map theo text.")]
-    public RoomGenerator EpisodeRoomGenerator;
+    public TilemapGenerator EpisodeRoomGenerator;
     [Tooltip("Tự chuyển RoomGenerator sang FolderRandom trước khi generate.")]
     public bool ForceFolderRandomMode = true;
 
@@ -126,6 +127,7 @@ public class AttentionAgent : Agent
     private const int ACTION_MOVING = 1;
     private const int ACTION_ATTACKING = 2;
     private const int ACTION_DASHING = 3;
+    private const int ACTION_MOVE_AWAY = 4;
 
     // --- Components ---
     private AIBrain aiBrain;
@@ -193,7 +195,7 @@ public class AttentionAgent : Agent
         GenerateEpisodeMapIfConfigured();
 
         agentHealth.Revive();
-        transform.position = agentStartingPosition;
+        transform.position = GetSpawnPosition();
 
         EquipRandomWeaponIfConfigured();
 
@@ -230,7 +232,24 @@ public class AttentionAgent : Agent
         }
 
         aiBrain.Target = null;
-        aiBrain.TransitionToState("Idle");
+        aiBrain.TransitionToState(ActionConfigs.Count > 0 ? ActionConfigs[0].StateName : "Moving");
+    }
+
+    /// <summary>
+    /// Returns the spawn position from the RoomGenerator's playerSpawnPointTransform
+    /// after map generation, falling back to the original starting position.
+    /// </summary>
+    private Vector3 GetSpawnPosition()
+    {
+        if (EpisodeRoomGenerator != null && EpisodeRoomGenerator.playerSpawnPointTransform != null)
+            return EpisodeRoomGenerator.playerSpawnPointTransform.position;
+
+        // Fallback: find InitsPoint in scene
+        GameObject initsPoint = GameObject.Find("InitsPoint");
+        if (initsPoint != null)
+            return initsPoint.transform.position;
+
+        return agentStartingPosition;
     }
 
     private void GenerateEpisodeMapIfConfigured()
@@ -242,7 +261,7 @@ public class AttentionAgent : Agent
 
         if (ForceFolderRandomMode)
         {
-            EpisodeRoomGenerator.mapSelectionMode = RoomGenerator.MapSelectionMode.FolderRandom;
+            EpisodeRoomGenerator.mapSelectionMode = TilemapGenerator.MapSelectionMode.FolderRandom;
         }
 
         EpisodeRoomGenerator.GenerateRoom();
@@ -284,6 +303,13 @@ public class AttentionAgent : Agent
     /// </summary>
     public override void CollectObservations(VectorSensor sensor)
     {
+        // Guard: if critical components missing, pad all observations with zeros
+        if (agentHealth == null || characterHandleWeapon == null)
+        {
+            for (int i = 0; i < 321; i++) sensor.AddObservation(0f);
+            return;
+        }
+
         if (characterHandleWeapon != null)
         {
             _currentWeapon = characterHandleWeapon.CurrentWeapon;
@@ -317,9 +343,9 @@ public class AttentionAgent : Agent
         _items.Clear();
         _hazards.Clear();
 
-        Collider[] allColliders = Physics.OverlapSphere(transform.position, VisionRadius);
+        Collider2D[] allColliders = Physics2D.OverlapCircleAll(transform.position, VisionRadius);
 
-        foreach (Collider col in allColliders)
+        foreach (Collider2D col in allColliders)
         {
             if (col.CompareTag("Enemy"))
             {
@@ -335,7 +361,6 @@ public class AttentionAgent : Agent
             }
             else
             {
-                // Cache GetComponent to avoid calling twice
                 Projectile proj = col.GetComponent<Projectile>();
                 if (proj != null)
                 {
@@ -1006,6 +1031,7 @@ public class AttentionAgent : Agent
         else if (Input.GetKey(KeyCode.Alpha2)) action = ACTION_MOVING;
         else if (Input.GetKey(KeyCode.Alpha3)) action = ACTION_ATTACKING;
         else if (Input.GetKey(KeyCode.Alpha4)) action = ACTION_DASHING;
+        else if (Input.GetKey(KeyCode.Alpha5)) action = ACTION_MOVE_AWAY;
 
         actionsOut.DiscreteActions.Array[0] = action;
     }

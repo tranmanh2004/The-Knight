@@ -1,9 +1,9 @@
 using UnityEditor;
 using UnityEngine;
 
-[CustomEditor(typeof(RoomGenerator))]
+[CustomEditor(typeof(TilemapGenerator))]
 [CanEditMultipleObjects]
-public class RoomGeneratorEditor : Editor
+public class TilemapGeneratorEditor : Editor
 {
     public override void OnInspectorGUI()
     {
@@ -12,7 +12,7 @@ public class RoomGeneratorEditor : Editor
         bool hasValidTarget = false;
         foreach (UnityEngine.Object obj in targets)
         {
-            if (obj is RoomGenerator rg && rg.tilemap != null)
+            if (obj is TilemapGenerator rg && rg.tilemap != null)
             {
                 hasValidTarget = true;
                 break;
@@ -25,7 +25,7 @@ public class RoomGeneratorEditor : Editor
             Undo.IncrementCurrentGroup();
             foreach (UnityEngine.Object obj in targets)
             {
-                if (obj is not RoomGenerator generator || generator.tilemap == null)
+                if (obj is not TilemapGenerator generator || generator.tilemap == null)
                 {
                     continue;
                 }

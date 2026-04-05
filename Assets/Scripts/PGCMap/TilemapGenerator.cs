@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using UnityEditor;
 #endif
 
-public class RoomGenerator : MonoBehaviour
+public class TilemapGenerator : MonoBehaviour
 {
     public enum MapSelectionMode
     {

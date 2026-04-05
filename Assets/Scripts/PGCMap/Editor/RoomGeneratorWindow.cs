@@ -1,14 +1,14 @@
 using UnityEditor;
 using UnityEngine;
 
-public class RoomGeneratorWindow : EditorWindow
+public class TilemapGeneratorWindow : EditorWindow
 {
-    private RoomGenerator _generator;
+    private TilemapGenerator _generator;
 
     [MenuItem("Tools/PGC/Room Generator")] // Adds entry in the Unity menu bar
     public static void ShowWindow()
     {
-        RoomGeneratorWindow window = GetWindow<RoomGeneratorWindow>(false, "Room Generator", true);
+        TilemapGeneratorWindow window = GetWindow<TilemapGeneratorWindow>(false, "Room Generator", true);
         window.minSize = new Vector2(300f, 120f);
     }
 
@@ -17,7 +17,7 @@ public class RoomGeneratorWindow : EditorWindow
         Selection.selectionChanged += HandleSelectionChanged;
         if (_generator == null)
         {
-            _generator = FindObjectOfType<RoomGenerator>();
+            _generator = FindFirstObjectByType<TilemapGenerator>();
         }
     }
 
@@ -34,7 +34,7 @@ public class RoomGeneratorWindow : EditorWindow
             return;
         }
 
-        RoomGenerator selectedGenerator = selected.GetComponent<RoomGenerator>();
+        TilemapGenerator selectedGenerator = selected.GetComponent<TilemapGenerator>();
         if (selectedGenerator != null)
         {
             _generator = selectedGenerator;
@@ -48,7 +48,7 @@ public class RoomGeneratorWindow : EditorWindow
         EditorGUILayout.Space(5f);
 
         EditorGUI.BeginChangeCheck();
-        _generator = (RoomGenerator)EditorGUILayout.ObjectField("Target", _generator, typeof(RoomGenerator), true);
+        _generator = (TilemapGenerator)EditorGUILayout.ObjectField("Target", _generator, typeof(TilemapGenerator), true);
         if (EditorGUI.EndChangeCheck())
         {
             Repaint();
@@ -70,7 +70,7 @@ public class RoomGeneratorWindow : EditorWindow
                 GameObject selected = Selection.activeGameObject;
                 if (selected != null)
                 {
-                    RoomGenerator selectedGenerator = selected.GetComponent<RoomGenerator>();
+                    TilemapGenerator selectedGenerator = selected.GetComponent<TilemapGenerator>();
                     if (selectedGenerator != null)
                     {
                         _generator = selectedGenerator;
@@ -86,15 +86,15 @@ public class RoomGeneratorWindow : EditorWindow
 
         if (_generator == null)
         {
-            EditorGUILayout.HelpBox("Assign hoặc chọn 1 GameObject chứa RoomGenerator để dùng nút Generate.", MessageType.Info);
+            EditorGUILayout.HelpBox("Assign hoặc chọn 1 GameObject chứa TilemapGenerator để dùng nút Generate.", MessageType.Info);
         }
         else if (_generator.tilemap == null)
         {
-            EditorGUILayout.HelpBox("RoomGenerator đang thiếu tham chiếu Tilemap. Hãy gán trước khi generate.", MessageType.Warning);
+            EditorGUILayout.HelpBox("TilemapGenerator đang thiếu tham chiếu Tilemap. Hãy gán trước khi generate.", MessageType.Warning);
         }
     }
 
-    private static void GenerateFromEditor(RoomGenerator generator)
+    private static void GenerateFromEditor(TilemapGenerator generator)
     {
         if (generator == null)
         {

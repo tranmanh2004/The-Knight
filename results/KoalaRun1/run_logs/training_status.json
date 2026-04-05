@@ -1,0 +1,29 @@
+{
+    "AttentionAgentConfig": {
+        "checkpoints": [
+            {
+                "steps": 2560,
+                "file_path": "results\\KoalaRun1\\AttentionAgentConfig\\AttentionAgentConfig-2560.onnx",
+                "reward": null,
+                "creation_time": 1775403113.2956967,
+                "auxillary_file_paths": [
+                    "results\\KoalaRun1\\AttentionAgentConfig\\AttentionAgentConfig-2560.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 2560,
+            "file_path": "results\\KoalaRun1\\AttentionAgentConfig.onnx",
+            "reward": null,
+            "creation_time": 1775403113.2956967,
+            "auxillary_file_paths": [
+                "results\\KoalaRun1\\AttentionAgentConfig\\AttentionAgentConfig-2560.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.9.1+cpu"
+    }
+}
