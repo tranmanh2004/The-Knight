@@ -231,8 +231,18 @@ public class AttentionAgent : Agent
             previousPlayerHealth = 0f;
         }
 
-        aiBrain.Target = null;
-        aiBrain.TransitionToState(ActionConfigs.Count > 0 ? ActionConfigs[0].StateName : "Moving");
+        // Set target to nearest enemy — agent needs a target to move toward
+        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+        GameObject nearestEnemy = null;
+        float nearestDist = float.MaxValue;
+        foreach (GameObject e in enemies)
+        {
+            float d = Vector3.Distance(transform.position, e.transform.position);
+            if (d < nearestDist) { nearestDist = d; nearestEnemy = e; }
+        }
+        aiBrain.Target = nearestEnemy != null ? nearestEnemy.transform : null;
+
+        aiBrain.TransitionToState("Moving");
     }
 
     /// <summary>
@@ -347,15 +357,15 @@ public class AttentionAgent : Agent
 
         foreach (Collider2D col in allColliders)
         {
-            if (col.CompareTag("Enemy"))
+            if (col.tag == "Enemy")
             {
                 _enemies.Add(col.gameObject);
             }
-            else if (col.CompareTag("Item") || col.GetComponent<PickableItem>() != null)
+            else if (col.tag == "Item" || col.GetComponent<PickableItem>() != null)
             {
                 _items.Add(col.gameObject);
             }
-            else if (col.CompareTag("Hazard"))
+            else if (col.tag == "Hazard")
             {
                 _hazards.Add(col.gameObject);
             }
