@@ -11520,7 +11520,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1498750440386690, guid: a200a0b4274de1d4da0e68119fadcbbb, type: 3}
       propertyPath: m_TagString
-      value: Enemy
+      value: Player
       objectReference: {fileID: 0}
     - target: {fileID: 4001341059962208, guid: a200a0b4274de1d4da0e68119fadcbbb, type: 3}
       propertyPath: m_LocalPosition.x
@@ -42201,7 +42201,14 @@ MonoBehaviour:
     RequiresWeaponIdle: 0
     Timer: 0
     IsLocked: 0
-  RandomWeaponPool: []
+  RandomWeaponPool:
+  - {fileID: 114552424271636822, guid: 63309671082ff30409623a954c22e8f5, type: 3}
+  - {fileID: 114317679573123918, guid: 41c4b1b5cf3c187459806b6e03ca36ac, type: 3}
+  - {fileID: 114068047272519342, guid: cf0e5f55594b379408379784046c533c, type: 3}
+  - {fileID: 114317679573123918, guid: 1b80d0a781b16184f8eeec786984fe3a, type: 3}
+  - {fileID: 114594623923584052, guid: 4069a3a0fab9aa14aa3863708b264eab, type: 3}
+  - {fileID: 114740255974881622, guid: 94ca7322bedfa1042892135419b92b96, type: 3}
+  - {fileID: 114068047272519342, guid: cf0e5f55594b379408379784046c533c, type: 3}
   RandomizeWeaponOnEpisodeBegin: 1
   AttackLockDurationMultiplier: 1
   WeaponAttackDelayOverrides: []

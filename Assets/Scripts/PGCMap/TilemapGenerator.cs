@@ -275,6 +275,7 @@ public class TilemapGenerator : MonoBehaviour
             Vector3 worldPosition = tilemap.GetCellCenterWorld(_enemySpawnCells[i]);
             GameObject selectedPrefab = validPrefabs[Random.Range(0, validPrefabs.Count)];
             GameObject spawned = Instantiate(selectedPrefab, worldPosition, Quaternion.identity, enemyParent);
+            spawned.tag = "Enemy";
             _spawnedEnemies.Add(spawned);
         }
     }

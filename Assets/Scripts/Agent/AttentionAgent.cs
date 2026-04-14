@@ -164,9 +164,9 @@ public class AttentionAgent : Agent
         base.Awake();
         aiBrain = GetComponent<AIBrain>();
         agentHealth = GetComponent<Health>();
-        EquipRandomWeaponIfConfigured();
         detectTargetDecision = GetComponent<AIDecisionDetectTargetRadius2D>();
         characterHandleWeapon = GetComponent<CharacterHandleWeapon>();
+        EquipRandomWeaponIfConfigured(); // Must be after characterHandleWeapon is assigned
     }
 
     public override void Initialize()
@@ -188,6 +188,28 @@ public class AttentionAgent : Agent
         }
 
         agentStartingPosition = transform.position;
+
+        // Subscribe to OnDeath so EndEpisode() fires immediately when TopDownEngine
+        // kills the agent — before the GameObject is disabled, which would prevent
+        // OnActionReceived from ever detecting death.
+        if (agentHealth != null)
+        {
+            agentHealth.OnDeath += HandleAgentDeath;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (agentHealth != null)
+        {
+            agentHealth.OnDeath -= HandleAgentDeath;
+        }
+    }
+
+    private void HandleAgentDeath()
+    {
+        AddReward(AgentDiedPenalty);
+        EndEpisode();
     }
 
     public override void OnEpisodeBegin()
@@ -231,18 +253,34 @@ public class AttentionAgent : Agent
             previousPlayerHealth = 0f;
         }
 
-        // Set target to nearest enemy — agent needs a target to move toward
+        // Force-enable AIBrain — Character.OnDeath() disables it and Revive()
+        // timing is not guaranteed to have re-enabled it before we get here.
+        if (aiBrain != null)
+        {
+            aiBrain.BrainActive = true;
+            aiBrain.enabled = true;
+        }
+
+        RefreshTarget();
+        aiBrain.TransitionToState("Moving");
+    }
+
+    /// <summary>
+    /// Finds the nearest active Enemy and assigns it to aiBrain.Target.
+    /// Called at episode begin and whenever the target is lost mid-episode.
+    /// </summary>
+    private void RefreshTarget()
+    {
         GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
-        GameObject nearestEnemy = null;
+        GameObject nearest = null;
         float nearestDist = float.MaxValue;
         foreach (GameObject e in enemies)
         {
+            if (!e.activeInHierarchy) continue;
             float d = Vector3.Distance(transform.position, e.transform.position);
-            if (d < nearestDist) { nearestDist = d; nearestEnemy = e; }
+            if (d < nearestDist) { nearestDist = d; nearest = e; }
         }
-        aiBrain.Target = nearestEnemy != null ? nearestEnemy.transform : null;
-
-        aiBrain.TransitionToState("Moving");
+        aiBrain.Target = nearest != null ? nearest.transform : null;
     }
 
     /// <summary>
@@ -852,6 +890,20 @@ public class AttentionAgent : Agent
             _currentWeapon = characterHandleWeapon.CurrentWeapon;
         }
 
+        // Re-acquire target if missing or dead
+        if (aiBrain.Target == null || aiBrain.Target.GetComponent<Health>()?.CurrentHealth <= 0)
+        {
+            GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+            GameObject nearest = null;
+            float nearestDist = float.MaxValue;
+            foreach (GameObject e in enemies)
+            {
+                float d = Vector3.Distance(transform.position, e.transform.position);
+                if (d < nearestDist) { nearestDist = d; nearest = e; }
+            }
+            aiBrain.Target = nearest != null ? nearest.transform : null;
+        }
+
         float currentHealth = agentHealth.CurrentHealth;
         float healthDelta = currentHealth - _previousHealth;
 
@@ -860,14 +912,6 @@ public class AttentionAgent : Agent
         if (healthDelta < 0)
         {
             AddReward(TakeDamagePenalty);
-        }
-
-        // Death penalty
-        if (currentHealth <= 0)
-        {
-            AddReward(AgentDiedPenalty);
-            EndEpisode();
-            return;
         }
 
         // Dodge reward tracking: now handled in FixedUpdate() for reliability
@@ -1000,6 +1044,24 @@ public class AttentionAgent : Agent
     private bool IsWeaponReady()
     {
         return _currentWeapon != null && _currentWeapon.WeaponState.CurrentState == Weapon.WeaponStates.WeaponIdle;
+    }
+
+    private void Update()
+    {
+        if (aiBrain == null) return;
+
+        // Re-enable brain if something turned it off mid-episode
+        if (!aiBrain.BrainActive || !aiBrain.enabled)
+        {
+            aiBrain.BrainActive = true;
+            aiBrain.enabled = true;
+        }
+
+        // Re-acquire target if it was destroyed or disabled
+        if (aiBrain.Target == null || !aiBrain.Target.gameObject.activeInHierarchy)
+        {
+            RefreshTarget();
+        }
     }
 
     /// <summary>

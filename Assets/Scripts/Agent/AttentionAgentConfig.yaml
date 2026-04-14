@@ -23,7 +23,7 @@ behaviors:
         gamma: 0.99
         encoding_size: 256 # increased from 64 — paper uses 288 for similar input size
         learning_rate: 1.0e-3 # paper uses 1e-3, ICM models need to learn faster than policy
-    max_steps: 3000000 # needs millions of steps to learn — 30000 was only ~15 episodes
+    max_steps: 300000 # needs millions of steps to learn — 30000 was only ~15 episodes
     time_horizon: 64
     summary_freq: 10000 # increased — 1000 was too frequent for 3M steps
     keep_checkpoints: 5
