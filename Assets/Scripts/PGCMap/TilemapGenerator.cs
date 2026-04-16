@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.Tilemaps;
 using MoreMountains.TopDownEngine;
 using System.Collections.Generic;
@@ -43,12 +43,35 @@ public class TilemapGenerator : MonoBehaviour
     public GameObject[] enemyPrefabs;
     public Transform enemyParent;
 
+    [Header("Enemy Object Pool")]
+    [Tooltip("Instances pre-created per prefab at startup to avoid Instantiate during training.")]
+    public int poolSizePerPrefab = 5;
+
+    // --- Map parsing state ---
     private bool _hasPlayerSpawn;
     private Vector3Int _playerSpawnCell;
     private readonly List<Vector3Int> _enemySpawnCells = new List<Vector3Int>();
+
+    // --- Active enemies for the current episode ---
     private readonly List<GameObject> _spawnedEnemies = new List<GameObject>();
 
-    [ContextMenu("Generate Room")] 
+    // --- Pool: prefab.GetInstanceID() → all instances ever created from that prefab ---
+    private readonly Dictionary<int, List<GameObject>> _pool = new Dictionary<int, List<GameObject>>();
+
+    // -------------------------------------------------------------------------
+    //  Unity lifecycle
+    // -------------------------------------------------------------------------
+
+    private void Awake()
+    {
+        WarmUpPool();
+    }
+
+    // -------------------------------------------------------------------------
+    //  Public API
+    // -------------------------------------------------------------------------
+
+    [ContextMenu("Generate Room")]
     public void GenerateRoom()
     {
         if (tilemap == null || floorTile == null || wallTile == null)
@@ -74,63 +97,195 @@ public class TilemapGenerator : MonoBehaviour
         SpawnEnemiesFromTextIfNeeded();
     }
 
-#if UNITY_EDITOR
-    [ContextMenu("Refresh Text Maps From Folder")]
-    public void RefreshTextMapsFromFolder()
+    /// <summary>
+    /// Returns all current enemies to the pool and re-spawns them at the same
+    /// positions from the last parsed map.  Use this at episode begin when you
+    /// want fresh enemies without changing the map layout.
+    /// </summary>
+    public void RespawnEnemies()
     {
-        if (textMapFolder == null)
-        {
-            folderTextMaps = new TextAsset[0];
-            return;
-        }
+        SpawnEnemiesFromTextIfNeeded();
+    }
 
-        string folderPath = AssetDatabase.GetAssetPath(textMapFolder);
-        if (string.IsNullOrEmpty(folderPath) || !AssetDatabase.IsValidFolder(folderPath))
-        {
-            folderTextMaps = new TextAsset[0];
-            return;
-        }
+    // -------------------------------------------------------------------------
+    //  Pool
+    // -------------------------------------------------------------------------
 
-        string[] guids = AssetDatabase.FindAssets("t:TextAsset", new[] { folderPath });
-        List<TextAsset> found = new List<TextAsset>();
-
-        for (int i = 0; i < guids.Length; i++)
+    private void WarmUpPool()
+    {
+        if (enemyPrefabs == null) return;
+        foreach (GameObject prefab in enemyPrefabs)
         {
-            string assetPath = AssetDatabase.GUIDToAssetPath(guids[i]);
-            if (!assetPath.EndsWith(".txt", System.StringComparison.OrdinalIgnoreCase))
+            if (prefab == null) continue;
+            int id = prefab.GetInstanceID();
+            if (!_pool.ContainsKey(id))
+                _pool[id] = new List<GameObject>();
+
+            for (int i = 0; i < poolSizePerPrefab; i++)
             {
-                continue;
+                GameObject go = CreatePoolInstance(prefab);
+                go.SetActive(false);
+                _pool[id].Add(go);
             }
-
-            TextAsset textAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(assetPath);
-            if (textAsset != null)
-            {
-                found.Add(textAsset);
-            }
-        }
-
-        folderTextMaps = found.ToArray();
-
-        if (selectedFolderMapIndex < 0)
-        {
-            selectedFolderMapIndex = 0;
-        }
-        if (folderTextMaps.Length > 0 && selectedFolderMapIndex >= folderTextMaps.Length)
-        {
-            selectedFolderMapIndex = folderTextMaps.Length - 1;
         }
     }
 
-    private void OnValidate()
+    private GameObject CreatePoolInstance(GameObject prefab)
     {
-        if (!autoRefreshFolderMaps)
+        Transform parent = enemyParent != null ? enemyParent : transform;
+        GameObject go = Instantiate(prefab, Vector3.zero, Quaternion.identity, parent);
+        go.tag = "Enemy";
+        return go;
+    }
+
+    /// <summary>
+    /// Returns an idle instance from the pool, growing it if needed.
+    /// The instance is moved to <paramref name="position"/> and fully revived.
+    /// </summary>
+    private GameObject GetFromPool(GameObject prefab, Vector3 position)
+    {
+        int id = prefab.GetInstanceID();
+        if (!_pool.ContainsKey(id))
+            _pool[id] = new List<GameObject>();
+
+        List<GameObject> instances = _pool[id];
+
+        // Reuse the first inactive instance
+        for (int i = 0; i < instances.Count; i++)
         {
+            if (instances[i] != null && !instances[i].activeInHierarchy)
+            {
+                ActivateInstance(instances[i], position);
+                return instances[i];
+            }
+        }
+
+        // Pool exhausted — grow it dynamically
+        GameObject newGo = CreatePoolInstance(prefab);
+        instances.Add(newGo);
+        ActivateInstance(newGo, position);
+        return newGo;
+    }
+
+    private void ActivateInstance(GameObject go, Vector3 position)
+    {
+        go.transform.SetParent(enemyParent != null ? enemyParent : transform);
+        go.transform.position = position;
+        go.transform.rotation = Quaternion.identity;
+        go.SetActive(true);
+
+        // Revive handles: HP, colliders, TopDownController velocity reset,
+        // layer, color, model, and ConditionState → Normal.
+        Health health = go.GetComponent<Health>();
+        if (health != null)
+        {
+            health.Revive();
+        }
+
+        // Character.OnDeath() disables the AIBrain; Revive() does NOT re-enable it.
+        AIBrain brain = go.GetComponent<AIBrain>();
+        if (brain != null)
+        {
+            brain.BrainActive = true;
+            brain.enabled = true;
+            brain.ResetBrain();
+        }
+
+        // If killed mid-attack the weapon state machine stays stuck (WeaponUse,
+        // WeaponDelayBeforeUse, etc.) and the enemy can never fire again.
+        // Force it back to Idle so the weapon is usable from the first frame.
+        CharacterHandleWeapon handleWeapon = go.GetComponent<CharacterHandleWeapon>();
+        if (handleWeapon != null && handleWeapon.CurrentWeapon != null)
+        {
+            handleWeapon.CurrentWeapon.WeaponState.ChangeState(Weapon.WeaponStates.WeaponIdle);
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    //  Spawn / clear helpers
+    // -------------------------------------------------------------------------
+
+    private void SpawnEnemiesFromTextIfNeeded()
+    {
+        ReturnActiveEnemiesToPool();
+
+        if (!spawnEnemiesFromText || _enemySpawnCells.Count == 0) return;
+
+        List<GameObject> validPrefabs = new List<GameObject>();
+        if (enemyPrefabs != null)
+        {
+            foreach (GameObject p in enemyPrefabs)
+            {
+                if (p != null) validPrefabs.Add(p);
+            }
+        }
+
+        if (validPrefabs.Count == 0)
+        {
+            Debug.LogWarning("Chưa gán enemyPrefabs để spawn quái từ ký tự E.", this);
             return;
         }
 
-        RefreshTextMapsFromFolder();
+        foreach (Vector3Int cell in _enemySpawnCells)
+        {
+            Vector3 worldPosition = tilemap.GetCellCenterWorld(cell);
+            GameObject prefab = validPrefabs[Random.Range(0, validPrefabs.Count)];
+
+            GameObject spawned;
+            if (Application.isPlaying)
+            {
+                spawned = GetFromPool(prefab, worldPosition);
+            }
+            else
+            {
+                // Editor mode: pool is not available, instantiate directly
+                Transform parent = enemyParent != null ? enemyParent : transform;
+                spawned = Instantiate(prefab, worldPosition, Quaternion.identity, parent);
+                spawned.tag = "Enemy";
+            }
+
+            _spawnedEnemies.Add(spawned);
+        }
     }
-#endif
+
+    /// <summary>
+    /// In play mode: disables all active enemies from the current episode (returns them to pool).
+    /// In editor mode: destroys them immediately.
+    /// </summary>
+    private void ReturnActiveEnemiesToPool()
+    {
+        if (Application.isPlaying)
+        {
+            foreach (GameObject go in _spawnedEnemies)
+            {
+                if (go != null && go.activeInHierarchy)
+                    go.SetActive(false);
+            }
+        }
+        else
+        {
+            // Editor: also sweep the parent for any orphaned instances
+            if (enemyParent != null)
+            {
+                for (int i = enemyParent.childCount - 1; i >= 0; i--)
+                {
+                    Transform child = enemyParent.GetChild(i);
+                    if (child != null) DestroyImmediate(child.gameObject);
+                }
+            }
+
+            foreach (GameObject go in _spawnedEnemies)
+            {
+                if (go != null) DestroyImmediate(go);
+            }
+        }
+
+        _spawnedEnemies.Clear();
+    }
+
+    // -------------------------------------------------------------------------
+    //  Map building helpers
+    // -------------------------------------------------------------------------
 
     void RenderToTilemap(int[,] grid)
     {
@@ -151,29 +306,21 @@ public class TilemapGenerator : MonoBehaviour
     private int[,] BuildGridFromText()
     {
         TextAsset sourceMap = GetSelectedMapTextAsset();
-        if (sourceMap == null)
-        {
-            return null;
-        }
+        if (sourceMap == null) return null;
 
         _hasPlayerSpawn = false;
         _enemySpawnCells.Clear();
 
         string text = sourceMap.text.Replace("\r\n", "\n").TrimEnd('\n');
         string[] lines = text.Split(new[] { '\n' }, System.StringSplitOptions.RemoveEmptyEntries);
-        if (lines.Length == 0)
-        {
-            return null;
-        }
+        if (lines.Length == 0) return null;
 
         int parsedHeight = lines.Length;
         int parsedWidth = 0;
         for (int i = 0; i < lines.Length; i++)
         {
             if (lines[i].Length > parsedWidth)
-            {
                 parsedWidth = lines[i].Length;
-            }
         }
 
         int[,] grid = new int[parsedWidth, parsedHeight];
@@ -211,20 +358,11 @@ public class TilemapGenerator : MonoBehaviour
                 return roomLayoutText;
 
             case MapSelectionMode.FolderByIndex:
-                if (folderTextMaps == null || folderTextMaps.Length == 0)
-                {
-                    return null;
-                }
-
-                int clampedIndex = Mathf.Clamp(selectedFolderMapIndex, 0, folderTextMaps.Length - 1);
-                return folderTextMaps[clampedIndex];
+                if (folderTextMaps == null || folderTextMaps.Length == 0) return null;
+                return folderTextMaps[Mathf.Clamp(selectedFolderMapIndex, 0, folderTextMaps.Length - 1)];
 
             case MapSelectionMode.FolderRandom:
-                if (folderTextMaps == null || folderTextMaps.Length == 0)
-                {
-                    return null;
-                }
-
+                if (folderTextMaps == null || folderTextMaps.Length == 0) return null;
                 return folderTextMaps[Random.Range(0, folderTextMaps.Length)];
 
             default:
@@ -238,102 +376,58 @@ public class TilemapGenerator : MonoBehaviour
         playerSpawnPointTransform.position = worldSpawnPosition;
     }
 
-    private void SpawnEnemiesFromTextIfNeeded()
-    {
-        ClearSpawnedEnemies();
-
-        if (!spawnEnemiesFromText)
-        {
-            return;
-        }
-
-        if (_enemySpawnCells.Count == 0)
-        {
-            return;
-        }
-
-        List<GameObject> validPrefabs = new List<GameObject>();
-        if (enemyPrefabs != null)
-        {
-            for (int i = 0; i < enemyPrefabs.Length; i++)
-            {
-                if (enemyPrefabs[i] != null)
-                {
-                    validPrefabs.Add(enemyPrefabs[i]);
-                }
-            }
-        }
-
-        if (validPrefabs.Count == 0)
-        {
-            Debug.LogWarning("Chưa gán enemyPrefabs để spawn quái từ ký tự E.", this);
-            return;
-        }
-
-        for (int i = 0; i < _enemySpawnCells.Count; i++)
-        {
-            Vector3 worldPosition = tilemap.GetCellCenterWorld(_enemySpawnCells[i]);
-            GameObject selectedPrefab = validPrefabs[Random.Range(0, validPrefabs.Count)];
-            GameObject spawned = Instantiate(selectedPrefab, worldPosition, Quaternion.identity, enemyParent);
-            spawned.tag = "Enemy";
-            _spawnedEnemies.Add(spawned);
-        }
-    }
-
-    private void ClearSpawnedEnemies()
-    {
-        if (enemyParent != null)
-        {
-            for (int i = enemyParent.childCount - 1; i >= 0; i--)
-            {
-                Transform child = enemyParent.GetChild(i);
-                if (child == null)
-                {
-                    continue;
-                }
-
-                if (Application.isPlaying)
-                {
-                    Destroy(child.gameObject);
-                }
-                else
-                {
-                    DestroyImmediate(child.gameObject);
-                }
-            }
-        }
-
-        for (int i = _spawnedEnemies.Count - 1; i >= 0; i--)
-        {
-            if (_spawnedEnemies[i] == null)
-            {
-                continue;
-            }
-
-            if (Application.isPlaying)
-            {
-                Destroy(_spawnedEnemies[i]);
-            }
-            else
-            {
-                DestroyImmediate(_spawnedEnemies[i]);
-            }
-        }
-
-        _spawnedEnemies.Clear();
-    }
-
     private int CharToTileType(char c)
     {
         switch (c)
         {
-            case '#':
-                return 1; // Wall
-            case '.':
-            case 'P':
-            case 'E':
-            default:
-                return 0; // Floor
+            case '#': return 1;   // Wall
+            default:  return 0;   // Floor (includes '.', 'P', 'E')
         }
     }
+
+    // -------------------------------------------------------------------------
+    //  Editor utilities
+    // -------------------------------------------------------------------------
+
+#if UNITY_EDITOR
+    [ContextMenu("Refresh Text Maps From Folder")]
+    public void RefreshTextMapsFromFolder()
+    {
+        if (textMapFolder == null)
+        {
+            folderTextMaps = new TextAsset[0];
+            return;
+        }
+
+        string folderPath = AssetDatabase.GetAssetPath(textMapFolder);
+        if (string.IsNullOrEmpty(folderPath) || !AssetDatabase.IsValidFolder(folderPath))
+        {
+            folderTextMaps = new TextAsset[0];
+            return;
+        }
+
+        string[] guids = AssetDatabase.FindAssets("t:TextAsset", new[] { folderPath });
+        List<TextAsset> found = new List<TextAsset>();
+
+        for (int i = 0; i < guids.Length; i++)
+        {
+            string assetPath = AssetDatabase.GUIDToAssetPath(guids[i]);
+            if (!assetPath.EndsWith(".txt", System.StringComparison.OrdinalIgnoreCase)) continue;
+            TextAsset textAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(assetPath);
+            if (textAsset != null) found.Add(textAsset);
+        }
+
+        folderTextMaps = found.ToArray();
+
+        if (selectedFolderMapIndex < 0) selectedFolderMapIndex = 0;
+        if (folderTextMaps.Length > 0 && selectedFolderMapIndex >= folderTextMaps.Length)
+            selectedFolderMapIndex = folderTextMaps.Length - 1;
+    }
+
+    private void OnValidate()
+    {
+        if (autoRefreshFolderMaps)
+            RefreshTextMapsFromFolder();
+    }
+#endif
 }
