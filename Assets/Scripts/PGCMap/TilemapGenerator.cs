@@ -1,7 +1,8 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Tilemaps;
 using MoreMountains.TopDownEngine;
 using System.Collections.Generic;
+using MoreMountains.Tools;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -174,15 +175,27 @@ public class TilemapGenerator : MonoBehaviour
         go.transform.rotation = Quaternion.identity;
         go.SetActive(true);
 
-        // Revive handles: HP, colliders, TopDownController velocity reset,
-        // layer, color, model, and ConditionState → Normal.
-        Health health = go.GetComponent<Health>();
-        if (health != null)
+        // RespawnAt resets ConditionState → Normal, re-enables TopDownController,
+        // re-enables colliders, resets velocity, then calls health.Revive() internally.
+        // Calling health.Revive() directly skips all of this and leaves the character
+        // stuck in Dead ConditionState → unable to move.
+        Character character = go.GetComponent<Character>();
+        if (character != null)
         {
-            health.Revive();
+            character.RespawnAt(position, character.transform.localScale.x > 0
+                ? Character.FacingDirections.East
+                : Character.FacingDirections.West);
+        }
+        else
+        {
+            // Fallback for non-Character enemies
+            Health health = go.GetComponent<Health>();
+            if (health != null)
+                health.Revive();
         }
 
-        // Character.OnDeath() disables the AIBrain; Revive() does NOT re-enable it.
+        // RespawnAt re-enables the brain via OnRevive callback, but ResetBrain()
+        // ensures state machine restarts cleanly from the initial state.
         AIBrain brain = go.GetComponent<AIBrain>();
         if (brain != null)
         {
@@ -193,7 +206,6 @@ public class TilemapGenerator : MonoBehaviour
 
         // If killed mid-attack the weapon state machine stays stuck (WeaponUse,
         // WeaponDelayBeforeUse, etc.) and the enemy can never fire again.
-        // Force it back to Idle so the weapon is usable from the first frame.
         CharacterHandleWeapon handleWeapon = go.GetComponent<CharacterHandleWeapon>();
         if (handleWeapon != null && handleWeapon.CurrentWeapon != null)
         {
@@ -259,7 +271,10 @@ public class TilemapGenerator : MonoBehaviour
             foreach (GameObject go in _spawnedEnemies)
             {
                 if (go != null && go.activeInHierarchy)
+                {
+                    CleanupDetachedUiForEnemy(go.transform);
                     go.SetActive(false);
+                }
             }
         }
         else
@@ -281,6 +296,29 @@ public class TilemapGenerator : MonoBehaviour
         }
 
         _spawnedEnemies.Clear();
+    }
+
+    private void CleanupDetachedUiForEnemy(Transform enemyTransform)
+    {
+        if (enemyTransform == null)
+        {
+            return;
+        }
+
+        MMFollowTarget[] followers = Object.FindObjectsByType<MMFollowTarget>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        for (int i = 0; i < followers.Length; i++)
+        {
+            MMFollowTarget follow = followers[i];
+            if (follow == null || follow.Target != enemyTransform)
+            {
+                continue;
+            }
+
+            if (follow.gameObject != null)
+            {
+                Destroy(follow.gameObject);
+            }
+        }
     }
 
     // -------------------------------------------------------------------------

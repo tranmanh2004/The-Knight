@@ -112,7 +112,10 @@ namespace MoreMountains.TopDownEngine
 				}                
 			}
 			
-			_weaponAim.SetCurrentAim(_weaponAimDirection);
+			if (_weaponAim != null)
+			{
+				_weaponAim.SetCurrentAim(_weaponAimDirection);
+			}
 		}
 
 	}

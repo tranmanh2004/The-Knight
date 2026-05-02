@@ -8,8 +8,8 @@ using MoreMountains.Tools;
 /// <summary>
 /// Editor tool: finds the "Koala" GameObject in the active scene and adds all
 /// components needed for ML-Agents training (AttentionAgent, BehaviorParameters,
-/// DecisionRequester, AIBrain, AIDecisionDetectTargetRadius2D, Health, and the
-/// five AI action states: Moving, Deciding, Attacking, Dashing, MoveAway).
+/// DecisionRequester, AIBrain compatibility target cache, AIDecisionDetectTargetRadius2D,
+/// Health, movement, weapon, and dash abilities).
 ///
 /// Menu: Tools → Setup Koala Agent
 /// </summary>
@@ -52,7 +52,8 @@ public class KoalaAgentSetup : Editor
         GetOrAdd<CharacterHandleWeapon>(koala);
 
         // ── 7b. CharacterDash2D ──────────────────────────────────────────────
-        GetOrAdd<CharacterDash2D>(koala);
+        CharacterDash2D dashAbility = GetOrAdd<CharacterDash2D>(koala);
+        dashAbility.DashMode = CharacterDash2D.DashModes.Script;
 
         // ── 8. Rigidbody2D ───────────────────────────────────────────────────
         Rigidbody2D rb = GetOrAdd<Rigidbody2D>(koala);
@@ -72,77 +73,21 @@ public class KoalaAgentSetup : Editor
         // ── 10. AIDecisionDetectTargetRadius2D ───────────────────────────────
         AIDecisionDetectTargetRadius2D detect = GetOrAdd<AIDecisionDetectTargetRadius2D>(koala);
         detect.Radius = 10f;
-        // Target layer = Player layer (8 = built-in Player layer)
-        detect.TargetLayer = LayerMask.GetMask("Player");
+        detect.TargetLayer = LayerMask.GetMask("Enemies");
 
-        // ── 11. AI Action components ─────────────────────────────────────────
-        AIActionMoveTowardsTarget2D moveTowards   = GetOrAdd<AIActionMoveTowardsTarget2D>(koala);
-        AIActionMoveAwayFromTarget2D moveAway      = GetOrAdd<AIActionMoveAwayFromTarget2D>(koala);
-        AIActionAimWeaponAtTarget2D aimAtTarget    = GetOrAdd<AIActionAimWeaponAtTarget2D>(koala);
-        AIActionShoot2D shoot                      = GetOrAdd<AIActionShoot2D>(koala);
-        AIActionDash dash                          = GetOrAdd<AIActionDash>(koala);
-
-        // ── 12. AIBrain with 4 states ────────────────────────────────────────
+        // ── 11. AIBrain compatibility only ───────────────────────────────────
         AIBrain brain = GetOrAdd<AIBrain>(koala);
-
-        AIState stateMoving = new AIState();
-        stateMoving.StateName = "Moving";
-        stateMoving.Actions = new AIActionsList();
-        stateMoving.Actions.Add(moveTowards);
-        stateMoving.Transitions = new AITransitionsList();
-        AITransition toDeciding = new AITransition();
-        toDeciding.Decision = detect;
-        toDeciding.TrueState = "Deciding";
-        stateMoving.Transitions.Add(toDeciding);
-
-        AIState stateDeciding = new AIState();
-        stateDeciding.StateName = "Deciding";
-        stateDeciding.Actions = new AIActionsList();
-        stateDeciding.Actions.Add(aimAtTarget);
-        stateDeciding.Actions.Add(moveTowards);
-        stateDeciding.Transitions = new AITransitionsList();
-        AITransition toAttacking = new AITransition();
-        toAttacking.Decision = detect;
-        toAttacking.TrueState = "Attacking";
-        stateDeciding.Transitions.Add(toAttacking);
-
-        AIState stateAttacking = new AIState();
-        stateAttacking.StateName = "Attacking";
-        stateAttacking.Actions = new AIActionsList();
-        stateAttacking.Actions.Add(shoot);
-        stateAttacking.Transitions = new AITransitionsList();
-        AITransition backToMoving = new AITransition();
-        backToMoving.Decision = detect;
-        backToMoving.FalseState = "Moving";
-        stateAttacking.Transitions.Add(backToMoving);
-
-        AIState stateDashing = new AIState();
-        stateDashing.StateName = "Dashing";
-        stateDashing.Actions = new AIActionsList();
-        stateDashing.Actions.Add(dash);
-        stateDashing.Transitions = new AITransitionsList();
-
-        AIState stateMoveAway = new AIState();
-        stateMoveAway.StateName = "MoveAway";
-        stateMoveAway.Actions = new AIActionsList();
-        stateMoveAway.Actions.Add(moveAway);
-        stateMoveAway.Transitions = new AITransitionsList();
-
-        brain.States = new System.Collections.Generic.List<AIState>
-        {
-            stateMoving, stateDeciding, stateAttacking, stateDashing, stateMoveAway
-        };
-
+        brain.States = new System.Collections.Generic.List<AIState>();
         brain.BrainActive = true;
 
-        // ── 13. BehaviorParameters ───────────────────────────────────────────
+        // ── 12. BehaviorParameters ───────────────────────────────────────────
         BehaviorParameters bp = GetOrAdd<BehaviorParameters>(koala);
         bp.BehaviorName = "AttentionAgentConfig";
         bp.BehaviorType = BehaviorType.Default;
 
-        var actionSpec = Unity.MLAgents.Actuators.ActionSpec.MakeDiscrete(5); // 5 actions
+        var actionSpec = Unity.MLAgents.Actuators.ActionSpec.MakeDiscrete(3, 3, 3);
         bp.BrainParameters.ActionSpec = actionSpec;
-        bp.BrainParameters.VectorObservationSize = 321;
+        bp.BrainParameters.VectorObservationSize = 329;
         bp.BrainParameters.NumStackedVectorObservations = 1;
 
         // ── 14. DecisionRequester ────────────────────────────────────────────
@@ -159,19 +104,12 @@ public class KoalaAgentSetup : Editor
         agent.AgentDiedPenalty    = -1.0f;
         agent.TimePenalty         = -0.001f;
         agent.DodgeSuccessReward  =  0.2f;
+        agent.EpisodicCoverageReward = 0f;
         agent.VisionRadius        = 20f;
         agent.MaxEnemies          = 3;
         agent.MaxBullets          = 10;
         agent.MaxItems            = 4;
         agent.MaxHazards          = 5;
-        agent.ActionConfigs = new System.Collections.Generic.List<AttentionActionConfig>
-        {
-            new AttentionActionConfig { StateName = "Moving",   LockDuration = 0f,   RequiresWeaponIdle = false },
-            new AttentionActionConfig { StateName = "Deciding", LockDuration = 0f,   RequiresWeaponIdle = false },
-            new AttentionActionConfig { StateName = "Attacking",LockDuration = 0.3f, RequiresWeaponIdle = true  },
-            new AttentionActionConfig { StateName = "Dashing",  LockDuration = 0.4f, RequiresWeaponIdle = false },
-            new AttentionActionConfig { StateName = "MoveAway", LockDuration = 0f,   RequiresWeaponIdle = false },
-        };
 
         // Auto-find TilemapGenerator on "Map" and enable per-episode map generation
         GameObject mapGo = GameObject.Find("Map");
@@ -181,8 +119,8 @@ public class KoalaAgentSetup : Editor
         agent.ForceFolderRandomMode = true;
 
         // ── 16. Tag & Layer ──────────────────────────────────────────────────
-        koala.tag   = "Enemy";
-        koala.layer = LayerMask.NameToLayer("Enemy");
+        koala.tag   = "Player";
+        koala.layer = LayerMask.NameToLayer("Player");
 
         // ── Mark scene dirty ─────────────────────────────────────────────────
         EditorUtility.SetDirty(koala);
@@ -202,8 +140,8 @@ public class KoalaAgentSetup : Editor
             "✓ CapsuleCollider2D\n" +
             "✓ AIDecisionDetectTargetRadius2D\n" +
             "✓ CharacterDash2D\n" +
-            "✓ AIBrain (Moving / Deciding / Attacking / Dashing / MoveAway)\n" +
-            "✓ BehaviorParameters (obs=321, actions=5)\n" +
+            "✓ AIBrain compatibility target only (no policy states)\n" +
+            "✓ BehaviorParameters (obs=329, branches=[3,3,3])\n" +
             "✓ DecisionRequester (period=5)\n" +
             "✓ AttentionAgent\n\n" +
             "✓ Map generation per episode: " + (roomGen != null ? "ENABLED (Map found)" : "DISABLED — 'Map' GameObject not found") + "\n\n" +

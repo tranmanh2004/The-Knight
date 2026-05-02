@@ -346,6 +346,7 @@ MonoBehaviour:
   IconRectTransform: {fileID: 0}
   IconImage: {fileID: 0}
   QuantityText: {fileID: 0}
+  QuantityTextTMP: {fileID: 0}
 --- !u!225 &225646516501504392
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -564,6 +565,7 @@ MonoBehaviour:
   IconRectTransform: {fileID: 0}
   IconImage: {fileID: 0}
   QuantityText: {fileID: 0}
+  QuantityTextTMP: {fileID: 0}
 --- !u!225 &225481959702146024
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -787,6 +789,7 @@ MonoBehaviour:
   IconRectTransform: {fileID: 0}
   IconImage: {fileID: 0}
   QuantityText: {fileID: 0}
+  QuantityTextTMP: {fileID: 0}
 --- !u!225 &225741068960150998
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -1299,6 +1302,9 @@ MonoBehaviour:
   DisabledAnimationParameterName: Disabled
   PressedAnimationParameterName: Pressed
   MouseMode: 1
+  PreventLeftClick: 0
+  PreventMiddleClick: 1
+  PreventRightClick: 1
 --- !u!114 &114952323987444518
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1533,6 +1539,7 @@ MonoBehaviour:
   IconRectTransform: {fileID: 0}
   IconImage: {fileID: 0}
   QuantityText: {fileID: 0}
+  QuantityTextTMP: {fileID: 0}
 --- !u!225 &225115066910666116
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -1677,6 +1684,7 @@ MonoBehaviour:
   IconRectTransform: {fileID: 0}
   IconImage: {fileID: 0}
   QuantityText: {fileID: 0}
+  QuantityTextTMP: {fileID: 0}
 --- !u!225 &225430292312447256
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -1858,6 +1866,9 @@ MonoBehaviour:
   DisabledAnimationParameterName: Disabled
   PressedAnimationParameterName: Pressed
   MouseMode: 1
+  PreventLeftClick: 0
+  PreventMiddleClick: 1
+  PreventRightClick: 1
 --- !u!114 &114803432833663714
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2241,7 +2252,7 @@ MonoBehaviour:
   m_PixelsPerUnitMultiplier: 1
 --- !u!95 &95700994930735506
 Animator:
-  serializedVersion: 5
+  serializedVersion: 7
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -2255,6 +2266,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
@@ -2627,6 +2639,7 @@ MonoBehaviour:
   IconRectTransform: {fileID: 0}
   IconImage: {fileID: 0}
   QuantityText: {fileID: 0}
+  QuantityTextTMP: {fileID: 0}
 --- !u!225 &225343778573191672
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -3136,6 +3149,10 @@ MonoBehaviour:
   ShortDescription: {fileID: 114854499579887234}
   Description: {fileID: 114004488176597286}
   Quantity: {fileID: 114766640138377364}
+  TitleTMP: {fileID: 0}
+  ShortDescriptionTMP: {fileID: 0}
+  DescriptionTMP: {fileID: 0}
+  QuantityTMP: {fileID: 0}
 --- !u!225 &225196290054925538
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -3881,7 +3898,7 @@ RectTransform:
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!95 &95139468954967338
 Animator:
-  serializedVersion: 5
+  serializedVersion: 7
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -3895,6 +3912,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
@@ -4044,6 +4062,7 @@ MonoBehaviour:
   IconRectTransform: {fileID: 0}
   IconImage: {fileID: 0}
   QuantityText: {fileID: 0}
+  QuantityTextTMP: {fileID: 0}
 --- !u!225 &225413277622362424
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -4274,7 +4293,7 @@ RectTransform:
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!95 &95962913801343696
 Animator:
-  serializedVersion: 5
+  serializedVersion: 7
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -4288,6 +4307,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
@@ -4437,6 +4457,7 @@ MonoBehaviour:
   IconRectTransform: {fileID: 0}
   IconImage: {fileID: 0}
   QuantityText: {fileID: 0}
+  QuantityTextTMP: {fileID: 0}
 --- !u!225 &225740029651993930
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -5046,6 +5067,7 @@ MonoBehaviour:
   IconRectTransform: {fileID: 0}
   IconImage: {fileID: 0}
   QuantityText: {fileID: 0}
+  QuantityTextTMP: {fileID: 0}
 --- !u!225 &225710554270127760
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -5228,6 +5250,9 @@ MonoBehaviour:
   DisabledAnimationParameterName: Disabled
   PressedAnimationParameterName: Pressed
   MouseMode: 1
+  PreventLeftClick: 0
+  PreventMiddleClick: 1
+  PreventRightClick: 1
 --- !u!114 &114982921976270570
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5428,6 +5453,7 @@ MonoBehaviour:
   IconRectTransform: {fileID: 0}
   IconImage: {fileID: 0}
   QuantityText: {fileID: 0}
+  QuantityTextTMP: {fileID: 0}
 --- !u!225 &225830645592164076
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -5649,6 +5675,7 @@ MonoBehaviour:
   IconRectTransform: {fileID: 0}
   IconImage: {fileID: 0}
   QuantityText: {fileID: 0}
+  QuantityTextTMP: {fileID: 0}
 --- !u!225 &225721346411245950
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -5783,6 +5810,9 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
     Initialized: 0
+    ConditionPropertyName: 
+    EnumConditionPropertyName: 
+    EnumConditions: 0000000000000000000000000000000000000000000000000000000000000000
   FlashOutTween:
     MMTweenDefinitionType: 0
     MMTweenCurve: 0
@@ -5811,6 +5841,9 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
     Initialized: 0
+    ConditionPropertyName: 
+    EnumConditionPropertyName: 
+    EnumConditions: 0000000000000000000000000000000000000000000000000000000000000000
   DebugSettings:
     ChannelMode: 0
     Channel: 0
@@ -6231,7 +6264,7 @@ RectTransform:
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!95 &95955769951353674
 Animator:
-  serializedVersion: 5
+  serializedVersion: 7
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -6245,6 +6278,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
@@ -6680,7 +6714,7 @@ RectTransform:
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!95 &95662908085572146
 Animator:
-  serializedVersion: 5
+  serializedVersion: 7
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -6694,6 +6728,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
@@ -6843,6 +6878,7 @@ MonoBehaviour:
   IconRectTransform: {fileID: 0}
   IconImage: {fileID: 0}
   QuantityText: {fileID: 0}
+  QuantityTextTMP: {fileID: 0}
 --- !u!225 &225005827401220592
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -7121,6 +7157,7 @@ MonoBehaviour:
   IconRectTransform: {fileID: 0}
   IconImage: {fileID: 0}
   QuantityText: {fileID: 0}
+  QuantityTextTMP: {fileID: 0}
 --- !u!225 &225062124613058168
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -7353,6 +7390,7 @@ MonoBehaviour:
   IconRectTransform: {fileID: 0}
   IconImage: {fileID: 0}
   QuantityText: {fileID: 0}
+  QuantityTextTMP: {fileID: 0}
 --- !u!225 &225261686026144054
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -7669,6 +7707,9 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
     Initialized: 0
+    ConditionPropertyName: 
+    EnumConditionPropertyName: 
+    EnumConditions: 0000000000000000000000000000000000000000000000000000000000000000
   IgnoreTimescale: 1
   CanFadeToCurrentAlpha: 1
   ShouldBlockRaycasts: 0
@@ -7939,6 +7980,7 @@ MonoBehaviour:
   IconRectTransform: {fileID: 0}
   IconImage: {fileID: 0}
   QuantityText: {fileID: 0}
+  QuantityTextTMP: {fileID: 0}
 --- !u!225 &225371587392144814
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -8305,6 +8347,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 0}
   m_PlayOnAwake: 1
   m_Volume: 1
   m_Pitch: 1
@@ -8522,6 +8565,7 @@ MonoBehaviour:
   IconRectTransform: {fileID: 0}
   IconImage: {fileID: 0}
   QuantityText: {fileID: 0}
+  QuantityTextTMP: {fileID: 0}
 --- !u!225 &225363880997285694
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -8745,6 +8789,7 @@ MonoBehaviour:
   IconRectTransform: {fileID: 0}
   IconImage: {fileID: 0}
   QuantityText: {fileID: 0}
+  QuantityTextTMP: {fileID: 0}
 --- !u!225 &225141196312264908
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -9114,6 +9159,9 @@ MonoBehaviour:
   DisabledAnimationParameterName: Disabled
   PressedAnimationParameterName: Pressed
   MouseMode: 0
+  PreventLeftClick: 0
+  PreventMiddleClick: 1
+  PreventRightClick: 1
 --- !u!1 &1714901216671854
 GameObject:
   m_ObjectHideFlags: 0
@@ -9284,6 +9332,9 @@ MonoBehaviour:
   DisabledAnimationParameterName: Disabled
   PressedAnimationParameterName: Pressed
   MouseMode: 1
+  PreventLeftClick: 0
+  PreventMiddleClick: 1
+  PreventRightClick: 1
 --- !u!114 &114106860277027218
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9712,6 +9763,7 @@ MonoBehaviour:
   IconRectTransform: {fileID: 0}
   IconImage: {fileID: 0}
   QuantityText: {fileID: 0}
+  QuantityTextTMP: {fileID: 0}
 --- !u!225 &225803523122064388
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -9891,6 +9943,9 @@ MonoBehaviour:
   DisabledAnimationParameterName: Disabled
   PressedAnimationParameterName: Pressed
   MouseMode: 0
+  PreventLeftClick: 0
+  PreventMiddleClick: 1
+  PreventRightClick: 1
 --- !u!1 &1785812869998728
 GameObject:
   m_ObjectHideFlags: 0
@@ -10101,7 +10156,7 @@ RectTransform:
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!95 &95130777392186180
 Animator:
-  serializedVersion: 5
+  serializedVersion: 7
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -10115,6 +10170,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
@@ -10301,6 +10357,9 @@ MonoBehaviour:
   DisabledAnimationParameterName: Disabled
   PressedAnimationParameterName: Pressed
   MouseMode: 1
+  PreventLeftClick: 0
+  PreventMiddleClick: 1
+  PreventRightClick: 1
 --- !u!114 &114505286239082192
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10647,6 +10706,7 @@ MonoBehaviour:
   IconRectTransform: {fileID: 0}
   IconImage: {fileID: 0}
   QuantityText: {fileID: 0}
+  QuantityTextTMP: {fileID: 0}
 --- !u!225 &225175950369119170
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -10791,6 +10851,7 @@ MonoBehaviour:
   IconRectTransform: {fileID: 0}
   IconImage: {fileID: 0}
   QuantityText: {fileID: 0}
+  QuantityTextTMP: {fileID: 0}
 --- !u!225 &225542156521305172
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -11014,6 +11075,7 @@ MonoBehaviour:
   IconRectTransform: {fileID: 0}
   IconImage: {fileID: 0}
   QuantityText: {fileID: 0}
+  QuantityTextTMP: {fileID: 0}
 --- !u!225 &225693244846048926
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -11338,6 +11400,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 0}
   m_PlayOnAwake: 1
   m_Volume: 1
   m_Pitch: 1
@@ -11614,6 +11677,9 @@ MonoBehaviour:
   DisabledAnimationParameterName: Disabled
   PressedAnimationParameterName: Pressed
   MouseMode: 0
+  PreventLeftClick: 0
+  PreventMiddleClick: 1
+  PreventRightClick: 1
 --- !u!1 &1879095024706690
 GameObject:
   m_ObjectHideFlags: 0
@@ -11781,6 +11847,9 @@ MonoBehaviour:
   DisabledAnimationParameterName: Disabled
   PressedAnimationParameterName: Pressed
   MouseMode: 0
+  PreventLeftClick: 0
+  PreventMiddleClick: 1
+  PreventRightClick: 1
 --- !u!1 &1891163676778778
 GameObject:
   m_ObjectHideFlags: 0
@@ -12098,7 +12167,6 @@ MonoBehaviour:
   DelayedBarDecreasingProgress: 0
   AmmoDisplayID: 0
   TextDisplay: {fileID: 114738638493714438}
-  TextDisplayTextMeshPro: {fileID: 0}
 --- !u!1 &1893508472311950
 GameObject:
   m_ObjectHideFlags: 0
@@ -12921,6 +12989,9 @@ MonoBehaviour:
   DisabledAnimationParameterName: Disabled
   PressedAnimationParameterName: Pressed
   MouseMode: 1
+  PreventLeftClick: 0
+  PreventMiddleClick: 1
+  PreventRightClick: 1
 --- !u!114 &114492224895312526
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17812,6 +17883,9 @@ ParticleSystemRenderer:
   m_ReflectionProbeUsage: 0
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
@@ -18036,6 +18110,9 @@ MonoBehaviour:
   DisabledAnimationParameterName: Disabled
   PressedAnimationParameterName: Pressed
   MouseMode: 0
+  PreventLeftClick: 0
+  PreventMiddleClick: 1
+  PreventRightClick: 1
 --- !u!1 &1911311959458284
 GameObject:
   m_ObjectHideFlags: 0
@@ -18168,6 +18245,7 @@ MonoBehaviour:
   IconRectTransform: {fileID: 0}
   IconImage: {fileID: 0}
   QuantityText: {fileID: 0}
+  QuantityTextTMP: {fileID: 0}
 --- !u!225 &225657658630561648
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -18312,6 +18390,7 @@ MonoBehaviour:
   IconRectTransform: {fileID: 0}
   IconImage: {fileID: 0}
   QuantityText: {fileID: 0}
+  QuantityTextTMP: {fileID: 0}
 --- !u!225 &225112383765087388
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -18659,6 +18738,7 @@ MonoBehaviour:
   IconRectTransform: {fileID: 0}
   IconImage: {fileID: 0}
   QuantityText: {fileID: 0}
+  QuantityTextTMP: {fileID: 0}
 --- !u!225 &225910623828608456
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -18748,7 +18828,7 @@ RectTransform:
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!95 &95683856970888098
 Animator:
-  serializedVersion: 5
+  serializedVersion: 7
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -18762,6 +18842,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
@@ -18911,6 +18992,7 @@ MonoBehaviour:
   IconRectTransform: {fileID: 0}
   IconImage: {fileID: 0}
   QuantityText: {fileID: 0}
+  QuantityTextTMP: {fileID: 0}
 --- !u!225 &225311914845119956
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -19068,6 +19150,7 @@ MonoBehaviour:
   HideMobileControlsInEditor: 0
   MovementControl: 0
   ForceDesktopIfPrimaryAxisActive: 0
+  DelayedButtonPresses: 0
   AutoRevertToMobileIfPrimaryAxisInactive: 0
   AutoRevertToMobileIfPrimaryAxisInactiveDuration: 10
   SmoothMovement: 1
@@ -19189,6 +19272,7 @@ MonoBehaviour:
   Gain: 1
   Use2DDistance: 0
   UseCameraSpace: 1
+  SignalCombinationMode: 0
   ReactionSettings:
     m_SecondaryNoise: {fileID: 0}
     AmplitudeGain: 1
@@ -19253,6 +19337,7 @@ MonoBehaviour:
   OversizeWindow:
     Enabled: 1
     MaxWindowSize: 0
+    Padding: 0
   m_LegacyMaxWindowSize: -2
 --- !u!1 &4143879649782153219
 GameObject:
@@ -19907,7 +19992,6 @@ GameObject:
   - component: {fileID: 1639571603629376641}
   - component: {fileID: 4848495533571832504}
   - component: {fileID: 4909442774358969784}
-  - component: {fileID: 3098810481925904469}
   - component: {fileID: 6582549731189380932}
   - component: {fileID: 1936473594827305717}
   m_Layer: 10
@@ -20091,26 +20175,6 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   CustomBlends: {fileID: 0}
---- !u!114 &3098810481925904469
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6411261008869218441}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6a160d838ff8b4b4693ac20007e008c7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_AssetsPPU: 16
-  m_RefResolutionX: 320
-  m_RefResolutionY: 176
-  m_UpscaleRT: 0
-  m_PixelSnapping: 0
-  m_CropFrameX: 0
-  m_CropFrameY: 1
-  m_StretchFill: 0
 --- !u!114 &6582549731189380932
 MonoBehaviour:
   m_ObjectHideFlags: 0

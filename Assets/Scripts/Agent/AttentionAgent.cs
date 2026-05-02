@@ -4,69 +4,52 @@ using Unity.MLAgents.Sensors;
 using MoreMountains.Tools;
 using MoreMountains.TopDownEngine;
 using Unity.MLAgents.Actuators;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-
-/// <summary>
-/// Cấu hình cho một hành động cần đợi (tương tự MeleeAgent)
-/// </summary>
-[Serializable]
-public class AttentionActionConfig
-{
-    public string StateName;
-    public float LockDuration = 0.5f;
-    public bool RequiresWeaponIdle = false;
-    
-    [HideInInspector] public float Timer;
-    [HideInInspector] public bool IsLocked;
-}
-
-[Serializable]
-public class WeaponAttackDelayConfig
-{
-    public string WeaponName;
-    public float LockDuration = 0.3f;
-}
 
 /// <summary>
 /// AttentionAgent - RL Agent for 2D roguelike shooter (Soul Knight-like)
 /// 
-/// OBSERVATION SPECIFICATION (BUG FIX #6: DOCUMENTED & CORRECTED):
-/// ===============================================================
-/// Total observation size: 321 dimensions (not 326 — padding was overstated)
-/// 
+/// OBSERVATION SPECIFICATION:
+/// ===========================
+/// Total observation size: 329 dimensions
+///
 /// Player Features (13 dims):
 ///   - Health (1), Ammo (1), Cooldown (1), WeaponReady (1), Speed (1)
-///   - Recent Damage (1), Velocity X,Z (2), Padding (5)
-/// 
+///   - Recent Damage (1), Velocity X,Y (2), Padding (5)
+///
 /// Global Features (6 dims):
 ///   - Enemy/Bullet/Item/Hazard fractions (4), Time normalized (1), Recent deaths (1)
-/// 
+///
 /// Enemy Features (54 dims = 3 enemies × 18):
-///   - Per enemy: Pos X,Z (2), Vel X,Z (2), Distance (1), Health (1), 
+///   - Per enemy: Pos X,Y (2), Vel X,Y (2), Distance (1), Health (1),
 ///     Threat, IsAttacking, AttackCooldown (3), Padding (5) = 18 dims
-/// 
+///
 /// Bullet Features (120 dims = 10 bullets × 12):
-///   - Per bullet: Pos X,Z (2), Vel X,Z (2), Distance (1), TimeToImpact (1),
+///   - Per bullet: Pos X,Y (2), Vel X,Y (2), Distance (1), TimeToImpact (1),
 ///     OwnerType (1), Padding (5) = 12 dims
-/// 
+///
 /// Item Features (68 dims = 4 items × 17):
-///   - Per item: Pos X,Z (2), ItemType one-hot (12), Rarity (1), Distance (1), Padding (2) = 17 dims
-/// 
+///   - Per item: Pos X,Y (2), ItemType one-hot (12), Rarity (1), Distance (1), Padding (2) = 17 dims
+///
 /// Hazard Features (60 dims = 5 hazards × 12):
-///   - Per hazard: Pos X,Z (2), Size (2), IsActive (1), HazardType one-hot (6), Padding (1) = 12 dims
-/// 
-/// Total = 13 + 6 + 54 + 120 + 68 + 60 = 321 dims
-/// 
-/// CRITICAL: If changing MaxEnemies, MaxBullets, MaxItems, MaxHazards,
-/// update ML-Agents YAML config to match this observation size!
+///   - Per hazard: Pos X,Y (2), Size (2), IsActive (1), HazardType one-hot (6), Padding (1) = 12 dims
+///
+/// Wall Features (8 dims = WALL_RAY_COUNT rays × 1):
+///   - 8 rays every 45°: normalized distance to nearest wall (0=touching, 1=nothing in range)
+///
+/// Total = 13 + 6 + 54 + 120 + 68 + 60 + 8 = 329 dims
+///
+/// CRITICAL: If changing MaxEnemies, MaxBullets, MaxItems, MaxHazards, or WALL_RAY_COUNT,
+/// update BehaviorParameters.VectorObservationSize in the Unity Inspector to match!
 /// 
 /// </summary>
+[RequireComponent(typeof(Character))]
 [RequireComponent(typeof(AIBrain))]
 [RequireComponent(typeof(Health))]
 [RequireComponent(typeof(AIDecisionDetectTargetRadius2D))]
 [RequireComponent(typeof(CharacterHandleWeapon))]
+[RequireComponent(typeof(CharacterMovement))]
+[RequireComponent(typeof(CharacterDash2D))]
 public class AttentionAgent : Agent
 {
     [Header("Reward Shaping Settings")]
@@ -81,6 +64,18 @@ public class AttentionAgent : Agent
     [Tooltip("Bán kính tầm nhìn cho việc phát hiện các đối tượng")]
     public float VisionRadius = 20f;
 
+    [Header("Wall Perception")]
+    [Tooltip("Layer(s) chứa wall colliders (collision tilemap layer).")]
+    public LayerMask WallLayerMask;
+    [Tooltip("Tầm xa của mỗi wall ray. Nên <= chiều rộng phòng.")]
+    public float WallRayLength = 15f;
+
+    [Header("Episodic Coverage Bonus")]
+    [Tooltip("Reward khi agent đến grid cell mới trong episode. Set 0 để tắt (dùng cho baseline/icm-only runs).")]
+    public float EpisodicCoverageReward = 0.01f;
+    [Tooltip("Kích thước mỗi grid cell (world units). 1f = mỗi tile là 1 cell.")]
+    public float CoverageGridCellSize = 1f;
+
     [Header("Object Capacity Settings")]
     [Tooltip("Số lượng enemies tối đa để đưa vào observation")]
     public int MaxEnemies = 3;
@@ -91,28 +86,11 @@ public class AttentionAgent : Agent
     [Tooltip("Số lượng hazards tối đa")]
     public int MaxHazards = 5;
 
-    [Header("Action Configurations")]
-    [Tooltip("Cấu hình cho từng hành động")]
-    public List<AttentionActionConfig> ActionConfigs = new List<AttentionActionConfig>
-    {
-        new AttentionActionConfig { StateName = "Idle",      LockDuration = 0f,   RequiresWeaponIdle = false },
-        new AttentionActionConfig { StateName = "Moving",    LockDuration = 0f,   RequiresWeaponIdle = false },
-        new AttentionActionConfig { StateName = "Attacking", LockDuration = 0f,   RequiresWeaponIdle = true  },
-        new AttentionActionConfig { StateName = "Dashing",   LockDuration = 0.4f, RequiresWeaponIdle = false },
-        new AttentionActionConfig { StateName = "MoveAway",  LockDuration = 0f,   RequiresWeaponIdle = false },
-    };
-
     [Header("Weapon Randomization")]
     [Tooltip("Danh sách vũ khí sẽ được chọn ngẫu nhiên khi bắt đầu episode.")]
     public List<Weapon> RandomWeaponPool = new List<Weapon>();
     [Tooltip("Nếu bật, agent sẽ equip ngẫu nhiên một vũ khí từ pool ở mỗi episode.")]
     public bool RandomizeWeaponOnEpisodeBegin = true;
-
-    [Header("Attack Lock Settings")]
-    [Tooltip("Nhân hệ số này vào cooldown của vũ khí (TimeBetweenUses).")]
-    public float AttackLockDurationMultiplier = 1f;
-    [Tooltip("Nếu có config theo WeaponName thì sẽ ưu tiên dùng giá trị này thay vì cooldown của vũ khí.")]
-    public List<WeaponAttackDelayConfig> WeaponAttackDelayOverrides = new List<WeaponAttackDelayConfig>();
 
     [Header("Episode Map Generation")]
     [Tooltip("Nếu bật, agent sẽ generate map mới khi bắt đầu episode.")]
@@ -122,24 +100,43 @@ public class AttentionAgent : Agent
     [Tooltip("Tự chuyển RoomGenerator sang FolderRandom trước khi generate.")]
     public bool ForceFolderRandomMode = true;
 
+    [Header("Debug")]
+    [Tooltip("Logs chosen action branches and context to Unity Console.")]
+    public bool DebugActionLogs = false;
+    [Tooltip("Log once every N OnActionReceived calls.")]
+    public int DebugLogEveryNSteps = 10;
+
     // --- Hằng số định danh hành động ---
-    private const int ACTION_IDLE = 0;
-    private const int ACTION_MOVING = 1;
-    private const int ACTION_ATTACKING = 2;
-    private const int ACTION_DASHING = 3;
-    private const int ACTION_MOVE_AWAY = 4;
+    private const int WALL_RAY_COUNT = 8;   // 8 rays × 45° — adds 8 dims to observation
+    private const int BRANCH_MOVE_X = 0;
+    private const int BRANCH_MOVE_Y = 1;
+    private const int BRANCH_COMBAT = 2;
+    private const int MOVE_X_NONE = 0;
+    private const int MOVE_X_LEFT = 1;
+    private const int MOVE_X_RIGHT = 2;
+    private const int MOVE_Y_NONE = 0;
+    private const int MOVE_Y_DOWN = 1;
+    private const int MOVE_Y_UP = 2;
+    private const int COMBAT_NONE = 0;
+    private const int COMBAT_ATTACK = 1;
+    private const int COMBAT_DASH = 2;
 
     // --- Components ---
     private AIBrain aiBrain;
     private Health agentHealth;
     private AIDecisionDetectTargetRadius2D detectTargetDecision;
     private CharacterHandleWeapon characterHandleWeapon;
+    private CharacterMovement characterMovement;
+    private CharacterDash2D characterDash2D;
     private Weapon _currentWeapon;
 
     // --- State Tracking ---
-    [SerializeField] private float previousPlayerHealth;
-    [SerializeField] private int _currentLockedAction = -1;
+    [SerializeField] private Transform _currentTarget;
+    [SerializeField] private float _previousTargetHealth;
+    private Health _currentTargetHealth;
+    private Vector2 _lastMoveDirection = Vector2.right;
     private Vector3 agentStartingPosition;
+    private int _decisionLogCounter = 0;
 
     // --- Object Lists (cached to avoid GC allocation) ---
     private List<GameObject> _enemies = new List<GameObject>();
@@ -156,6 +153,9 @@ public class AttentionAgent : Agent
     [SerializeField] private float _dodgeStartTime;
     private bool _tookDamageDuringDodge = false;
 
+    // --- Episodic coverage tracking ---
+    private readonly HashSet<Vector2Int> _visitedCells = new HashSet<Vector2Int>();
+
     // --- Character reference ---
     private Character _character;
 
@@ -166,6 +166,9 @@ public class AttentionAgent : Agent
         agentHealth = GetComponent<Health>();
         detectTargetDecision = GetComponent<AIDecisionDetectTargetRadius2D>();
         characterHandleWeapon = GetComponent<CharacterHandleWeapon>();
+        characterMovement = GetComponent<CharacterMovement>();
+        characterDash2D = GetComponent<CharacterDash2D>();
+        _character = GetComponent<Character>();
         EquipRandomWeaponIfConfigured(); // Must be after characterHandleWeapon is assigned
     }
 
@@ -175,6 +178,8 @@ public class AttentionAgent : Agent
         if (agentHealth == null) agentHealth = GetComponent<Health>();
         if (detectTargetDecision == null) detectTargetDecision = GetComponent<AIDecisionDetectTargetRadius2D>();
         if (characterHandleWeapon == null) characterHandleWeapon = GetComponent<CharacterHandleWeapon>();
+        if (characterMovement == null) characterMovement = GetComponent<CharacterMovement>();
+        if (characterDash2D == null) characterDash2D = GetComponent<CharacterDash2D>();
         if (_character == null) _character = GetComponent<Character>();
 
         if (characterHandleWeapon == null)
@@ -185,6 +190,11 @@ public class AttentionAgent : Agent
         if (aiBrain != null)
         {
             aiBrain.ResetBrain();
+        }
+
+        if (characterDash2D != null)
+        {
+            characterDash2D.DashMode = CharacterDash2D.DashModes.Script;
         }
 
         agentStartingPosition = transform.position;
@@ -216,53 +226,43 @@ public class AttentionAgent : Agent
     {
         GenerateEpisodeMapIfConfigured();
 
-        agentHealth.Revive();
-        transform.position = GetSpawnPosition();
+        // RespawnAt resets ConditionState → Normal, re-enables TopDownController,
+        // re-enables colliders, resets velocity, and fires OnRevive → re-enables AIBrain.
+        Vector3 spawnPos = GetSpawnPosition();
+        if (_character != null)
+        {
+            _character.RespawnAt(spawnPos,
+                _lastMoveDirection.x >= 0 ? Character.FacingDirections.East : Character.FacingDirections.West);
+        }
+        else
+        {
+            agentHealth.Revive();
+            transform.position = spawnPos;
+        }
 
         EquipRandomWeaponIfConfigured();
+        EnsureWeaponEquipped();
+
+        // Reset weapon state in case agent died mid-attack (WeaponUse/WeaponDelayBeforeUse stuck).
+        if (characterHandleWeapon != null && characterHandleWeapon.CurrentWeapon != null)
+        {
+            characterHandleWeapon.CurrentWeapon.WeaponState.ChangeState(Weapon.WeaponStates.WeaponIdle);
+        }
 
         _previousHealth = agentHealth.MaximumHealth;
         _isDodging = false;
         _tookDamageDuringDodge = false;
-        _currentLockedAction = -1;
-
-        foreach (var config in ActionConfigs)
-        {
-            config.Timer = 0f;
-            config.IsLocked = false;
-        }
+        _visitedCells.Clear();
+        _lastMoveDirection = Vector2.right;
 
         _currentWeapon = characterHandleWeapon.CurrentWeapon;
+        _currentTarget = null;
+        _currentTargetHealth = null;
+        _previousTargetHealth = 0f;
+        _decisionLogCounter = 0;
 
-        GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
-        if (playerObject != null)
-        {
-            Health playerHealth = playerObject.GetComponent<Health>();
-            if (playerHealth != null)
-            {
-                playerHealth.Revive();
-                previousPlayerHealth = playerHealth.MaximumHealth;
-            }
-            else
-            {
-                previousPlayerHealth = 0f;
-            }
-        }
-        else
-        {
-            previousPlayerHealth = 0f;
-        }
-
-        // Force-enable AIBrain — Character.OnDeath() disables it and Revive()
-        // timing is not guaranteed to have re-enabled it before we get here.
-        if (aiBrain != null)
-        {
-            aiBrain.BrainActive = true;
-            aiBrain.enabled = true;
-        }
-
-        RefreshTarget();
-        aiBrain.TransitionToState("Moving");
+        CacheSurroundingObjects();
+        UpdateStickyTarget();
     }
 
     /// <summary>
@@ -271,16 +271,76 @@ public class AttentionAgent : Agent
     /// </summary>
     private void RefreshTarget()
     {
-        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
-        GameObject nearest = null;
-        float nearestDist = float.MaxValue;
-        foreach (GameObject e in enemies)
+        CacheSurroundingObjects();
+        UpdateStickyTarget();
+    }
+
+    private void UpdateStickyTarget()
+    {
+        if (IsTargetValid(_currentTarget))
         {
-            if (!e.activeInHierarchy) continue;
-            float d = Vector3.Distance(transform.position, e.transform.position);
-            if (d < nearestDist) { nearestDist = d; nearest = e; }
+            SyncBrainTarget();
+            return;
         }
-        aiBrain.Target = nearest != null ? nearest.transform : null;
+
+        Transform nearest = null;
+        float nearestDist = float.MaxValue;
+
+        for (int i = 0; i < _enemies.Count; i++)
+        {
+            GameObject enemy = _enemies[i];
+            Transform enemyTransform = enemy != null ? enemy.transform : null;
+            if (!IsTargetValid(enemyTransform))
+            {
+                continue;
+            }
+
+            float d = Vector2.Distance(transform.position, enemyTransform.position);
+            if (d < nearestDist)
+            {
+                nearestDist = d;
+                nearest = enemyTransform;
+            }
+        }
+
+        SetCurrentTarget(nearest);
+        SyncBrainTarget();
+    }
+
+    private void SetCurrentTarget(Transform target)
+    {
+        if (_currentTarget == target)
+        {
+            return;
+        }
+
+        _currentTarget = target;
+        _currentTargetHealth = _currentTarget != null ? _currentTarget.GetComponent<Health>() : null;
+        _previousTargetHealth = _currentTargetHealth != null ? _currentTargetHealth.CurrentHealth : 0f;
+    }
+
+    private bool IsTargetValid(Transform target)
+    {
+        if (target == null || target == transform || !target.gameObject.activeInHierarchy)
+        {
+            return false;
+        }
+
+        Health health = target.GetComponent<Health>();
+        if (health != null && health.CurrentHealth <= 0f)
+        {
+            return false;
+        }
+
+        return Vector2.Distance(transform.position, target.position) <= VisionRadius;
+    }
+
+    private void SyncBrainTarget()
+    {
+        if (aiBrain != null)
+        {
+            aiBrain.Target = _currentTarget;
+        }
     }
 
     /// <summary>
@@ -302,17 +362,20 @@ public class AttentionAgent : Agent
 
     private void GenerateEpisodeMapIfConfigured()
     {
-        if (!GenerateRandomMapOnEpisodeBegin || EpisodeRoomGenerator == null)
-        {
-            return;
-        }
+        if (EpisodeRoomGenerator == null) return;
 
-        if (ForceFolderRandomMode)
+        if (GenerateRandomMapOnEpisodeBegin)
         {
-            EpisodeRoomGenerator.mapSelectionMode = TilemapGenerator.MapSelectionMode.FolderRandom;
+            if (ForceFolderRandomMode)
+                EpisodeRoomGenerator.mapSelectionMode = TilemapGenerator.MapSelectionMode.FolderRandom;
+            EpisodeRoomGenerator.GenerateRoom(); // despawns old enemies + spawns fresh at new map positions
         }
-
-        EpisodeRoomGenerator.GenerateRoom();
+        else
+        {
+            // Same map, but still need to respawn enemies — handles MaxStep and KillTarget
+            // episode ends where TrainingManager's PlayerDeath handler never fires.
+            EpisodeRoomGenerator.RespawnEnemies();
+        }
     }
 
     private void EquipRandomWeaponIfConfigured()
@@ -346,6 +409,53 @@ public class AttentionAgent : Agent
         _currentWeapon = characterHandleWeapon.CurrentWeapon;
     }
 
+    private void EnsureWeaponEquipped()
+    {
+        if (characterHandleWeapon == null)
+        {
+            return;
+        }
+
+        if (characterHandleWeapon.CurrentWeapon != null)
+        {
+            _currentWeapon = characterHandleWeapon.CurrentWeapon;
+            return;
+        }
+
+        if (characterHandleWeapon.InitialWeapon != null)
+        {
+            characterHandleWeapon.ChangeWeapon(
+                characterHandleWeapon.InitialWeapon,
+                characterHandleWeapon.InitialWeapon.WeaponName,
+                false
+            );
+            _currentWeapon = characterHandleWeapon.CurrentWeapon;
+            return;
+        }
+
+        if (RandomWeaponPool != null)
+        {
+            for (int i = 0; i < RandomWeaponPool.Count; i++)
+            {
+                Weapon fallback = RandomWeaponPool[i];
+                if (fallback == null)
+                {
+                    continue;
+                }
+
+                characterHandleWeapon.ChangeWeapon(fallback, fallback.WeaponName, false);
+                _currentWeapon = characterHandleWeapon.CurrentWeapon;
+                return;
+            }
+        }
+
+        _currentWeapon = null;
+        if (Time.frameCount % 120 == 0)
+        {
+            Debug.LogWarning("AttentionAgent: CurrentWeapon is null. Set CharacterHandleWeapon.InitialWeapon or assign RandomWeaponPool.", gameObject);
+        }
+    }
+
     /// <summary>
     /// Collect all observations: player features, enemies, bullets, items, hazards, global features
     /// </summary>
@@ -354,7 +464,7 @@ public class AttentionAgent : Agent
         // Guard: if critical components missing, pad all observations with zeros
         if (agentHealth == null || characterHandleWeapon == null)
         {
-            for (int i = 0; i < 321; i++) sensor.AddObservation(0f);
+            for (int i = 0; i < 329; i++) sensor.AddObservation(0f);
             return;
         }
 
@@ -362,14 +472,25 @@ public class AttentionAgent : Agent
         {
             _currentWeapon = characterHandleWeapon.CurrentWeapon;
         }
+        EnsureWeaponEquipped();
 
         // === PERFORMANCE: Cache all nearby objects with SINGLE OverlapSphere call ===
-        CacheSurroundingObjects();
+        try
+        {
+            CacheSurroundingObjects();
+            UpdateStickyTarget();
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[AttentionAgent] CollectObservations setup threw: {e}", gameObject);
+            for (int i = 0; i < 329; i++) sensor.AddObservation(0f);
+            return;
+        }
 
-        // === PLAYER FEATURES (Fixed ~20 dimensions) ===
+        // === PLAYER FEATURES (13 dims) ===
         CollectPlayerFeatures(sensor);
 
-        // === GLOBAL FEATURES (Fixed ~6 dimensions) ===
+        // === GLOBAL FEATURES (6 dims) ===
         CollectGlobalFeatures(sensor);
 
         // === VARIABLE-LENGTH OBJECT LISTS ===
@@ -377,6 +498,9 @@ public class AttentionAgent : Agent
         CollectBulletFeatures(sensor);
         CollectItemFeatures(sensor);
         CollectHazardFeatures(sensor);
+
+        // === WALL FEATURES (8 dims) ===
+        CollectWallFeatures(sensor);
     }
 
     /// <summary>
@@ -490,7 +614,7 @@ public class AttentionAgent : Agent
         }
         Vector3 velDir = velocity.magnitude > 0.1f ? velocity.normalized : Vector3.zero;
         sensor.AddObservation(velDir.x);
-        sensor.AddObservation(velDir.z);
+        sensor.AddObservation(velDir.y);
 
         // Add padding to reach ~20 dimensions
         for (int i = 0; i < 5; i++)
@@ -519,10 +643,9 @@ public class AttentionAgent : Agent
         float hazardFraction = Mathf.Clamp01((float)hazardCount / Mathf.Max(1, MaxHazards));
         sensor.AddObservation(hazardFraction);
 
-        // Time in episode (normalized) - BUG FIX #8: use Agent's MaxStep, not global Academy properties
-        float timeNorm = 0f;
-        int maxSteps = MaxStep > 0 ? MaxStep : 1000; // Default fallback if no max step set
-        timeNorm = Mathf.Clamp01(Academy.Instance.StepCount / Mathf.Max(1f, maxSteps));
+        // Time in episode (normalized) — use Agent's per-episode StepCount, not global Academy counter
+        int maxSteps = MaxStep > 0 ? MaxStep : 1000;
+        float timeNorm = Mathf.Clamp01((float)StepCount / Mathf.Max(1f, maxSteps));
         sensor.AddObservation(timeNorm);
 
         // Recent deaths nearby (placeholder)
@@ -568,7 +691,7 @@ public class AttentionAgent : Agent
 
         // Relative position (clamped to vision radius, normalized to [-1, 1])
         float relX = Mathf.Clamp(relativePos.x / VisionRadius, -1f, 1f);
-        float relZ = Mathf.Clamp(relativePos.z / VisionRadius, -1f, 1f);
+        float relZ = Mathf.Clamp(relativePos.y / VisionRadius, -1f, 1f);
         sensor.AddObservation(relX);
         sensor.AddObservation(relZ);
 
@@ -584,7 +707,7 @@ public class AttentionAgent : Agent
             }
         }
         sensor.AddObservation(Mathf.Clamp(relVel.x / 10f, -1f, 1f));
-        sensor.AddObservation(Mathf.Clamp(relVel.z / 10f, -1f, 1f));
+        sensor.AddObservation(Mathf.Clamp(relVel.y / 10f, -1f, 1f));
 
         // Distance (normalized)
         sensor.AddObservation(Mathf.Clamp01(distance / VisionRadius));
@@ -606,7 +729,7 @@ public class AttentionAgent : Agent
         sensor.AddObservation(1.0f);
 
         // Padding to reach 18 dimensions
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < 9; i++)
         {
             sensor.AddObservation(0.0f);
         }
@@ -649,12 +772,12 @@ public class AttentionAgent : Agent
 
         // Relative position
         sensor.AddObservation(Mathf.Clamp(relativePos.x / VisionRadius, -1f, 1f));
-        sensor.AddObservation(Mathf.Clamp(relativePos.z / VisionRadius, -1f, 1f));
+        sensor.AddObservation(Mathf.Clamp(relativePos.y / VisionRadius, -1f, 1f));
 
         // Velocity (absolute, as bullet speed is independent)
-        Vector3 bulletVel = bullet.GetComponent<Rigidbody>()?.linearVelocity ?? Vector3.zero;
+        Vector2 bulletVel = bullet.GetComponent<Rigidbody2D>()?.linearVelocity ?? Vector2.zero;
         sensor.AddObservation(Mathf.Clamp(bulletVel.x / 20f, -1f, 1f));
-        sensor.AddObservation(Mathf.Clamp(bulletVel.z / 20f, -1f, 1f));
+        sensor.AddObservation(Mathf.Clamp(bulletVel.y / 20f, -1f, 1f));
 
         // Distance
         sensor.AddObservation(Mathf.Clamp01(distance / VisionRadius));
@@ -711,7 +834,7 @@ public class AttentionAgent : Agent
 
         // Relative position
         sensor.AddObservation(Mathf.Clamp(relativePos.x / VisionRadius, -1f, 1f));
-        sensor.AddObservation(Mathf.Clamp(relativePos.z / VisionRadius, -1f, 1f));
+        sensor.AddObservation(Mathf.Clamp(relativePos.y / VisionRadius, -1f, 1f));
 
         // Item type (one-hot, assuming max 12 types, placeholder using health as proxy)
         PickableItem pickable = item.GetComponent<PickableItem>();
@@ -771,7 +894,7 @@ public class AttentionAgent : Agent
 
         // Relative position
         sensor.AddObservation(Mathf.Clamp(relativePos.x / VisionRadius, -1f, 1f));
-        sensor.AddObservation(Mathf.Clamp(relativePos.z / VisionRadius, -1f, 1f));
+        sensor.AddObservation(Mathf.Clamp(relativePos.y / VisionRadius, -1f, 1f));
 
         // Size (dummy)
         sensor.AddObservation(0.5f);
@@ -799,6 +922,31 @@ public class AttentionAgent : Agent
     /// BUG FIX #3: Use tag-based detection instead of fragile name.Contains()
     /// Tag your item gameobjects: "ItemHealth", "ItemAmmo", "ItemShield", "ItemSpeed", "ItemCoin", "ItemKey"
     /// </summary>
+    /// <summary>
+    /// Casts WALL_RAY_COUNT rays evenly around the agent against WallLayerMask.
+    /// Each ray returns normalized distance to nearest wall (0=touching, 1=nothing in range).
+    /// First ray points right (+X), rotates CCW every 45°. Adds 8 observations.
+    /// </summary>
+    private void CollectWallFeatures(VectorSensor sensor)
+    {
+        float angleStep = 360f / WALL_RAY_COUNT;
+        for (int i = 0; i < WALL_RAY_COUNT; i++)
+        {
+            float angleRad = i * angleStep * Mathf.Deg2Rad;
+            Vector2 dir = new Vector2(Mathf.Cos(angleRad), Mathf.Sin(angleRad));
+            RaycastHit2D hit = Physics2D.Raycast(transform.position, dir, WallRayLength, WallLayerMask);
+            sensor.AddObservation(hit.collider != null ? hit.distance / WallRayLength : 1f);
+        }
+    }
+
+    private Vector2Int WorldToCell(Vector3 worldPos)
+    {
+        return new Vector2Int(
+            Mathf.FloorToInt(worldPos.x / CoverageGridCellSize),
+            Mathf.FloorToInt(worldPos.y / CoverageGridCellSize)
+        );
+    }
+
     private int GetItemTypeIndex(PickableItem item)
     {
         if (item == null) return 0;
@@ -858,28 +1006,11 @@ public class AttentionAgent : Agent
         {
             _currentWeapon = characterHandleWeapon.CurrentWeapon;
         }
+        EnsureWeaponEquipped();
 
-        // If locked in action, disable other actions but ALWAYS allow Idle
-        if (_currentLockedAction >= 0)
+        if (!IsWeaponReady())
         {
-            for (int i = 0; i < ActionConfigs.Count; i++)
-            {
-                actionMask.SetActionEnabled(0, i, (i == ACTION_IDLE));  // Only Idle enabled
-            }
-            return;
-        }
-
-        // Disable attacking if weapon not ready
-        for (int i = 0; i < ActionConfigs.Count; i++)
-        {
-            bool canExecute = true;
-
-            if (ActionConfigs[i].RequiresWeaponIdle && !IsWeaponReady())
-            {
-                canExecute = false;
-            }
-
-            actionMask.SetActionEnabled(0, i, canExecute);
+            actionMask.SetActionEnabled(BRANCH_COMBAT, COMBAT_ATTACK, false);
         }
     }
 
@@ -890,19 +1021,8 @@ public class AttentionAgent : Agent
             _currentWeapon = characterHandleWeapon.CurrentWeapon;
         }
 
-        // Re-acquire target if missing or dead
-        if (aiBrain.Target == null || aiBrain.Target.GetComponent<Health>()?.CurrentHealth <= 0)
-        {
-            GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
-            GameObject nearest = null;
-            float nearestDist = float.MaxValue;
-            foreach (GameObject e in enemies)
-            {
-                float d = Vector3.Distance(transform.position, e.transform.position);
-                if (d < nearestDist) { nearestDist = d; nearest = e; }
-            }
-            aiBrain.Target = nearest != null ? nearest.transform : null;
-        }
+        CacheSurroundingObjects();
+        UpdateStickyTarget();
 
         float currentHealth = agentHealth.CurrentHealth;
         float healthDelta = currentHealth - _previousHealth;
@@ -916,129 +1036,205 @@ public class AttentionAgent : Agent
 
         // Dodge reward tracking: now handled in FixedUpdate() for reliability
 
-        // Damage to player
-        if (aiBrain.Target != null)
+        // Damage to current target
+        if (_currentTargetHealth != null)
         {
-            Health playerHealth = aiBrain.Target.GetComponent<Health>();
-            if (playerHealth != null)
+            if (_currentTargetHealth.CurrentHealth < _previousTargetHealth)
             {
-                if (playerHealth.CurrentHealth < previousPlayerHealth)
-                {
-                    AddReward(DealDamageReward);
-                }
-                if (playerHealth.CurrentHealth <= 0)
-                {
-                    AddReward(KillPlayerReward);
-                    EndEpisode();
-                    return;
-                }
-                previousPlayerHealth = playerHealth.CurrentHealth;
+                AddReward(DealDamageReward);
             }
+            if (_currentTargetHealth.CurrentHealth <= 0)
+            {
+                AddReward(KillPlayerReward);
+                EndEpisode();
+                return;
+            }
+            _previousTargetHealth = _currentTargetHealth.CurrentHealth;
         }
 
         // Time penalty
         AddReward(TimePenalty);
-        
+
+        // Episodic coverage bonus — reward visiting new grid cells this episode
+        if (EpisodicCoverageReward > 0f)
+        {
+            Vector2Int cell = WorldToCell(transform.position);
+            if (_visitedCells.Add(cell))
+                AddReward(EpisodicCoverageReward);
+        }
+
         // Update health tracking
         _previousHealth = currentHealth;
 
-        // === ACTION LOCK CHECK ===
-        if (_currentLockedAction >= 0)
-        {
-            var lockedConfig = ActionConfigs[_currentLockedAction];
-            lockedConfig.Timer -= Time.fixedDeltaTime;
-
-            bool timerDone = lockedConfig.Timer <= 0f;
-            bool weaponReady = !lockedConfig.RequiresWeaponIdle || IsWeaponReady();
-
-            if (timerDone && weaponReady)
-            {
-                lockedConfig.IsLocked = false;
-                _currentLockedAction = -1;
-            }
-            else
-            {
-                return;  // Still locked, don't process new action
-            }
-        }
-
-        ExecuteAction(actions.DiscreteActions[0]);
+        int moveX = actions.DiscreteActions[BRANCH_MOVE_X];
+        int moveY = actions.DiscreteActions[BRANCH_MOVE_Y];
+        int combat = actions.DiscreteActions[BRANCH_COMBAT];
+        Vector2 movement = DecodeMovement(actions.DiscreteActions);
+        ApplyMovement(movement);
+        ExecuteCombat(combat, movement);
+        LogActionDecision(moveX, moveY, combat, movement);
     }
 
-    private void ExecuteAction(int chosenAction)
+    private void LogActionDecision(int moveX, int moveY, int combat, Vector2 movement)
     {
-        if (chosenAction < 0 || chosenAction >= ActionConfigs.Count)
-        {
-            Debug.LogWarning($"Invalid action {chosenAction}!");
-            return;
-        }
-
-        var config = ActionConfigs[chosenAction];
-
-        if (config.RequiresWeaponIdle && !IsWeaponReady())
+        if (!DebugActionLogs)
         {
             return;
         }
 
-        // Track dodge for success reward (BUG FIX v3: init _tookDamageDuringDodge here)
-        if (chosenAction == ACTION_DASHING)
+        _decisionLogCounter++;
+        int every = Mathf.Max(1, DebugLogEveryNSteps);
+        if ((_decisionLogCounter % every) != 0)
         {
-            _isDodging = true;
-            _dodgeStartHealth = agentHealth.CurrentHealth;
-            _dodgeStartTime = Time.time;
-            _tookDamageDuringDodge = false;  // Reset flag at start of dodge
+            return;
         }
 
-        aiBrain.TransitionToState(config.StateName);
+        bool hasTarget = _currentTarget != null;
+        bool hasWeapon = _currentWeapon != null;
+        bool weaponReady = IsWeaponReady();
 
-        float lockDuration = GetEffectiveLockDuration(chosenAction, config);
-        if (lockDuration > 0f)
+        Debug.Log(
+            "[AgentDecision] " +
+            "step=" + StepCount +
+            " moveX=" + moveX +
+            " moveY=" + moveY +
+            " combat=" + combat +
+            " movement=(" + movement.x.ToString("F2") + "," + movement.y.ToString("F2") + ")" +
+            " target=" + hasTarget +
+            " weapon=" + hasWeapon +
+            " ready=" + weaponReady,
+            gameObject
+        );
+    }
+
+    private Vector2 DecodeMovement(ActionSegment<int> discreteActions)
+    {
+        Vector2 movement = Vector2.zero;
+
+        switch (discreteActions[BRANCH_MOVE_X])
         {
-            config.Timer = lockDuration;
-            config.IsLocked = true;
-            _currentLockedAction = chosenAction;
+            case MOVE_X_LEFT:
+                movement.x = -1f;
+                break;
+            case MOVE_X_RIGHT:
+                movement.x = 1f;
+                break;
+        }
+
+        switch (discreteActions[BRANCH_MOVE_Y])
+        {
+            case MOVE_Y_DOWN:
+                movement.y = -1f;
+                break;
+            case MOVE_Y_UP:
+                movement.y = 1f;
+                break;
+        }
+
+        return movement.sqrMagnitude > 1f ? movement.normalized : movement;
+    }
+
+    private void ApplyMovement(Vector2 movement)
+    {
+        if (characterMovement != null)
+        {
+            characterMovement.SetMovement(movement);
+        }
+
+        if (movement.sqrMagnitude > 0.0001f)
+        {
+            _lastMoveDirection = movement.normalized;
         }
     }
 
-    private float GetEffectiveLockDuration(int chosenAction, AttentionActionConfig config)
+    private void ExecuteCombat(int combatAction, Vector2 movement)
     {
-        float baseDuration = Mathf.Max(0f, config.LockDuration);
-
-        if (chosenAction != ACTION_ATTACKING)
+        switch (combatAction)
         {
-            return baseDuration;
+            case COMBAT_ATTACK:
+                AttackCurrentTarget();
+                break;
+            case COMBAT_DASH:
+                DashInBestDirection(movement);
+                break;
+        }
+    }
+
+    private void AttackCurrentTarget()
+    {
+        if (_currentTarget == null || !IsWeaponReady() || characterHandleWeapon == null)
+        {
+            return;
         }
 
-        if (_currentWeapon == null)
+        Vector3 aimDirection = _currentTarget.position - transform.position;
+        if (aimDirection.sqrMagnitude > 0.0001f && _currentWeapon != null)
         {
-            return baseDuration;
-        }
-
-        string currentWeaponName = _currentWeapon.WeaponName;
-        if (!string.IsNullOrWhiteSpace(currentWeaponName) && WeaponAttackDelayOverrides != null)
-        {
-            for (int i = 0; i < WeaponAttackDelayOverrides.Count; i++)
+            WeaponAim weaponAim = _currentWeapon.GetComponent<WeaponAim>();
+            if (weaponAim != null)
             {
-                WeaponAttackDelayConfig overrideConfig = WeaponAttackDelayOverrides[i];
-                if (overrideConfig == null || string.IsNullOrWhiteSpace(overrideConfig.WeaponName))
-                {
-                    continue;
-                }
-
-                if (string.Equals(overrideConfig.WeaponName, currentWeaponName, StringComparison.OrdinalIgnoreCase))
-                {
-                    return Mathf.Max(0f, overrideConfig.LockDuration);
-                }
+                weaponAim.SetCurrentAim(aimDirection.normalized, true);
             }
         }
 
-        float weaponCooldown = _currentWeapon.TimeBetweenUses * Mathf.Max(0f, AttackLockDurationMultiplier);
-        if (weaponCooldown <= 0f)
+        characterHandleWeapon.ShootStart();
+    }
+
+    private void DashInBestDirection(Vector2 movement)
+    {
+        if (characterDash2D == null)
         {
-            return baseDuration;
+            return;
         }
 
-        return weaponCooldown;
+        Vector2 dashDirection = movement.sqrMagnitude > 0.0001f
+            ? movement.normalized
+            : GetDodgeDirectionFromNearestBullet();
+
+        if (dashDirection.sqrMagnitude <= 0.0001f)
+        {
+            dashDirection = _lastMoveDirection.sqrMagnitude > 0.0001f ? _lastMoveDirection.normalized : Vector2.right;
+        }
+
+        characterDash2D.DashMode = CharacterDash2D.DashModes.Script;
+        characterDash2D.DashDirection = new Vector3(dashDirection.x, dashDirection.y, 0f);
+
+        _isDodging = true;
+        _dodgeStartHealth = agentHealth.CurrentHealth;
+        _dodgeStartTime = Time.time;
+        _tookDamageDuringDodge = false;
+
+        characterDash2D.DashStart();
+    }
+
+    private Vector2 GetDodgeDirectionFromNearestBullet()
+    {
+        Projectile nearest = null;
+        float nearestDist = float.MaxValue;
+
+        for (int i = 0; i < _bullets.Count; i++)
+        {
+            Projectile bullet = _bullets[i];
+            if (bullet == null || !bullet.gameObject.activeInHierarchy)
+            {
+                continue;
+            }
+
+            float distance = Vector2.Distance(transform.position, bullet.transform.position);
+            if (distance < nearestDist)
+            {
+                nearestDist = distance;
+                nearest = bullet;
+            }
+        }
+
+        if (nearest == null)
+        {
+            return Vector2.zero;
+        }
+
+        Vector2 away = (Vector2)(transform.position - nearest.transform.position);
+        return away.sqrMagnitude > 0.0001f ? away.normalized : Vector2.zero;
     }
 
     private bool IsWeaponReady()
@@ -1097,14 +1293,37 @@ public class AttentionAgent : Agent
 
     public override void Heuristic(in ActionBuffers actionsOut)
     {
-        int action = ACTION_IDLE;
+        ActionSegment<int> discreteActions = actionsOut.DiscreteActions;
 
-        if (Input.GetKey(KeyCode.Alpha1)) action = ACTION_IDLE;
-        else if (Input.GetKey(KeyCode.Alpha2)) action = ACTION_MOVING;
-        else if (Input.GetKey(KeyCode.Alpha3)) action = ACTION_ATTACKING;
-        else if (Input.GetKey(KeyCode.Alpha4)) action = ACTION_DASHING;
-        else if (Input.GetKey(KeyCode.Alpha5)) action = ACTION_MOVE_AWAY;
+        discreteActions[BRANCH_MOVE_X] = MOVE_X_NONE;
+        discreteActions[BRANCH_MOVE_Y] = MOVE_Y_NONE;
+        discreteActions[BRANCH_COMBAT] = COMBAT_NONE;
 
-        actionsOut.DiscreteActions.Array[0] = action;
+        if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
+        {
+            discreteActions[BRANCH_MOVE_X] = MOVE_X_LEFT;
+        }
+        else if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
+        {
+            discreteActions[BRANCH_MOVE_X] = MOVE_X_RIGHT;
+        }
+
+        if (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S))
+        {
+            discreteActions[BRANCH_MOVE_Y] = MOVE_Y_DOWN;
+        }
+        else if (Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W))
+        {
+            discreteActions[BRANCH_MOVE_Y] = MOVE_Y_UP;
+        }
+
+        if (Input.GetKey(KeyCode.Space) || Input.GetKey(KeyCode.LeftShift))
+        {
+            discreteActions[BRANCH_COMBAT] = COMBAT_DASH;
+        }
+        else if (Input.GetKey(KeyCode.J) || Input.GetMouseButton(0))
+        {
+            discreteActions[BRANCH_COMBAT] = COMBAT_ATTACK;
+        }
     }
 }
