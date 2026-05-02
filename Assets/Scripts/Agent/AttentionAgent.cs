@@ -56,6 +56,7 @@ public class AttentionAgent : Agent
     public float DealDamageReward = 0.5f;
     public float TakeDamagePenalty = -0.5f;
     public float KillPlayerReward = 1.0f;
+    public float AllEnemiesKilledReward = 1.0f;
     public float AgentDiedPenalty = -1.0f;
     public float TimePenalty = -0.001f;
     public float DodgeSuccessReward = 0.2f;  // Tránh được viên đạn
@@ -104,7 +105,7 @@ public class AttentionAgent : Agent
     [Tooltip("Logs chosen action branches and context to Unity Console.")]
     public bool DebugActionLogs = false;
     [Tooltip("Log once every N OnActionReceived calls.")]
-    public int DebugLogEveryNSteps = 10;
+    public int DebugLogEveryNSteps = 1;
 
     // --- Hằng số định danh hành động ---
     private const int WALL_RAY_COUNT = 8;   // 8 rays × 45° — adds 8 dims to observation
@@ -1052,6 +1053,13 @@ public class AttentionAgent : Agent
             _previousTargetHealth = _currentTargetHealth.CurrentHealth;
         }
 
+        if (!HasAnyLivingEnemy())
+        {
+            AddReward(AllEnemiesKilledReward);
+            EndEpisode();
+            return;
+        }
+
         // Time penalty
         AddReward(TimePenalty);
 
@@ -1075,6 +1083,27 @@ public class AttentionAgent : Agent
         LogActionDecision(moveX, moveY, combat, movement);
     }
 
+    private bool HasAnyLivingEnemy()
+    {
+        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+        for (int i = 0; i < enemies.Length; i++)
+        {
+            GameObject enemy = enemies[i];
+            if (enemy == null || !enemy.activeInHierarchy)
+            {
+                continue;
+            }
+
+            Health health = enemy.GetComponent<Health>();
+            if (health == null || health.CurrentHealth > 0f)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private void LogActionDecision(int moveX, int moveY, int combat, Vector2 movement)
     {
         if (!DebugActionLogs)
@@ -1092,6 +1121,12 @@ public class AttentionAgent : Agent
         bool hasTarget = _currentTarget != null;
         bool hasWeapon = _currentWeapon != null;
         bool weaponReady = IsWeaponReady();
+        string moveXLabel = MoveXToLabel(moveX);
+        string moveYLabel = MoveYToLabel(moveY);
+        string combatLabel = CombatToLabel(combat);
+        Vector3 pos = transform.position;
+        float hp = agentHealth != null ? agentHealth.CurrentHealth : -1f;
+        float maxHp = agentHealth != null ? agentHealth.MaximumHealth : -1f;
 
         Debug.Log(
             "[AgentDecision] " +
@@ -1099,12 +1134,46 @@ public class AttentionAgent : Agent
             " moveX=" + moveX +
             " moveY=" + moveY +
             " combat=" + combat +
+            " action=(" + moveXLabel + "," + moveYLabel + "," + combatLabel + ")" +
             " movement=(" + movement.x.ToString("F2") + "," + movement.y.ToString("F2") + ")" +
+            " pos=(" + pos.x.ToString("F2") + "," + pos.y.ToString("F2") + ")" +
+            " hp=" + hp.ToString("F1") + "/" + maxHp.ToString("F1") +
+            " reward=" + GetCumulativeReward().ToString("F3") +
             " target=" + hasTarget +
             " weapon=" + hasWeapon +
             " ready=" + weaponReady,
             gameObject
         );
+    }
+
+    private string MoveXToLabel(int moveX)
+    {
+        switch (moveX)
+        {
+            case MOVE_X_LEFT: return "Left";
+            case MOVE_X_RIGHT: return "Right";
+            default: return "NoneX";
+        }
+    }
+
+    private string MoveYToLabel(int moveY)
+    {
+        switch (moveY)
+        {
+            case MOVE_Y_DOWN: return "Down";
+            case MOVE_Y_UP: return "Up";
+            default: return "NoneY";
+        }
+    }
+
+    private string CombatToLabel(int combat)
+    {
+        switch (combat)
+        {
+            case COMBAT_ATTACK: return "Attack";
+            case COMBAT_DASH: return "Dash";
+            default: return "NoneCombat";
+        }
     }
 
     private Vector2 DecodeMovement(ActionSegment<int> discreteActions)
@@ -1170,14 +1239,43 @@ public class AttentionAgent : Agent
         Vector3 aimDirection = _currentTarget.position - transform.position;
         if (aimDirection.sqrMagnitude > 0.0001f && _currentWeapon != null)
         {
+            Vector3 normalizedAim = aimDirection.normalized;
+            FaceAimDirection(normalizedAim);
+
             WeaponAim weaponAim = _currentWeapon.GetComponent<WeaponAim>();
             if (weaponAim != null)
             {
-                weaponAim.SetCurrentAim(aimDirection.normalized, true);
+                weaponAim.SetCurrentAim(GetWeaponAimInput(normalizedAim, weaponAim), true);
             }
         }
 
         characterHandleWeapon.ShootStart();
+    }
+
+    private void FaceAimDirection(Vector3 normalizedAim)
+    {
+        if (_character == null || _character.Orientation2D == null || Mathf.Abs(normalizedAim.x) <= 0.0001f)
+        {
+            return;
+        }
+
+        _character.Orientation2D.FaceDirection(normalizedAim.x < 0f ? -1 : 1);
+
+        if (_currentWeapon != null)
+        {
+            _currentWeapon.FlipWeapon();
+            _currentWeapon.ApplyOffset();
+        }
+    }
+
+    private Vector3 GetWeaponAimInput(Vector3 normalizedAim, WeaponAim weaponAim)
+    {
+        if (weaponAim is WeaponAim2D && _character != null && _character.Orientation2D != null && !_character.Orientation2D.IsFacingRight)
+        {
+            return -normalizedAim;
+        }
+
+        return normalizedAim;
     }
 
     private void DashInBestDirection(Vector2 movement)

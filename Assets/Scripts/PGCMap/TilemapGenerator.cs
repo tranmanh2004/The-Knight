@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using MoreMountains.Tools;
 #if UNITY_EDITOR
 using UnityEditor;
+using System.IO;
 #endif
 
 public class TilemapGenerator : MonoBehaviour
@@ -38,9 +39,13 @@ public class TilemapGenerator : MonoBehaviour
 
     [Header("Spawn Point Reference")]
     public Transform playerSpawnPointTransform;
+    [Tooltip("Nếu bật, ký tự P trong map chỉ là fallback. Player spawn sẽ được chọn ngẫu nhiên từ ô sàn hợp lệ.")]
+    public bool randomizePlayerSpawnFromFloor = true;
 
-    [Header("Enemy Spawn From Text")]
+    [Header("Random Enemy Spawn")]
     public bool spawnEnemiesFromText = true;
+    [Tooltip("Nếu bật, mỗi map chỉ spawn một enemy ở ô sàn ngẫu nhiên.")]
+    public bool spawnOnlyOneEnemyFromText = true;
     public GameObject[] enemyPrefabs;
     public Transform enemyParent;
 
@@ -52,6 +57,7 @@ public class TilemapGenerator : MonoBehaviour
     private bool _hasPlayerSpawn;
     private Vector3Int _playerSpawnCell;
     private readonly List<Vector3Int> _enemySpawnCells = new List<Vector3Int>();
+    private int[,] _lastRoomGrid;
 
     // --- Active enemies for the current episode ---
     private readonly List<GameObject> _spawnedEnemies = new List<GameObject>();
@@ -221,7 +227,8 @@ public class TilemapGenerator : MonoBehaviour
     {
         ReturnActiveEnemiesToPool();
 
-        if (!spawnEnemiesFromText || _enemySpawnCells.Count == 0) return;
+        if (!spawnEnemiesFromText) return;
+        EnsureRoomGridForSpawning();
 
         List<GameObject> validPrefabs = new List<GameObject>();
         if (enemyPrefabs != null)
@@ -234,12 +241,21 @@ public class TilemapGenerator : MonoBehaviour
 
         if (validPrefabs.Count == 0)
         {
-            Debug.LogWarning("Chưa gán enemyPrefabs để spawn quái từ ký tự E.", this);
+            Debug.LogWarning("Chưa gán enemyPrefabs để spawn quái.", this);
             return;
         }
 
-        foreach (Vector3Int cell in _enemySpawnCells)
+        SelectRandomEnemySpawnCells();
+        if (_enemySpawnCells.Count == 0)
         {
+            Debug.LogWarning("Không tìm thấy ô sàn hợp lệ để random spawn enemy.", this);
+            return;
+        }
+
+        int enemyCount = spawnOnlyOneEnemyFromText ? Mathf.Min(1, _enemySpawnCells.Count) : _enemySpawnCells.Count;
+        for (int i = 0; i < enemyCount; i++)
+        {
+            Vector3Int cell = _enemySpawnCells[i];
             Vector3 worldPosition = tilemap.GetCellCenterWorld(cell);
             GameObject prefab = validPrefabs[Random.Range(0, validPrefabs.Count)];
 
@@ -258,6 +274,16 @@ public class TilemapGenerator : MonoBehaviour
 
             _spawnedEnemies.Add(spawned);
         }
+    }
+
+    private void EnsureRoomGridForSpawning()
+    {
+        if (_lastRoomGrid != null)
+        {
+            return;
+        }
+
+        _lastRoomGrid = BuildGridFromText();
     }
 
     /// <summary>
@@ -378,14 +404,96 @@ public class TilemapGenerator : MonoBehaviour
                     _hasPlayerSpawn = true;
                     _playerSpawnCell = new Vector3Int(startPosition.x + x, startPosition.y + y, 0);
                 }
-                else if (c == 'E')
-                {
-                    _enemySpawnCells.Add(new Vector3Int(startPosition.x + x, startPosition.y + y, 0));
-                }
             }
         }
 
+        if (randomizePlayerSpawnFromFloor)
+        {
+            SelectRandomPlayerSpawnCell(grid);
+        }
+
+        _lastRoomGrid = grid;
         return grid;
+    }
+
+    private void SelectRandomPlayerSpawnCell(int[,] grid)
+    {
+        List<Vector3Int> candidates = new List<Vector3Int>();
+        CollectPlayerSpawnCandidates(grid, candidates);
+
+        if (candidates.Count == 0)
+        {
+            Debug.LogWarning("Không tìm thấy ô sàn hợp lệ để random spawn P.", this);
+            return;
+        }
+
+        _playerSpawnCell = candidates[Random.Range(0, candidates.Count)];
+        _hasPlayerSpawn = true;
+    }
+
+    private void CollectPlayerSpawnCandidates(int[,] grid, List<Vector3Int> candidates)
+    {
+        int width = grid.GetLength(0);
+        int height = grid.GetLength(1);
+
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                if (grid[x, y] == 1)
+                {
+                    continue;
+                }
+
+                candidates.Add(new Vector3Int(startPosition.x + x, startPosition.y + y, 0));
+            }
+        }
+    }
+
+    private void SelectRandomEnemySpawnCells()
+    {
+        _enemySpawnCells.Clear();
+        if (_lastRoomGrid == null)
+        {
+            return;
+        }
+
+        List<Vector3Int> candidates = new List<Vector3Int>();
+        CollectEnemySpawnCandidates(_lastRoomGrid, candidates);
+
+        int desiredCount = spawnOnlyOneEnemyFromText ? 1 : candidates.Count;
+        desiredCount = Mathf.Min(desiredCount, candidates.Count);
+        for (int i = 0; i < desiredCount; i++)
+        {
+            int selectedIndex = Random.Range(0, candidates.Count);
+            _enemySpawnCells.Add(candidates[selectedIndex]);
+            candidates.RemoveAt(selectedIndex);
+        }
+    }
+
+    private void CollectEnemySpawnCandidates(int[,] grid, List<Vector3Int> candidates)
+    {
+        int width = grid.GetLength(0);
+        int height = grid.GetLength(1);
+
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                if (grid[x, y] == 1)
+                {
+                    continue;
+                }
+
+                Vector3Int cell = new Vector3Int(startPosition.x + x, startPosition.y + y, 0);
+                if (_hasPlayerSpawn && cell == _playerSpawnCell)
+                {
+                    continue;
+                }
+
+                candidates.Add(cell);
+            }
+        }
     }
 
     private TextAsset GetSelectedMapTextAsset()
@@ -410,6 +518,11 @@ public class TilemapGenerator : MonoBehaviour
 
     private void UpdateLevelManagerSpawnPointIfNeeded()
     {
+        if (!_hasPlayerSpawn || playerSpawnPointTransform == null)
+        {
+            return;
+        }
+
         Vector3 worldSpawnPosition = tilemap.GetCellCenterWorld(_playerSpawnCell);
         playerSpawnPointTransform.position = worldSpawnPosition;
     }
@@ -460,6 +573,180 @@ public class TilemapGenerator : MonoBehaviour
         if (selectedFolderMapIndex < 0) selectedFolderMapIndex = 0;
         if (folderTextMaps.Length > 0 && selectedFolderMapIndex >= folderTextMaps.Length)
             selectedFolderMapIndex = folderTextMaps.Length - 1;
+    }
+
+    [ContextMenu("Edit Map Data In Folder")]
+    public void EditMapDataInFolder()
+    {
+        if (textMapFolder == null)
+        {
+            Debug.LogWarning("Chưa gán textMapFolder để edit map data.", this);
+            return;
+        }
+
+        string folderPath = AssetDatabase.GetAssetPath(textMapFolder);
+        if (string.IsNullOrEmpty(folderPath) || !AssetDatabase.IsValidFolder(folderPath))
+        {
+            Debug.LogWarning("textMapFolder không hợp lệ.", this);
+            return;
+        }
+
+        string[] guids = AssetDatabase.FindAssets("t:TextAsset", new[] { folderPath });
+        int changedCount = 0;
+
+        for (int i = 0; i < guids.Length; i++)
+        {
+            string assetPath = AssetDatabase.GUIDToAssetPath(guids[i]);
+            if (!assetPath.EndsWith(".txt", System.StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            string fullPath = Path.GetFullPath(assetPath);
+            string original = File.ReadAllText(fullPath);
+            string edited = EditMapData(original);
+            if (edited == original)
+            {
+                continue;
+            }
+
+            File.WriteAllText(fullPath, edited);
+            changedCount++;
+        }
+
+        AssetDatabase.Refresh();
+        RefreshTextMapsFromFolder();
+        Debug.Log($"Edited {changedCount} text map data file(s). Removed fixed P/E markers and ensured a wall border.", this);
+    }
+
+    private string EditMapData(string text)
+    {
+        string normalized = text.Replace("\r\n", "\n").Replace('\r', '\n').TrimEnd('\n');
+        string[] lines = normalized.Split(new[] { '\n' }, System.StringSplitOptions.RemoveEmptyEntries);
+        if (lines.Length == 0)
+        {
+            return text;
+        }
+
+        int width = 0;
+        for (int i = 0; i < lines.Length; i++)
+        {
+            if (lines[i].Length > width)
+            {
+                width = lines[i].Length;
+            }
+        }
+
+        List<char[]> editedRows = new List<char[]>();
+
+        for (int row = 0; row < lines.Length; row++)
+        {
+            char[] chars = new char[width];
+            for (int col = 0; col < width; col++)
+            {
+                char c = col < lines[row].Length ? lines[row][col] : '.';
+                if (c == 'P')
+                {
+                    c = '.';
+                }
+                else if (c == 'E')
+                {
+                    c = '.';
+                }
+                else if (c != '#')
+                {
+                    c = '.';
+                }
+
+                chars[col] = c;
+            }
+
+            editedRows.Add(chars);
+        }
+
+        EnsureMapDataBorder(editedRows);
+
+        List<string> editedLines = new List<string>();
+        for (int i = 0; i < editedRows.Count; i++)
+        {
+            editedLines.Add(new string(editedRows[i]));
+        }
+
+        return string.Join("\n", editedLines) + "\n";
+    }
+
+    private void EnsureMapDataBorder(List<char[]> rows)
+    {
+        if (rows.Count == 0 || HasMapDataBorder(rows))
+        {
+            return;
+        }
+
+        int innerWidth = rows[0].Length;
+        int borderedWidth = innerWidth + 2;
+        char[] topBorder = MakeBorderRow(borderedWidth);
+        char[] bottomBorder = MakeBorderRow(borderedWidth);
+
+        for (int row = 0; row < rows.Count; row++)
+        {
+            char[] borderedRow = new char[borderedWidth];
+            borderedRow[0] = '#';
+            for (int col = 0; col < innerWidth; col++)
+            {
+                borderedRow[col + 1] = rows[row][col];
+            }
+            borderedRow[borderedWidth - 1] = '#';
+            rows[row] = borderedRow;
+        }
+
+        rows.Insert(0, topBorder);
+        rows.Add(bottomBorder);
+    }
+
+    private bool HasMapDataBorder(List<char[]> rows)
+    {
+        if (rows.Count < 3 || rows[0].Length < 3)
+        {
+            return false;
+        }
+
+        int width = rows[0].Length;
+        for (int row = 0; row < rows.Count; row++)
+        {
+            if (rows[row].Length != width)
+            {
+                return false;
+            }
+        }
+
+        for (int col = 0; col < width; col++)
+        {
+            if (rows[0][col] != '#' || rows[rows.Count - 1][col] != '#')
+            {
+                return false;
+            }
+        }
+
+        for (int row = 1; row < rows.Count - 1; row++)
+        {
+            if (rows[row][0] != '#' || rows[row][width - 1] != '#')
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private char[] MakeBorderRow(int width)
+    {
+        char[] row = new char[width];
+        for (int i = 0; i < width; i++)
+        {
+            row[i] = '#';
+        }
+
+        return row;
     }
 
     private void OnValidate()
