@@ -1,0 +1,56 @@
+{
+    "AttentionAgentConfig": {
+        "checkpoints": [
+            {
+                "steps": 9941,
+                "file_path": "results\\3\\AttentionAgentConfig\\AttentionAgentConfig-9941.onnx",
+                "reward": -3.060272561555559,
+                "creation_time": 1777827689.5607347,
+                "auxillary_file_paths": [
+                    "results\\3\\AttentionAgentConfig\\AttentionAgentConfig-9941.pt"
+                ]
+            },
+            {
+                "steps": 19976,
+                "file_path": "results\\3\\AttentionAgentConfig\\AttentionAgentConfig-19976.onnx",
+                "reward": -3.1552726507864217,
+                "creation_time": 1777827740.7875192,
+                "auxillary_file_paths": [
+                    "results\\3\\AttentionAgentConfig\\AttentionAgentConfig-19976.pt"
+                ]
+            },
+            {
+                "steps": 29967,
+                "file_path": "results\\3\\AttentionAgentConfig\\AttentionAgentConfig-29967.onnx",
+                "reward": -2.813666808936331,
+                "creation_time": 1777827799.3211908,
+                "auxillary_file_paths": [
+                    "results\\3\\AttentionAgentConfig\\AttentionAgentConfig-29967.pt"
+                ]
+            },
+            {
+                "steps": 34871,
+                "file_path": "results\\3\\AttentionAgentConfig\\AttentionAgentConfig-34871.onnx",
+                "reward": -2.7541000828146935,
+                "creation_time": 1777827826.7765718,
+                "auxillary_file_paths": [
+                    "results\\3\\AttentionAgentConfig\\AttentionAgentConfig-34871.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 34871,
+            "file_path": "results\\3\\AttentionAgentConfig.onnx",
+            "reward": -2.7541000828146935,
+            "creation_time": 1777827826.7765718,
+            "auxillary_file_paths": [
+                "results\\3\\AttentionAgentConfig\\AttentionAgentConfig-34871.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.5.1+cu121"
+    }
+}

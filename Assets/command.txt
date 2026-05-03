@@ -1,0 +1,3 @@
+tensorboard --logdir "D:\Project\The Knight\Assets\results\2
+tensorboard --logdir "D:\Project\The Knight\Assets\results\2
+mlagents-learn Scripts\Agent\icm_config.yaml --run-id=3 --env="D:\Project\The Knight\Build\The Knight.exe" --num-envs=8 --no-graphics --torch-device cuda --quality-level 0
