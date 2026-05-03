@@ -29,4 +29,4 @@ behaviors:
     time_horizon: 64
     summary_freq: 10000
     keep_checkpoints: 5
-    checkpoint_interval: 10000
+    checkpoint_interval: 1000000

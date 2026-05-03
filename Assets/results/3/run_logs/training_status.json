@@ -2,49 +2,58 @@
     "AttentionAgentConfig": {
         "checkpoints": [
             {
-                "steps": 9941,
-                "file_path": "results\\3\\AttentionAgentConfig\\AttentionAgentConfig-9941.onnx",
-                "reward": -3.060272561555559,
-                "creation_time": 1777827689.5607347,
+                "steps": 306429,
+                "file_path": "results\\3\\AttentionAgentConfig\\AttentionAgentConfig-306429.onnx",
+                "reward": -3.1322858312300275,
+                "creation_time": 1777830629.2196572,
                 "auxillary_file_paths": [
-                    "results\\3\\AttentionAgentConfig\\AttentionAgentConfig-9941.pt"
+                    "results\\3\\AttentionAgentConfig\\AttentionAgentConfig-306429.pt"
                 ]
             },
             {
-                "steps": 19976,
-                "file_path": "results\\3\\AttentionAgentConfig\\AttentionAgentConfig-19976.onnx",
-                "reward": -3.1552726507864217,
-                "creation_time": 1777827740.7875192,
+                "steps": 999958,
+                "file_path": "results\\3\\AttentionAgentConfig\\AttentionAgentConfig-999958.onnx",
+                "reward": -0.915380855401357,
+                "creation_time": 1777834548.6942787,
                 "auxillary_file_paths": [
-                    "results\\3\\AttentionAgentConfig\\AttentionAgentConfig-19976.pt"
+                    "results\\3\\AttentionAgentConfig\\AttentionAgentConfig-999958.pt"
                 ]
             },
             {
-                "steps": 29967,
-                "file_path": "results\\3\\AttentionAgentConfig\\AttentionAgentConfig-29967.onnx",
-                "reward": -2.813666808936331,
-                "creation_time": 1777827799.3211908,
+                "steps": 1999940,
+                "file_path": "results\\3\\AttentionAgentConfig\\AttentionAgentConfig-1999940.onnx",
+                "reward": -0.9272305793487109,
+                "creation_time": 1777840130.7543936,
                 "auxillary_file_paths": [
-                    "results\\3\\AttentionAgentConfig\\AttentionAgentConfig-29967.pt"
+                    "results\\3\\AttentionAgentConfig\\AttentionAgentConfig-1999940.pt"
                 ]
             },
             {
-                "steps": 34871,
-                "file_path": "results\\3\\AttentionAgentConfig\\AttentionAgentConfig-34871.onnx",
-                "reward": -2.7541000828146935,
-                "creation_time": 1777827826.7765718,
+                "steps": 2999955,
+                "file_path": "results\\3\\AttentionAgentConfig\\AttentionAgentConfig-2999955.onnx",
+                "reward": -2.3367272920229216,
+                "creation_time": 1777845728.5754874,
                 "auxillary_file_paths": [
-                    "results\\3\\AttentionAgentConfig\\AttentionAgentConfig-34871.pt"
+                    "results\\3\\AttentionAgentConfig\\AttentionAgentConfig-2999955.pt"
+                ]
+            },
+            {
+                "steps": 3310384,
+                "file_path": "results\\3\\AttentionAgentConfig\\AttentionAgentConfig-3310384.onnx",
+                "reward": -0.7409998043016954,
+                "creation_time": 1777847469.9186554,
+                "auxillary_file_paths": [
+                    "results\\3\\AttentionAgentConfig\\AttentionAgentConfig-3310384.pt"
                 ]
             }
         ],
         "final_checkpoint": {
-            "steps": 34871,
+            "steps": 3310384,
             "file_path": "results\\3\\AttentionAgentConfig.onnx",
-            "reward": -2.7541000828146935,
-            "creation_time": 1777827826.7765718,
+            "reward": -0.7409998043016954,
+            "creation_time": 1777847469.9186554,
             "auxillary_file_paths": [
-                "results\\3\\AttentionAgentConfig\\AttentionAgentConfig-34871.pt"
+                "results\\3\\AttentionAgentConfig\\AttentionAgentConfig-3310384.pt"
             ]
         }
     },
