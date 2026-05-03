@@ -20,7 +20,7 @@ behaviors:
         strength: 1.0
     # NO curiosity, NO episodic coverage (set EpisodicCoverageReward=0 in Inspector)
     # Ablation Run 1: PPO baseline — replicates A3C baseline from ICM paper
-    max_steps: 300000
+    max_steps: 1000000
     time_horizon: 64
     summary_freq: 10000
     keep_checkpoints: 5

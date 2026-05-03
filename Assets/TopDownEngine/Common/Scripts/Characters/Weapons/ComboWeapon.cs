@@ -54,7 +54,7 @@ namespace MoreMountains.TopDownEngine
 				bool comboInProgress = false;
 				foreach (Weapon weapon in Weapons)
 				{
-					if (weapon.WeaponState.CurrentState != Weapon.WeaponStates.WeaponIdle)
+					if (weapon != null && weapon.WeaponState != null && weapon.WeaponState.CurrentState != Weapon.WeaponStates.WeaponIdle)
 					{
 						comboInProgress = true;
 					}

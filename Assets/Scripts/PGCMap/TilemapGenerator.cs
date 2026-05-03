@@ -44,8 +44,11 @@ public class TilemapGenerator : MonoBehaviour
 
     [Header("Random Enemy Spawn")]
     public bool spawnEnemiesFromText = true;
-    [Tooltip("Nếu bật, mỗi map chỉ spawn một enemy ở ô sàn ngẫu nhiên.")]
+    [Tooltip("Nếu bật, mỗi map spawn số enemy giới hạn ở ô sàn ngẫu nhiên.")]
     public bool spawnOnlyOneEnemyFromText = true;
+    [Min(1)]
+    [Tooltip("Số enemy random spawn khi spawnOnlyOneEnemyFromText bật.")]
+    public int randomEnemySpawnCount = 3;
     public GameObject[] enemyPrefabs;
     public Transform enemyParent;
 
@@ -252,7 +255,7 @@ public class TilemapGenerator : MonoBehaviour
             return;
         }
 
-        int enemyCount = spawnOnlyOneEnemyFromText ? Mathf.Min(1, _enemySpawnCells.Count) : _enemySpawnCells.Count;
+        int enemyCount = _enemySpawnCells.Count;
         for (int i = 0; i < enemyCount; i++)
         {
             Vector3Int cell = _enemySpawnCells[i];
@@ -461,7 +464,7 @@ public class TilemapGenerator : MonoBehaviour
         List<Vector3Int> candidates = new List<Vector3Int>();
         CollectEnemySpawnCandidates(_lastRoomGrid, candidates);
 
-        int desiredCount = spawnOnlyOneEnemyFromText ? 1 : candidates.Count;
+        int desiredCount = spawnOnlyOneEnemyFromText ? randomEnemySpawnCount : candidates.Count;
         desiredCount = Mathf.Min(desiredCount, candidates.Count);
         for (int i = 0; i < desiredCount; i++)
         {

@@ -137,8 +137,11 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/TopDownEngine/ThirdParty/MoreMountains/MMTools/Demos/MMSceneLoading/MMSceneLoadingDemoSceneB.unity
     guid: 352d34cac2435634fb99618d19a3929c
-  - enabled: 1
+  - enabled: 0
     path: Assets/TopDownEngine/Demos/Koala2D/MyFirstLevel.unity
     guid: 620ed5f6bdf67c141a3fc44a9f2f7809
+  - enabled: 1
+    path: Assets/TopDownEngine/Demos/Koala2D/MyPGC.unity
+    guid: 9d2bdbaad7543684ab1812693d921ba4
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

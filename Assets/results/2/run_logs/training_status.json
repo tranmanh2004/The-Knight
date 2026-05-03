@@ -1,0 +1,65 @@
+{
+    "AttentionAgentConfig": {
+        "checkpoints": [
+            {
+                "steps": 4929999,
+                "file_path": "results\\2\\AttentionAgentConfig\\AttentionAgentConfig-4929999.onnx",
+                "reward": -0.3031425502683435,
+                "creation_time": 1777813113.543992,
+                "auxillary_file_paths": [
+                    "results\\2\\AttentionAgentConfig\\AttentionAgentConfig-4929999.pt"
+                ]
+            },
+            {
+                "steps": 4939956,
+                "file_path": "results\\2\\AttentionAgentConfig\\AttentionAgentConfig-4939956.onnx",
+                "reward": 2.5045006511112056,
+                "creation_time": 1777813177.1531658,
+                "auxillary_file_paths": [
+                    "results\\2\\AttentionAgentConfig\\AttentionAgentConfig-4939956.pt"
+                ]
+            },
+            {
+                "steps": 4949985,
+                "file_path": "results\\2\\AttentionAgentConfig\\AttentionAgentConfig-4949985.onnx",
+                "reward": 2.1466005824506285,
+                "creation_time": 1777813232.8800752,
+                "auxillary_file_paths": [
+                    "results\\2\\AttentionAgentConfig\\AttentionAgentConfig-4949985.pt"
+                ]
+            },
+            {
+                "steps": 4959954,
+                "file_path": "results\\2\\AttentionAgentConfig\\AttentionAgentConfig-4959954.onnx",
+                "reward": 1.0468576071517808,
+                "creation_time": 1777813310.7506988,
+                "auxillary_file_paths": [
+                    "results\\2\\AttentionAgentConfig\\AttentionAgentConfig-4959954.pt"
+                ]
+            },
+            {
+                "steps": 4960849,
+                "file_path": "results\\2\\AttentionAgentConfig\\AttentionAgentConfig-4960849.onnx",
+                "reward": 0.6795004196465015,
+                "creation_time": 1777813342.8252802,
+                "auxillary_file_paths": [
+                    "results\\2\\AttentionAgentConfig\\AttentionAgentConfig-4960849.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 4960849,
+            "file_path": "results\\2\\AttentionAgentConfig.onnx",
+            "reward": 0.6795004196465015,
+            "creation_time": 1777813342.8252802,
+            "auxillary_file_paths": [
+                "results\\2\\AttentionAgentConfig\\AttentionAgentConfig-4960849.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.5.1+cu121"
+    }
+}

@@ -38,17 +38,17 @@ behaviors:
     init_path: null
     keep_checkpoints: 5
     even_checkpoints: false
-    max_steps: 300000
+    max_steps: 1000000
     time_horizon: 64
     summary_freq: 10000
     threaded: false
     self_play: null
     behavioral_cloning: null
 env_settings:
-  env_path: null
+  env_path: D:\Project\The Knight\Build\The Knight.exe
   env_args: null
   base_port: 5005
-  num_envs: 1
+  num_envs: 12
   num_areas: 1
   timeout_wait: 60
   seed: -1
@@ -62,15 +62,15 @@ engine_settings:
   time_scale: 20
   target_frame_rate: -1
   capture_frame_rate: 60
-  no_graphics: false
+  no_graphics: true
   no_graphics_monitor: false
 environment_parameters: null
 checkpoint_settings:
   run_id: '1'
   initialize_from: null
   load_model: false
-  resume: false
-  force: true
+  resume: true
+  force: false
   train_model: false
   inference: false
   results_dir: results

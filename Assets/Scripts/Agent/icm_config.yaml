@@ -25,7 +25,7 @@ behaviors:
         learning_rate: 1.0e-3
     # NO episodic coverage (set EpisodicCoverageReward=0 in Inspector)
     # Ablation Run 2: PPO + ICM — replicates paper's proposed method
-    max_steps: 300000
+    max_steps: 5000000
     time_horizon: 64
     summary_freq: 10000
     keep_checkpoints: 5

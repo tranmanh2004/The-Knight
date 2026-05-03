@@ -85,9 +85,9 @@ public class KoalaAgentSetup : Editor
         bp.BehaviorName = "AttentionAgentConfig";
         bp.BehaviorType = BehaviorType.Default;
 
-        var actionSpec = Unity.MLAgents.Actuators.ActionSpec.MakeDiscrete(3, 3, 3);
+        var actionSpec = Unity.MLAgents.Actuators.ActionSpec.MakeDiscrete(3, 3, 3, 9);
         bp.BrainParameters.ActionSpec = actionSpec;
-        bp.BrainParameters.VectorObservationSize = 329;
+        bp.BrainParameters.VectorObservationSize = 199;
         bp.BrainParameters.NumStackedVectorObservations = 1;
 
         // ── 14. DecisionRequester ────────────────────────────────────────────
@@ -100,7 +100,7 @@ public class KoalaAgentSetup : Editor
         agent.MaxStep = 5000;
         agent.DealDamageReward    =  0.5f;
         agent.TakeDamagePenalty   = -0.5f;
-        agent.KillPlayerReward    =  1.0f;
+        agent.KillEnemyReward     =  1.0f;
         agent.AgentDiedPenalty    = -1.0f;
         agent.TimePenalty         = -0.001f;
         agent.DodgeSuccessReward  =  0.2f;
@@ -108,8 +108,7 @@ public class KoalaAgentSetup : Editor
         agent.VisionRadius        = 20f;
         agent.MaxEnemies          = 3;
         agent.MaxBullets          = 10;
-        agent.MaxItems            = 4;
-        agent.MaxHazards          = 5;
+        agent.OverlapBufferSize   = 128;
 
         // Auto-find TilemapGenerator on "Map" and enable per-episode map generation
         GameObject mapGo = GameObject.Find("Map");
@@ -141,7 +140,7 @@ public class KoalaAgentSetup : Editor
             "✓ AIDecisionDetectTargetRadius2D\n" +
             "✓ CharacterDash2D\n" +
             "✓ AIBrain compatibility target only (no policy states)\n" +
-            "✓ BehaviorParameters (obs=329, branches=[3,3,3])\n" +
+            "✓ BehaviorParameters (obs=199, branches=[3,3,3,9])\n" +
             "✓ DecisionRequester (period=5)\n" +
             "✓ AttentionAgent\n\n" +
             "✓ Map generation per episode: " + (roomGen != null ? "ENABLED (Map found)" : "DISABLED — 'Map' GameObject not found") + "\n\n" +

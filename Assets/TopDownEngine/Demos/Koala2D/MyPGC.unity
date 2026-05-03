@@ -281,8 +281,18 @@ PrefabInstance:
         type: 3}
       propertyPath: InitialWeapon
       value: 
-      objectReference: {fileID: 114594623923584052, guid: 4069a3a0fab9aa14aa3863708b264eab,
+      objectReference: {fileID: 114594623923584052, guid: ea4d9a1282e7d5748a3393a32892ddbf,
         type: 3}
+    - target: {fileID: 114545434076996454, guid: a200a0b4274de1d4da0e68119fadcbbb,
+        type: 3}
+      propertyPath: ForceWeaponAimControl
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114545434076996454, guid: a200a0b4274de1d4da0e68119fadcbbb,
+        type: 3}
+      propertyPath: ForcedWeaponAimControl
+      value: 4
+      objectReference: {fileID: 0}
     - target: {fileID: 114873785417298432, guid: a200a0b4274de1d4da0e68119fadcbbb,
         type: 3}
       propertyPath: CharacterType
@@ -4326,7 +4336,7 @@ MonoBehaviour:
   MaxStep: 5000
   DealDamageReward: 0.5
   TakeDamagePenalty: -0.5
-  KillPlayerReward: 1
+  KillEnemyReward: 1
   AllEnemiesKilledReward: 1
   AgentDiedPenalty: -1
   TimePenalty: -0.001
@@ -4340,21 +4350,19 @@ MonoBehaviour:
   CoverageGridCellSize: 1
   MaxEnemies: 3
   MaxBullets: 10
-  MaxItems: 4
-  MaxHazards: 5
+  OverlapBufferSize: 128
   RandomWeaponPool:
   - {fileID: 114552424271636822, guid: 63309671082ff30409623a954c22e8f5, type: 3}
   - {fileID: 114317679573123918, guid: 41c4b1b5cf3c187459806b6e03ca36ac, type: 3}
   - {fileID: 114068047272519342, guid: cf0e5f55594b379408379784046c533c, type: 3}
-  - {fileID: 114317679573123918, guid: 1b80d0a781b16184f8eeec786984fe3a, type: 3}
-  - {fileID: 114594623923584052, guid: bb65093cd7611424989addce50918e38, type: 3}
   - {fileID: 114740255974881622, guid: 94ca7322bedfa1042892135419b92b96, type: 3}
   - {fileID: 114068047272519342, guid: cf0e5f55594b379408379784046c533c, type: 3}
+  - {fileID: 114594623923584052, guid: ea4d9a1282e7d5748a3393a32892ddbf, type: 3}
   RandomizeWeaponOnEpisodeBegin: 1
   GenerateRandomMapOnEpisodeBegin: 1
   EpisodeRoomGenerator: {fileID: 1982127725}
   ForceFolderRandomMode: 1
-  DebugActionLogs: 1
+  DebugActionLogs: 0
   DebugLogEveryNSteps: 10
   _currentTarget: {fileID: 0}
   _previousTargetHealth: 0
@@ -4390,16 +4398,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 329
+    VectorObservationSize: 199
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 0
-      BranchSizes: 030000000300000003000000
-    VectorActionSize: 030000000300000003000000
+      BranchSizes: 03000000030000000300000009000000
+    VectorActionSize: 03000000030000000300000009000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 0}
+  m_Model: {fileID: 5022602860645237092, guid: dd1290d243938e14d91679b15f87cff1, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: AttentionAgentConfig
@@ -6028,6 +6036,7 @@ MonoBehaviour:
   randomizePlayerSpawnFromFloor: 1
   spawnEnemiesFromText: 1
   spawnOnlyOneEnemyFromText: 1
+  randomEnemySpawnCount: 3
   enemyPrefabs:
   - {fileID: 1170912388798894, guid: 3d2a551cb5b32194898fd8fb30716e53, type: 3}
   - {fileID: 1561694053617324, guid: 89e8fe862f5cce84198ece4736c332ef, type: 3}
