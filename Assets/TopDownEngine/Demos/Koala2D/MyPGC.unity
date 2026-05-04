@@ -4334,13 +4334,13 @@ MonoBehaviour:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
   MaxStep: 5000
-  DealDamageReward: 0.5
-  TakeDamagePenalty: -0.5
-  KillEnemyReward: 1
-  AllEnemiesKilledReward: 1
+  DealDamageReward: 0
+  TakeDamagePenalty: 0
+  KillEnemyReward: 2
+  AllEnemiesKilledReward: 3
   AgentDiedPenalty: -1
-  TimePenalty: -0.001
-  DodgeSuccessReward: 0.2
+  TimePenalty: -0.0005
+  DodgeSuccessReward: 0
   VisionRadius: 20
   WallLayerMask:
     serializedVersion: 2
@@ -4365,7 +4365,6 @@ MonoBehaviour:
   DebugActionLogs: 0
   DebugLogEveryNSteps: 10
   _currentTarget: {fileID: 0}
-  _previousTargetHealth: 0
   _previousHealth: 0
   _isDodging: 0
   _dodgeStartHealth: 0
