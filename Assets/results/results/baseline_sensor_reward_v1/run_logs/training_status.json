@@ -1,0 +1,65 @@
+{
+    "AttentionAgentConfig": {
+        "checkpoints": [
+            {
+                "steps": 499940,
+                "file_path": "results\\baseline_sensor_reward_v1\\AttentionAgentConfig\\AttentionAgentConfig-499940.onnx",
+                "reward": -4.657583191990852,
+                "creation_time": 1777886128.6288612,
+                "auxillary_file_paths": [
+                    "results\\baseline_sensor_reward_v1\\AttentionAgentConfig\\AttentionAgentConfig-499940.pt"
+                ]
+            },
+            {
+                "steps": 599973,
+                "file_path": "results\\baseline_sensor_reward_v1\\AttentionAgentConfig\\AttentionAgentConfig-599973.onnx",
+                "reward": -3.4550515030111586,
+                "creation_time": 1777886285.9964874,
+                "auxillary_file_paths": [
+                    "results\\baseline_sensor_reward_v1\\AttentionAgentConfig\\AttentionAgentConfig-599973.pt"
+                ]
+            },
+            {
+                "steps": 699961,
+                "file_path": "results\\baseline_sensor_reward_v1\\AttentionAgentConfig\\AttentionAgentConfig-699961.onnx",
+                "reward": -2.941380512714386,
+                "creation_time": 1777886470.1212823,
+                "auxillary_file_paths": [
+                    "results\\baseline_sensor_reward_v1\\AttentionAgentConfig\\AttentionAgentConfig-699961.pt"
+                ]
+            },
+            {
+                "steps": 799937,
+                "file_path": "results\\baseline_sensor_reward_v1\\AttentionAgentConfig\\AttentionAgentConfig-799937.onnx",
+                "reward": -3.782911000916591,
+                "creation_time": 1777886610.953127,
+                "auxillary_file_paths": [
+                    "results\\baseline_sensor_reward_v1\\AttentionAgentConfig\\AttentionAgentConfig-799937.pt"
+                ]
+            },
+            {
+                "steps": 800001,
+                "file_path": "results\\baseline_sensor_reward_v1\\AttentionAgentConfig\\AttentionAgentConfig-800001.onnx",
+                "reward": -3.782911000916591,
+                "creation_time": 1777886612.0086496,
+                "auxillary_file_paths": [
+                    "results\\baseline_sensor_reward_v1\\AttentionAgentConfig\\AttentionAgentConfig-800001.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 800001,
+            "file_path": "results\\baseline_sensor_reward_v1\\AttentionAgentConfig.onnx",
+            "reward": -3.782911000916591,
+            "creation_time": 1777886612.0086496,
+            "auxillary_file_paths": [
+                "results\\baseline_sensor_reward_v1\\AttentionAgentConfig\\AttentionAgentConfig-800001.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.11.0+cpu"
+    }
+}

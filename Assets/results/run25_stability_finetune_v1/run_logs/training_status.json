@@ -1,0 +1,65 @@
+{
+    "AttentionAgentConfig": {
+        "checkpoints": [
+            {
+                "steps": 199942,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run25_stability_finetune_v1\\AttentionAgentConfig\\AttentionAgentConfig-199942.onnx",
+                "reward": 4.822833049864996,
+                "creation_time": 1778080951.209623,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run25_stability_finetune_v1\\AttentionAgentConfig\\AttentionAgentConfig-199942.pt"
+                ]
+            },
+            {
+                "steps": 299983,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run25_stability_finetune_v1\\AttentionAgentConfig\\AttentionAgentConfig-299983.onnx",
+                "reward": 8.278306391846854,
+                "creation_time": 1778081101.2981865,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run25_stability_finetune_v1\\AttentionAgentConfig\\AttentionAgentConfig-299983.pt"
+                ]
+            },
+            {
+                "steps": 399983,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run25_stability_finetune_v1\\AttentionAgentConfig\\AttentionAgentConfig-399983.onnx",
+                "reward": 7.540932738874107,
+                "creation_time": 1778081260.4670312,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run25_stability_finetune_v1\\AttentionAgentConfig\\AttentionAgentConfig-399983.pt"
+                ]
+            },
+            {
+                "steps": 499962,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run25_stability_finetune_v1\\AttentionAgentConfig\\AttentionAgentConfig-499962.onnx",
+                "reward": 9.724243599766245,
+                "creation_time": 1778081421.1572444,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run25_stability_finetune_v1\\AttentionAgentConfig\\AttentionAgentConfig-499962.pt"
+                ]
+            },
+            {
+                "steps": 500026,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run25_stability_finetune_v1\\AttentionAgentConfig\\AttentionAgentConfig-500026.onnx",
+                "reward": 9.724243599766245,
+                "creation_time": 1778081422.284802,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run25_stability_finetune_v1\\AttentionAgentConfig\\AttentionAgentConfig-500026.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 500026,
+            "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run25_stability_finetune_v1\\AttentionAgentConfig.onnx",
+            "reward": 9.724243599766245,
+            "creation_time": 1778081422.284802,
+            "auxillary_file_paths": [
+                "C:\\Riot Games\\The-Knight\\Assets\\results\\run25_stability_finetune_v1\\AttentionAgentConfig\\AttentionAgentConfig-500026.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.11.0+cpu"
+    }
+}

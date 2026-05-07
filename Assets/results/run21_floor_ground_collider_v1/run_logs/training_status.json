@@ -1,0 +1,56 @@
+{
+    "AttentionAgentConfig": {
+        "checkpoints": [
+            {
+                "steps": 99963,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run21_floor_ground_collider_v1\\AttentionAgentConfig\\AttentionAgentConfig-99963.onnx",
+                "reward": 6.960878116477813,
+                "creation_time": 1778075628.338527,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run21_floor_ground_collider_v1\\AttentionAgentConfig\\AttentionAgentConfig-99963.pt"
+                ]
+            },
+            {
+                "steps": 199965,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run21_floor_ground_collider_v1\\AttentionAgentConfig\\AttentionAgentConfig-199965.onnx",
+                "reward": 7.366392511036247,
+                "creation_time": 1778075768.292283,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run21_floor_ground_collider_v1\\AttentionAgentConfig\\AttentionAgentConfig-199965.pt"
+                ]
+            },
+            {
+                "steps": 299984,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run21_floor_ground_collider_v1\\AttentionAgentConfig\\AttentionAgentConfig-299984.onnx",
+                "reward": 7.896849237058474,
+                "creation_time": 1778075909.3279004,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run21_floor_ground_collider_v1\\AttentionAgentConfig\\AttentionAgentConfig-299984.pt"
+                ]
+            },
+            {
+                "steps": 300112,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run21_floor_ground_collider_v1\\AttentionAgentConfig\\AttentionAgentConfig-300112.onnx",
+                "reward": 7.896849237058474,
+                "creation_time": 1778075910.3897269,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run21_floor_ground_collider_v1\\AttentionAgentConfig\\AttentionAgentConfig-300112.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 300112,
+            "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run21_floor_ground_collider_v1\\AttentionAgentConfig.onnx",
+            "reward": 7.896849237058474,
+            "creation_time": 1778075910.3897269,
+            "auxillary_file_paths": [
+                "C:\\Riot Games\\The-Knight\\Assets\\results\\run21_floor_ground_collider_v1\\AttentionAgentConfig\\AttentionAgentConfig-300112.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.11.0+cpu"
+    }
+}

@@ -1,0 +1,65 @@
+{
+    "AttentionAgentConfig": {
+        "checkpoints": [
+            {
+                "steps": 149966,
+                "file_path": "results\\run4_softcooldown_baseline300014_v1\\AttentionAgentConfig\\AttentionAgentConfig-149966.onnx",
+                "reward": 1.9497695174068213,
+                "creation_time": 1777961329.842269,
+                "auxillary_file_paths": [
+                    "results\\run4_softcooldown_baseline300014_v1\\AttentionAgentConfig\\AttentionAgentConfig-149966.pt"
+                ]
+            },
+            {
+                "steps": 199957,
+                "file_path": "results\\run4_softcooldown_baseline300014_v1\\AttentionAgentConfig\\AttentionAgentConfig-199957.onnx",
+                "reward": 4.002690359050858,
+                "creation_time": 1777961399.1277604,
+                "auxillary_file_paths": [
+                    "results\\run4_softcooldown_baseline300014_v1\\AttentionAgentConfig\\AttentionAgentConfig-199957.pt"
+                ]
+            },
+            {
+                "steps": 249986,
+                "file_path": "results\\run4_softcooldown_baseline300014_v1\\AttentionAgentConfig\\AttentionAgentConfig-249986.onnx",
+                "reward": 4.639052223414183,
+                "creation_time": 1777961469.9778116,
+                "auxillary_file_paths": [
+                    "results\\run4_softcooldown_baseline300014_v1\\AttentionAgentConfig\\AttentionAgentConfig-249986.pt"
+                ]
+            },
+            {
+                "steps": 299997,
+                "file_path": "results\\run4_softcooldown_baseline300014_v1\\AttentionAgentConfig\\AttentionAgentConfig-299997.onnx",
+                "reward": 3.579915548209101,
+                "creation_time": 1777961538.7290268,
+                "auxillary_file_paths": [
+                    "results\\run4_softcooldown_baseline300014_v1\\AttentionAgentConfig\\AttentionAgentConfig-299997.pt"
+                ]
+            },
+            {
+                "steps": 300037,
+                "file_path": "results\\run4_softcooldown_baseline300014_v1\\AttentionAgentConfig\\AttentionAgentConfig-300037.onnx",
+                "reward": 3.358569400161505,
+                "creation_time": 1777961539.9432511,
+                "auxillary_file_paths": [
+                    "results\\run4_softcooldown_baseline300014_v1\\AttentionAgentConfig\\AttentionAgentConfig-300037.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 300037,
+            "file_path": "results\\run4_softcooldown_baseline300014_v1\\AttentionAgentConfig.onnx",
+            "reward": 3.358569400161505,
+            "creation_time": 1777961539.9432511,
+            "auxillary_file_paths": [
+                "results\\run4_softcooldown_baseline300014_v1\\AttentionAgentConfig\\AttentionAgentConfig-300037.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.11.0+cpu"
+    }
+}

@@ -11,7 +11,7 @@ using System.Collections.Generic;
 /// 
 /// OBSERVATION SPECIFICATION:
 /// ===========================
-/// Total observation size: 199 dimensions
+/// Total observation size: 207 dimensions
 ///
 /// Player Features (13 dims):
 ///   - Health (1), Ammo (1), Cooldown (1), WeaponReady (1), Speed (1)
@@ -28,10 +28,10 @@ using System.Collections.Generic;
 ///   - Per bullet: Pos X,Y (2), Vel X,Y (2), Distance (1), TimeToImpact (1),
 ///     OwnerType (1), Padding (5) = 12 dims
 ///
-/// Wall Features (8 dims = WALL_RAY_COUNT rays × 1):
-///   - 8 rays every 45°: normalized distance to nearest wall (0=touching, 1=nothing in range)
+/// Wall Features (16 dims = WALL_RAY_COUNT rays × 1):
+///   - 16 rays every 22.5°: normalized distance to nearest wall (0=touching, 1=nothing in range)
 ///
-/// Total = 13 + 4 + 54 + 120 + 8 = 199 dims
+/// Total = 13 + 4 + 54 + 120 + 16 = 207 dims
 ///
 /// CRITICAL: If changing MaxEnemies, MaxBullets, or WALL_RAY_COUNT,
 /// update BehaviorParameters.VectorObservationSize in the Unity Inspector to match!
@@ -46,14 +46,31 @@ using System.Collections.Generic;
 [RequireComponent(typeof(CharacterDash2D))]
 public class AttentionAgent : Agent
 {
-    [Header("Reward Shaping Settings")]
-    public float DealDamageReward = 0.5f;
-    public float TakeDamagePenalty = -0.5f;
-    public float KillEnemyReward = 1.0f;
-    public float AllEnemiesKilledReward = 1.0f;
-    public float AgentDiedPenalty = -1.0f;
-    public float TimePenalty = -0.001f;
-    public float DodgeSuccessReward = 0.2f;  // Tránh được viên đạn
+    // Reward tuning is intentionally code-only. Keeping these non-serialized
+    // prevents scenes/prefabs from silently overriding training experiments.
+    private const float DealDamageReward = 1.0f;
+    private const float TakeDamagePenalty = -0.3f;
+    private const float KillEnemyReward = 3.0f;
+    private const float AllEnemiesKilledReward = 5.0f;
+    private const float AgentDiedPenalty = -2.0f;
+    private const float TimePenalty = -0.0005f;
+    private const float DodgeSuccessReward = 0.1f;
+    private const float DamageRewardPerPoint = 0.04f;
+    private const float DamageTakenPenaltyPerPoint = 0.006f;
+    private const float ApproachTargetReward = 0.008f;
+    private const float MoveAwayFromTargetPenalty = -0.001f;
+    private const float AimAtTargetReward = 0.001f;
+    private const float ReadyAttackIntentWithTargetReward = 0.003f;
+    private const float CooldownPatienceReward = 0.0001f;
+    private const float AttackAlignedReward = 0.05f;
+    private const float InvalidAttackPenalty = -0.003f;
+    private const float UsefulDashReward = 0.04f;
+    private const float WastefulDashPenalty = -0.002f;
+    private const float IdleNearEnemyPenalty = -0.0005f;
+    private const float EpisodicCoverageReward = 0f;
+    private const float CoverageGridCellSize = 1f;
+    private const bool AutoAimAttackAtCurrentTarget = true;
+    private const bool RequireLineOfSightToTarget = true;
 
     [Header("Vision Settings")]
     [Tooltip("Bán kính tầm nhìn cho việc phát hiện các đối tượng")]
@@ -64,12 +81,6 @@ public class AttentionAgent : Agent
     public LayerMask WallLayerMask;
     [Tooltip("Tầm xa của mỗi wall ray. Nên <= chiều rộng phòng.")]
     public float WallRayLength = 15f;
-
-    [Header("Episodic Coverage Bonus")]
-    [Tooltip("Reward khi agent đến grid cell mới trong episode. Set 0 để tắt (dùng cho baseline/icm-only runs).")]
-    public float EpisodicCoverageReward = 0.01f;
-    [Tooltip("Kích thước mỗi grid cell (world units). 1f = mỗi tile là 1 cell.")]
-    public float CoverageGridCellSize = 1f;
 
     [Header("Object Capacity Settings")]
     [Tooltip("Số lượng enemies tối đa để đưa vào observation")]
@@ -92,15 +103,74 @@ public class AttentionAgent : Agent
     public TilemapGenerator EpisodeRoomGenerator;
     [Tooltip("Tự chuyển RoomGenerator sang FolderRandom trước khi generate.")]
     public bool ForceFolderRandomMode = true;
+    [Tooltip("Ends a broken episode if the agent is pushed far away from the episode spawn.")]
+    public bool EndEpisodeWhenOutOfBounds = true;
+    [Tooltip("Max world-space distance from spawn before the episode is considered broken.")]
+    public float MaxDistanceFromSpawnBeforeReset = 80f;
+    [Tooltip("Ends a broken episode if any living enemy is pushed far away from the episode spawn.")]
+    public bool EndEpisodeWhenEnemyOutOfBounds = true;
+    [Tooltip("Max world-space distance from spawn before an enemy is considered out of the playable room.")]
+    public float MaxEnemyDistanceFromSpawnBeforeReset = 80f;
+    [Tooltip("Ends episode if agent stays still for too many consecutive decisions (stuck against wall or by knockback).")]
+    public bool EndEpisodeWhenStuck = true;
+    [Tooltip("How many consecutive still decisions before episode ends. At DecisionPeriod=5, 30 decisions ≈ 7.5 seconds stuck.")]
+    public int MaxStillDecisionsBeforeReset = 30;
+    [Tooltip("Attempts a small safe reposition before ending a grounded stuck episode.")]
+    public bool RecoverGroundedStuckBeforeEnding = true;
+    [Tooltip("How many consecutive still decisions before trying grounded stuck recovery.")]
+    public int GroundedStuckRecoveryDecisionThreshold = 20;
+    [Tooltip("Max grounded stuck recoveries allowed in one episode before ending it as broken.")]
+    public int MaxGroundedStuckRecoveriesPerEpisode = 3;
+    [Tooltip("Small penalty applied when the agent needs grounded stuck recovery.")]
+    public float GroundedStuckRecoveryPenalty = -0.05f;
+    [Tooltip("Search radius in world units for a safe floor point during grounded stuck recovery.")]
+    public float GroundedStuckRecoverySearchRadius = 4f;
+    [Tooltip("Spacing in world units between sampled recovery points.")]
+    public float GroundedStuckRecoverySearchStep = 0.5f;
+    [Tooltip("Minimum clearance from wall/enemy colliders when choosing a grounded stuck recovery point.")]
+    public float GroundedStuckRecoveryClearance = 0.45f;
+    [Tooltip("Relocates living enemies that appear stuck near geometry before they keep poisoning the episode.")]
+    public bool RecoverEnemyStuckDuringTraining = true;
+    [Tooltip("How many decisions an enemy can barely move before being considered stuck.")]
+    public int EnemyStuckRecoveryDecisionThreshold = 60;
+    [Tooltip("Max enemy stuck recoveries allowed in one episode.")]
+    public int MaxEnemyStuckRecoveriesPerEpisode = 6;
+    [Tooltip("Max recoveries for the same enemy in one episode.")]
+    public int MaxEnemyStuckRecoveriesPerEnemy = 2;
+    [Tooltip("World-space movement below this value counts as still for enemy stuck detection.")]
+    public float EnemyStuckDistanceEpsilon = 0.04f;
+    [Tooltip("Minimum distance from the agent when choosing an enemy recovery point.")]
+    public float EnemyStuckRecoveryMinDistanceFromAgent = 2f;
+    [Tooltip("Search radius in world units for a safe enemy recovery point.")]
+    public float EnemyStuckRecoverySearchRadius = 5f;
+    [Tooltip("Spacing in world units between sampled enemy recovery points.")]
+    public float EnemyStuckRecoverySearchStep = 0.5f;
+    [Tooltip("Clearance from wall/player/other enemy colliders when choosing enemy recovery points.")]
+    public float EnemyStuckRecoveryClearance = 0.45f;
+    [Tooltip("Ends episode if agent makes too many consecutive invalid attacks (weapon not ready or no target).")]
+    public bool EndEpisodeOnConsecutiveInvalid = true;
+    [Tooltip("How many consecutive invalid attack actions before episode ends.")]
+    public int MaxConsecutiveInvalidAttacks = 20;
+    [Tooltip("Penalty used when ending a broken episode early.")]
+    public float BrokenEpisodePenalty = -1f;
+    [Tooltip("Disables damage knockback on the training agent and spawned enemies. This reduces physics-driven broken episodes during RL training.")]
+    public bool DisableTrainingKnockback = true;
 
     [Header("Debug")]
     [Tooltip("Logs chosen action branches and context to Unity Console.")]
     public bool DebugActionLogs = false;
     [Tooltip("Log once every N OnActionReceived calls.")]
     public int DebugLogEveryNSteps = 1;
+    [Tooltip("Logs a warning when the agent keeps receiving decisions but barely changes position.")]
+    public bool DebugStuckLogs = true;
+    [Tooltip("How many logged decisions with almost no position change before a stuck warning is printed.")]
+    public int DebugStuckDecisionThreshold = 10;
+    [Tooltip("Max world-space movement between logged decisions that counts as standing still.")]
+    public float DebugStuckDistanceEpsilon = 0.05f;
 
     // --- Hằng số định danh hành động ---
-    private const int WALL_RAY_COUNT = 8;   // 8 rays × 45° — adds 8 dims to observation
+    public const int VectorObservationSize = 207;
+    private const int WALL_RAY_COUNT = 16;   // 16 rays × 22.5° — adds 16 dims to observation
     private const int BRANCH_MOVE_X = 0;
     private const int BRANCH_MOVE_Y = 1;
     private const int BRANCH_COMBAT = 2;
@@ -131,21 +201,30 @@ public class AttentionAgent : Agent
     private CharacterHandleWeapon characterHandleWeapon;
     private CharacterMovement characterMovement;
     private CharacterDash2D characterDash2D;
+    private TopDownController2D topDownController2D;
     private Weapon _currentWeapon;
 
     // --- State Tracking ---
     [SerializeField] private Transform _currentTarget;
     private float _previousTotalEnemyHealth = 0f;
     private int _previousEnemyCount = 0;
+    private float _previousTargetDistance = -1f;
     private Vector2 _lastMoveDirection = Vector2.right;
     private Vector2 _lastAimDirection = Vector2.right;
     private Vector3 agentStartingPosition;
     private int _decisionLogCounter = 0;
+    private Vector3 _lastDebugPosition;
+    private int _stillDecisionCount = 0;
+    private int _consecutiveInvalidAttacks = 0;
+    private int _groundedStuckRecoveries = 0;
 
     // --- Object Lists (cached to avoid GC allocation) ---
     private List<GameObject> _enemies = new List<GameObject>();
     private List<Projectile> _bullets = new List<Projectile>();
     private readonly List<GameObject> _trackedEnemies = new List<GameObject>();
+    private readonly Dictionary<GameObject, Vector3> _lastEnemyPositions = new Dictionary<GameObject, Vector3>();
+    private readonly Dictionary<GameObject, int> _enemyStillDecisionCounts = new Dictionary<GameObject, int>();
+    private readonly Dictionary<GameObject, int> _enemyRecoveryCounts = new Dictionary<GameObject, int>();
     private Collider2D[] _overlapResults;
     private ContactFilter2D _overlapFilter;
 
@@ -161,6 +240,38 @@ public class AttentionAgent : Agent
     // --- Episodic coverage tracking ---
     private readonly HashSet<Vector2Int> _visitedCells = new HashSet<Vector2Int>();
 
+    // --- Training diagnostics ---
+    private float _episodeDamageDealt;
+    private float _episodeDamageTaken;
+    private int _episodeKills;
+    private int _episodeAttackActions;
+    private int _episodeAlignedAttacks;
+    private int _episodeInvalidAttacks;
+    private int _episodeDashActions;
+    private int _episodeUsefulDashes;
+    private int _episodeWastefulDashes;
+    private int _episodeDecisionCount;
+    private int _episodeDecisionsWithTarget;
+    private int _episodeAttacksWithTarget;
+    private int _episodeAttacksWithoutTarget;
+    private int _episodeAttacksWhileWeaponReady;
+    private int _episodeAttacksWhileWeaponNotReady;
+    private int _episodeCooldownPatienceDecisions;
+    private int _episodeBlockedAttackActions;
+    private int _episodeBlockedDashActions;
+    private int _episodeEnemyStuckRecoveries;
+    private BrokenEpisodeReason _episodeBrokenReason = BrokenEpisodeReason.None;
+    private bool _episodeStatsRecorded;
+
+    private enum BrokenEpisodeReason
+    {
+        None,
+        Stuck,
+        ConsecutiveInvalidAttacks,
+        AgentOutOfBounds,
+        EnemyOutOfBounds
+    }
+
     // --- Character reference ---
     private Character _character;
 
@@ -173,6 +284,7 @@ public class AttentionAgent : Agent
         characterHandleWeapon = GetComponent<CharacterHandleWeapon>();
         characterMovement = GetComponent<CharacterMovement>();
         characterDash2D = GetComponent<CharacterDash2D>();
+        topDownController2D = GetComponent<TopDownController2D>();
         _character = GetComponent<Character>();
         InitializeReusableBuffers();
         ConfigureWeaponAimForTraining();
@@ -191,6 +303,7 @@ public class AttentionAgent : Agent
         if (characterHandleWeapon == null) characterHandleWeapon = GetComponent<CharacterHandleWeapon>();
         if (characterMovement == null) characterMovement = GetComponent<CharacterMovement>();
         if (characterDash2D == null) characterDash2D = GetComponent<CharacterDash2D>();
+        if (topDownController2D == null) topDownController2D = GetComponent<TopDownController2D>();
         if (_character == null) _character = GetComponent<Character>();
         InitializeReusableBuffers();
 
@@ -232,11 +345,17 @@ public class AttentionAgent : Agent
     private void HandleAgentDeath()
     {
         AddReward(AgentDiedPenalty);
+        RecordEpisodeStats(0f, 1f);
         EndEpisode();
     }
 
     public override void OnEpisodeBegin()
     {
+        if (!_episodeStatsRecorded && _episodeDecisionCount > 0)
+        {
+            RecordEpisodeStats(0f, 0f);
+        }
+        ResetEpisodeStats();
         GenerateEpisodeMapIfConfigured();
         ConfigureWeaponAimForTraining();
         EnsureCurrentWeaponStateInitialized();
@@ -254,6 +373,7 @@ public class AttentionAgent : Agent
             agentHealth.Revive();
             transform.position = spawnPos;
         }
+        StabilizeTrainingCharacter(gameObject);
 
         EquipRandomWeaponIfConfigured();
         EnsureWeaponEquipped();
@@ -276,13 +396,21 @@ public class AttentionAgent : Agent
         _currentTarget = null;
         _previousTotalEnemyHealth = 0f;
         _previousEnemyCount = 0;
+        _previousTargetDistance = -1f;
         _decisionLogCounter = 0;
+        _lastDebugPosition = transform.position;
+        _stillDecisionCount = 0;
+        _consecutiveInvalidAttacks = 0;
+        _groundedStuckRecoveries = 0;
 
         RefreshTrackedEnemies();
+        StabilizeTrackedEnemies();
+        ResetEnemyStuckTracking();
         CacheSurroundingObjects();
         UpdateStickyTarget();
         _previousTotalEnemyHealth = GetTotalEnemyHealth();
         _previousEnemyCount = GetLivingEnemyCount();
+        _previousTargetDistance = GetCurrentTargetDistance();
     }
 
     /// <summary>
@@ -335,6 +463,7 @@ public class AttentionAgent : Agent
         }
 
         _currentTarget = target;
+        _previousTargetDistance = GetCurrentTargetDistance();
     }
 
     private bool IsTargetValid(Transform target)
@@ -350,7 +479,28 @@ public class AttentionAgent : Agent
             return false;
         }
 
-        return Vector2.Distance(transform.position, target.position) <= VisionRadius;
+        return Vector2.Distance(transform.position, target.position) <= VisionRadius
+            && HasLineOfSightTo(target);
+    }
+
+    private bool HasLineOfSightTo(Transform target)
+    {
+        if (!RequireLineOfSightToTarget || target == null || WallLayerMask.value == 0)
+        {
+            return true;
+        }
+
+        Vector2 origin = transform.position;
+        Vector2 destination = target.position;
+        Vector2 direction = destination - origin;
+        float distance = direction.magnitude;
+        if (distance <= 0.0001f)
+        {
+            return true;
+        }
+
+        RaycastHit2D wallHit = Physics2D.Raycast(origin, direction / distance, distance, WallLayerMask);
+        return wallHit.collider == null;
     }
 
     private void SyncBrainTarget()
@@ -492,7 +642,7 @@ public class AttentionAgent : Agent
         // Guard: if critical components missing, pad all observations with zeros
         if (agentHealth == null || characterHandleWeapon == null)
         {
-            for (int i = 0; i < 199; i++) sensor.AddObservation(0f);
+            for (int i = 0; i < VectorObservationSize; i++) sensor.AddObservation(0f);
             return;
         }
 
@@ -511,7 +661,7 @@ public class AttentionAgent : Agent
         catch (System.Exception e)
         {
             Debug.LogError($"[AttentionAgent] CollectObservations setup threw: {e}", gameObject);
-            for (int i = 0; i < 199; i++) sensor.AddObservation(0f);
+            for (int i = 0; i < VectorObservationSize; i++) sensor.AddObservation(0f);
             return;
         }
 
@@ -525,7 +675,7 @@ public class AttentionAgent : Agent
         CollectEnemyFeatures(sensor);
         CollectBulletFeatures(sensor);
 
-        // === WALL FEATURES (8 dims) ===
+        // === WALL FEATURES (16 dims) ===
         CollectWallFeatures(sensor);
     }
 
@@ -552,7 +702,10 @@ public class AttentionAgent : Agent
 
             if (col.CompareTag("Enemy"))
             {
-                _enemies.Add(col.gameObject);
+                if (IsTargetValid(col.transform))
+                {
+                    _enemies.Add(col.gameObject);
+                }
             }
             else
             {
@@ -818,7 +971,7 @@ public class AttentionAgent : Agent
     /// <summary>
     /// Casts WALL_RAY_COUNT rays evenly around the agent against WallLayerMask.
     /// Each ray returns normalized distance to nearest wall (0=touching, 1=nothing in range).
-    /// First ray points right (+X), rotates CCW every 45°. Adds 8 observations.
+    /// First ray points right (+X), rotates CCW every 22.5°. Adds 16 observations.
     /// </summary>
     private void CollectWallFeatures(VectorSensor sensor)
     {
@@ -848,9 +1001,24 @@ public class AttentionAgent : Agent
         }
         EnsureWeaponEquipped();
 
-        if (!IsWeaponReady())
+        try
+        {
+            CacheSurroundingObjects();
+            UpdateStickyTarget();
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"[AttentionAgent] Action mask target refresh failed: {e.Message}", gameObject);
+        }
+
+        if (!IsTargetValid(_currentTarget) || !IsWeaponReady())
         {
             actionMask.SetActionEnabled(BRANCH_COMBAT, COMBAT_ATTACK, false);
+        }
+
+        if (!HasNearbyBulletThreat())
+        {
+            actionMask.SetActionEnabled(BRANCH_COMBAT, COMBAT_DASH, false);
         }
     }
 
@@ -863,6 +1031,20 @@ public class AttentionAgent : Agent
 
         CacheSurroundingObjects();
         UpdateStickyTarget();
+        RecoverStuckEnemiesIfNeeded();
+
+        if (TryEndBrokenEpisodeIfNeeded())
+        {
+            return;
+        }
+
+        int moveX = actions.DiscreteActions[BRANCH_MOVE_X];
+        int moveY = actions.DiscreteActions[BRANCH_MOVE_Y];
+        int requestedCombat = actions.DiscreteActions[BRANCH_COMBAT];
+        int combat = SanitizeCombatAction(requestedCombat);
+        int aim = actions.DiscreteActions[BRANCH_AIM];
+        Vector2 movement = DecodeMovement(actions.DiscreteActions);
+        Vector2 aimDirection = DecodeAim(aim);
 
         float currentHealth = agentHealth.CurrentHealth;
         float healthDelta = currentHealth - _previousHealth;
@@ -871,7 +1053,10 @@ public class AttentionAgent : Agent
         // Damage penalty
         if (healthDelta < 0)
         {
-            AddReward(TakeDamagePenalty);
+            float damageTaken = -healthDelta;
+            _episodeDamageTaken += damageTaken;
+            float cappedPenalty = -Mathf.Min(Mathf.Abs(TakeDamagePenalty), damageTaken * DamageTakenPenaltyPerPoint);
+            AddReward(cappedPenalty);
         }
 
         // Dodge reward tracking: now handled in FixedUpdate() for reliability
@@ -883,47 +1068,839 @@ public class AttentionAgent : Agent
         float currHealth = GetTotalEnemyHealth();
         int currCount = GetLivingEnemyCount();
 
-        if (currHealth < prevHealth)
-            AddReward(DealDamageReward);
+        float enemyDamageDealt = Mathf.Max(0f, prevHealth - currHealth);
+        if (enemyDamageDealt > 0f)
+        {
+            _episodeDamageDealt += enemyDamageDealt;
+            AddReward(Mathf.Min(DealDamageReward, enemyDamageDealt * DamageRewardPerPoint));
+        }
 
         int killed = prevCount - currCount;
         if (killed > 0)
+        {
+            _episodeKills += killed;
             AddReward(KillEnemyReward * killed);
+        }
 
         _previousTotalEnemyHealth = currHealth;
         _previousEnemyCount = currCount;
 
         if (!HasAnyLivingEnemy())
         {
-            AddReward(AllEnemiesKilledReward);
+            bool roomWasActuallyCleared = _previousEnemyCount > 0 || _episodeKills > 0;
+            AddReward(roomWasActuallyCleared ? AllEnemiesKilledReward : BrokenEpisodePenalty);
+            RecordEpisodeStats(roomWasActuallyCleared ? 1f : 0f, 0f);
             EndEpisode();
             return;
         }
 
         // Time penalty
         AddReward(TimePenalty);
-
-        // Episodic coverage bonus — reward visiting new grid cells this episode
-        if (EpisodicCoverageReward > 0f)
-        {
-            Vector2Int cell = WorldToCell(transform.position);
-            if (_visitedCells.Add(cell))
-                AddReward(EpisodicCoverageReward);
-        }
+        _episodeDecisionCount++;
+        AddCombatShapingReward(movement, aimDirection, combat);
 
         // Update health tracking
         _previousHealth = currentHealth;
 
-        int moveX = actions.DiscreteActions[BRANCH_MOVE_X];
-        int moveY = actions.DiscreteActions[BRANCH_MOVE_Y];
-        int combat = actions.DiscreteActions[BRANCH_COMBAT];
-        int aim = actions.DiscreteActions[BRANCH_AIM];
-        Vector2 movement = DecodeMovement(actions.DiscreteActions);
-        Vector2 aimDirection = DecodeAim(aim);
         ApplyMovement(movement);
         ApplyAim(aimDirection);
         ExecuteCombat(combat, movement, aimDirection);
-        LogActionDecision(moveX, moveY, combat, aim, movement, aimDirection);
+        LogActionDecision(moveX, moveY, requestedCombat, combat, aim, movement, aimDirection);
+    }
+
+    private void AddCombatShapingReward(Vector2 movement, Vector2 aimDirection, int combat)
+    {
+        bool hasTarget = IsTargetValid(_currentTarget);
+        bool hasThreat = HasNearbyBulletThreat();
+        bool isAttacking = combat == COMBAT_ATTACK;
+        bool weaponReady = IsWeaponReady();
+
+        if (!isAttacking)
+            _consecutiveInvalidAttacks = 0;
+
+        if (hasTarget)
+        {
+            _episodeDecisionsWithTarget++;
+        }
+
+        if (isAttacking)
+        {
+            if (hasTarget)
+            {
+                _episodeAttacksWithTarget++;
+            }
+            else
+            {
+                _episodeAttacksWithoutTarget++;
+            }
+
+            if (weaponReady)
+            {
+                _episodeAttacksWhileWeaponReady++;
+            }
+            else
+            {
+                _episodeAttacksWhileWeaponNotReady++;
+            }
+        }
+        if (combat == COMBAT_DASH)
+        {
+            _episodeDashActions++;
+            if (hasThreat)
+            {
+                _episodeUsefulDashes++;
+            }
+            else
+            {
+                _episodeWastefulDashes++;
+            }
+            AddReward(hasThreat ? UsefulDashReward : WastefulDashPenalty);
+        }
+
+        if (!hasTarget)
+        {
+            _previousTargetDistance = -1f;
+            if (isAttacking)
+            {
+                _consecutiveInvalidAttacks++;
+                _episodeAttackActions++;
+                _episodeInvalidAttacks++;
+                AddReward(InvalidAttackPenalty);
+            }
+            return;
+        }
+
+        float currentDistance = GetCurrentTargetDistance();
+        if (_previousTargetDistance >= 0f)
+        {
+            float progress = _previousTargetDistance - currentDistance;
+            if (progress > 0.01f)
+            {
+                AddReward(Mathf.Min(0.03f, progress * ApproachTargetReward));
+            }
+            else if (progress < -0.01f)
+            {
+                AddReward(Mathf.Max(-0.01f, -progress * MoveAwayFromTargetPenalty));
+            }
+        }
+        _previousTargetDistance = currentDistance;
+
+        if (movement.sqrMagnitude <= 0.0001f && currentDistance <= VisionRadius * 0.5f)
+        {
+            AddReward(IdleNearEnemyPenalty);
+        }
+
+        Vector2 effectiveAimDirection = GetCombatAimDirection(aimDirection, combat);
+        float aimDot = GetAimDotToTarget(effectiveAimDirection);
+        if (aimDot > 0.75f)
+        {
+            AddReward(AimAtTargetReward * aimDot);
+        }
+
+        if (!isAttacking && !weaponReady && _currentWeapon != null && aimDot > 0.75f)
+        {
+            _episodeCooldownPatienceDecisions++;
+            AddReward(CooldownPatienceReward);
+        }
+
+        if (isAttacking)
+        {
+            _episodeAttackActions++;
+
+            if (!weaponReady)
+            {
+                return;
+            }
+
+            AddReward(ReadyAttackIntentWithTargetReward);
+
+            if (aimDot > 0.75f)
+            {
+                _consecutiveInvalidAttacks = 0;
+                _episodeAlignedAttacks++;
+                AddReward(AttackAlignedReward * aimDot);
+            }
+            else
+            {
+                _consecutiveInvalidAttacks++;
+                _episodeInvalidAttacks++;
+                AddReward(InvalidAttackPenalty * 0.5f);
+            }
+        }
+    }
+
+    private bool TryEndBrokenEpisodeIfNeeded()
+    {
+        if (TryRecoverGroundedStuckIfNeeded())
+        {
+            return false;
+        }
+
+        if (EndEpisodeWhenStuck && _stillDecisionCount >= MaxStillDecisionsBeforeReset)
+        {
+            if (DebugStuckLogs)
+                Debug.LogWarning("[AgentBrokenEpisode] reason=Stuck step=" + StepCount + " stillCount=" + _stillDecisionCount, gameObject);
+            AddReward(BrokenEpisodePenalty);
+            _episodeBrokenReason = BrokenEpisodeReason.Stuck;
+            RecordEpisodeStats(0f, 0f);
+            EndEpisode();
+            return true;
+        }
+
+        if (EndEpisodeOnConsecutiveInvalid && _consecutiveInvalidAttacks >= MaxConsecutiveInvalidAttacks)
+        {
+            if (DebugStuckLogs)
+                Debug.LogWarning("[AgentBrokenEpisode] reason=ConsecutiveInvalidAttacks step=" + StepCount + " count=" + _consecutiveInvalidAttacks, gameObject);
+            AddReward(BrokenEpisodePenalty);
+            _episodeBrokenReason = BrokenEpisodeReason.ConsecutiveInvalidAttacks;
+            RecordEpisodeStats(0f, 0f);
+            EndEpisode();
+            return true;
+        }
+
+        if (TryEndEnemyOutOfBoundsEpisode())
+        {
+            return true;
+        }
+
+        if (!EndEpisodeWhenOutOfBounds || MaxDistanceFromSpawnBeforeReset <= 0f)
+        {
+            return false;
+        }
+
+        Vector3 spawnPosition = GetSpawnPosition();
+        float distanceFromSpawn = Vector2.Distance(transform.position, spawnPosition);
+        if (distanceFromSpawn <= MaxDistanceFromSpawnBeforeReset)
+        {
+            return false;
+        }
+
+        AddReward(BrokenEpisodePenalty);
+        _episodeBrokenReason = BrokenEpisodeReason.AgentOutOfBounds;
+        RecordEpisodeStats(0f, 0f);
+
+        if (DebugStuckLogs)
+        {
+            Debug.LogWarning(
+                "[AgentBrokenEpisode] " +
+                "reason=OutOfBounds" +
+                " step=" + StepCount +
+                " pos=(" + transform.position.x.ToString("F2") + "," + transform.position.y.ToString("F2") + ")" +
+                " spawn=(" + spawnPosition.x.ToString("F2") + "," + spawnPosition.y.ToString("F2") + ")" +
+                " distance=" + distanceFromSpawn.ToString("F2") +
+                " maxDistance=" + MaxDistanceFromSpawnBeforeReset.ToString("F2"),
+                gameObject
+            );
+        }
+
+        EndEpisode();
+        return true;
+    }
+
+    private bool TryRecoverGroundedStuckIfNeeded()
+    {
+        if (!RecoverGroundedStuckBeforeEnding)
+        {
+            return false;
+        }
+
+        int threshold = Mathf.Clamp(
+            GroundedStuckRecoveryDecisionThreshold,
+            1,
+            Mathf.Max(1, MaxStillDecisionsBeforeReset)
+        );
+        if (_stillDecisionCount < threshold)
+        {
+            return false;
+        }
+
+        if (topDownController2D == null || !topDownController2D.Grounded || topDownController2D.OverHole)
+        {
+            return false;
+        }
+
+        int maxRecoveries = Mathf.Max(0, MaxGroundedStuckRecoveriesPerEpisode);
+        if (_groundedStuckRecoveries >= maxRecoveries)
+        {
+            return false;
+        }
+
+        Vector2 recoveryPosition;
+        if (!TryFindGroundedStuckRecoveryPosition(out recoveryPosition))
+        {
+            return false;
+        }
+
+        Vector3 oldPosition = transform.position;
+        transform.position = new Vector3(recoveryPosition.x, recoveryPosition.y, oldPosition.z);
+        StabilizeTrainingCharacter(gameObject);
+        _lastDebugPosition = transform.position;
+        _stillDecisionCount = 0;
+        _groundedStuckRecoveries++;
+        AddReward(GroundedStuckRecoveryPenalty);
+
+        if (DebugStuckLogs)
+        {
+            Debug.LogWarning(
+                "[AgentUnstuck] " +
+                "step=" + StepCount +
+                " count=" + _groundedStuckRecoveries +
+                " from=(" + oldPosition.x.ToString("F2") + "," + oldPosition.y.ToString("F2") + ")" +
+                " to=(" + recoveryPosition.x.ToString("F2") + "," + recoveryPosition.y.ToString("F2") + ")" +
+                " grounded=" + topDownController2D.Grounded +
+                " overHole=" + topDownController2D.OverHole,
+                gameObject
+            );
+        }
+
+        return true;
+    }
+
+    private bool TryFindGroundedStuckRecoveryPosition(out Vector2 recoveryPosition)
+    {
+        Vector2 origin = transform.position;
+        float step = Mathf.Max(0.1f, GroundedStuckRecoverySearchStep);
+        float radius = Mathf.Max(step, GroundedStuckRecoverySearchRadius);
+        float bestScore = float.MaxValue;
+        recoveryPosition = origin;
+        bool found = false;
+
+        for (float r = step; r <= radius + 0.001f; r += step)
+        {
+            int samples = Mathf.Max(8, Mathf.CeilToInt((2f * Mathf.PI * r) / step));
+            for (int i = 0; i < samples; i++)
+            {
+                float angle = (2f * Mathf.PI * i) / samples;
+                Vector2 candidate = origin + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * r;
+                if (!IsSafeGroundedRecoveryPosition(candidate))
+                {
+                    continue;
+                }
+
+                float score = (candidate - origin).sqrMagnitude;
+                if (IsTargetValid(_currentTarget))
+                {
+                    score += 0.05f * Vector2.Distance(candidate, _currentTarget.position);
+                }
+
+                if (score < bestScore)
+                {
+                    bestScore = score;
+                    recoveryPosition = candidate;
+                    found = true;
+                }
+            }
+
+            if (found)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool IsSafeGroundedRecoveryPosition(Vector2 candidate)
+    {
+        LayerMask groundMask = topDownController2D != null
+            ? topDownController2D.GroundLayerMask
+            : LayerMask.GetMask("Ground");
+        if (groundMask.value != 0 && Physics2D.OverlapPoint(candidate, groundMask) == null)
+        {
+            return false;
+        }
+
+        float clearance = Mathf.Max(0.1f, GroundedStuckRecoveryClearance);
+        LayerMask wallMask = WallLayerMask.value != 0
+            ? WallLayerMask
+            : LayerMask.GetMask("Obstacles", "ObstaclesDoors");
+        if (wallMask.value != 0 && Physics2D.OverlapCircle(candidate, clearance, wallMask) != null)
+        {
+            return false;
+        }
+
+        LayerMask enemyMask = LayerMask.GetMask("Enemies");
+        if (enemyMask.value != 0 && Physics2D.OverlapCircle(candidate, clearance, enemyMask) != null)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private void RecoverStuckEnemiesIfNeeded()
+    {
+        if (!RecoverEnemyStuckDuringTraining)
+        {
+            return;
+        }
+
+        if (_episodeEnemyStuckRecoveries >= Mathf.Max(0, MaxEnemyStuckRecoveriesPerEpisode))
+        {
+            return;
+        }
+
+        for (int i = 0; i < _trackedEnemies.Count; i++)
+        {
+            GameObject enemy = _trackedEnemies[i];
+            if (!IsLivingEnemy(enemy))
+            {
+                continue;
+            }
+
+            if (!ShouldRecoverEnemyStuck(enemy))
+            {
+                continue;
+            }
+
+            Vector2 recoveryPosition;
+            if (!TryFindEnemyRecoveryPosition(enemy, out recoveryPosition))
+            {
+                ResetEnemyStuckCounter(enemy);
+                continue;
+            }
+
+            RecoverEnemyToPosition(enemy, recoveryPosition);
+            if (_episodeEnemyStuckRecoveries >= Mathf.Max(0, MaxEnemyStuckRecoveriesPerEpisode))
+            {
+                return;
+            }
+        }
+    }
+
+    private bool IsLivingEnemy(GameObject enemy)
+    {
+        if (enemy == null || !enemy.activeInHierarchy)
+        {
+            return false;
+        }
+
+        Health health = enemy.GetComponent<Health>();
+        return health == null || health.CurrentHealth > 0f;
+    }
+
+    private bool ShouldRecoverEnemyStuck(GameObject enemy)
+    {
+        Vector3 currentPosition = enemy.transform.position;
+        Vector3 lastPosition;
+        if (!_lastEnemyPositions.TryGetValue(enemy, out lastPosition))
+        {
+            _lastEnemyPositions[enemy] = currentPosition;
+            _enemyStillDecisionCounts[enemy] = 0;
+            return false;
+        }
+
+        float moved = Vector2.Distance(currentPosition, lastPosition);
+        _lastEnemyPositions[enemy] = currentPosition;
+
+        int stillCount = moved <= Mathf.Max(0.001f, EnemyStuckDistanceEpsilon)
+            ? GetDictionaryCount(_enemyStillDecisionCounts, enemy) + 1
+            : 0;
+        _enemyStillDecisionCounts[enemy] = stillCount;
+
+        int perEnemyRecoveries = GetDictionaryCount(_enemyRecoveryCounts, enemy);
+        if (perEnemyRecoveries >= Mathf.Max(0, MaxEnemyStuckRecoveriesPerEnemy))
+        {
+            return false;
+        }
+
+        if (stillCount < Mathf.Max(1, EnemyStuckRecoveryDecisionThreshold))
+        {
+            return false;
+        }
+
+        TopDownController2D enemyController = enemy.GetComponent<TopDownController2D>();
+        bool enemyGrounded = enemyController == null || enemyController.Grounded;
+        bool enemyOverHole = enemyController != null && enemyController.OverHole;
+        bool nearWall = IsNearWall(enemy.transform.position, EnemyStuckRecoveryClearance);
+        bool nearAgent = Vector2.Distance(enemy.transform.position, transform.position) <= EnemyStuckRecoveryMinDistanceFromAgent;
+        bool likelyBlockingAgent = nearAgent && _stillDecisionCount >= Mathf.Max(1, GroundedStuckRecoveryDecisionThreshold / 2);
+
+        return !enemyGrounded || enemyOverHole || nearWall || likelyBlockingAgent;
+    }
+
+    private int GetDictionaryCount(Dictionary<GameObject, int> dictionary, GameObject key)
+    {
+        int value;
+        return dictionary.TryGetValue(key, out value) ? value : 0;
+    }
+
+    private bool IsNearWall(Vector2 position, float clearance)
+    {
+        LayerMask wallMask = WallLayerMask.value != 0
+            ? WallLayerMask
+            : LayerMask.GetMask("Obstacles", "ObstaclesDoors");
+        return wallMask.value != 0
+            && Physics2D.OverlapCircle(position, Mathf.Max(0.1f, clearance), wallMask) != null;
+    }
+
+    private bool TryFindEnemyRecoveryPosition(GameObject enemy, out Vector2 recoveryPosition)
+    {
+        Vector2 origin = enemy.transform.position;
+        float step = Mathf.Max(0.1f, EnemyStuckRecoverySearchStep);
+        float radius = Mathf.Max(step, EnemyStuckRecoverySearchRadius);
+        float minAgentDistance = Mathf.Max(0f, EnemyStuckRecoveryMinDistanceFromAgent);
+        float bestScore = float.MaxValue;
+        recoveryPosition = origin;
+        bool found = false;
+
+        for (float r = step; r <= radius + 0.001f; r += step)
+        {
+            int samples = Mathf.Max(8, Mathf.CeilToInt((2f * Mathf.PI * r) / step));
+            for (int i = 0; i < samples; i++)
+            {
+                float angle = (2f * Mathf.PI * i) / samples;
+                Vector2 candidate = origin + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * r;
+                if (Vector2.Distance(candidate, transform.position) < minAgentDistance)
+                {
+                    continue;
+                }
+
+                if (!IsSafeEnemyRecoveryPosition(enemy, candidate))
+                {
+                    continue;
+                }
+
+                float score = (candidate - origin).sqrMagnitude + 0.1f * Vector2.Distance(candidate, transform.position);
+                if (score < bestScore)
+                {
+                    bestScore = score;
+                    recoveryPosition = candidate;
+                    found = true;
+                }
+            }
+
+            if (found)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool IsSafeEnemyRecoveryPosition(GameObject enemy, Vector2 candidate)
+    {
+        TopDownController2D enemyController = enemy != null ? enemy.GetComponent<TopDownController2D>() : null;
+        LayerMask groundMask = enemyController != null
+            ? enemyController.GroundLayerMask
+            : LayerMask.GetMask("Ground");
+        if (groundMask.value != 0 && Physics2D.OverlapPoint(candidate, groundMask) == null)
+        {
+            return false;
+        }
+
+        float clearance = Mathf.Max(0.1f, EnemyStuckRecoveryClearance);
+        if (IsNearWall(candidate, clearance))
+        {
+            return false;
+        }
+
+        LayerMask dynamicMask = LayerMask.GetMask("Player", "Enemies");
+        if (dynamicMask.value == 0)
+        {
+            return true;
+        }
+
+        Collider2D[] hits = Physics2D.OverlapCircleAll(candidate, clearance, dynamicMask);
+        for (int i = 0; i < hits.Length; i++)
+        {
+            if (hits[i] == null)
+            {
+                continue;
+            }
+
+            if (enemy != null && hits[i].transform.IsChildOf(enemy.transform))
+            {
+                continue;
+            }
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private void RecoverEnemyToPosition(GameObject enemy, Vector2 recoveryPosition)
+    {
+        Vector3 oldPosition = enemy.transform.position;
+        enemy.transform.position = new Vector3(recoveryPosition.x, recoveryPosition.y, oldPosition.z);
+        StabilizeTrainingCharacter(enemy);
+
+        AIBrain brain = enemy.GetComponent<AIBrain>();
+        if (brain != null)
+        {
+            brain.BrainActive = true;
+            brain.enabled = true;
+            brain.ResetBrain();
+        }
+
+        _lastEnemyPositions[enemy] = enemy.transform.position;
+        _enemyStillDecisionCounts[enemy] = 0;
+        _enemyRecoveryCounts[enemy] = GetDictionaryCount(_enemyRecoveryCounts, enemy) + 1;
+        _episodeEnemyStuckRecoveries++;
+
+        if (DebugStuckLogs)
+        {
+            Debug.LogWarning(
+                "[EnemyUnstuck] " +
+                "step=" + StepCount +
+                " enemy=" + enemy.name +
+                " count=" + _episodeEnemyStuckRecoveries +
+                " enemyCount=" + _enemyRecoveryCounts[enemy] +
+                " from=(" + oldPosition.x.ToString("F2") + "," + oldPosition.y.ToString("F2") + ")" +
+                " to=(" + recoveryPosition.x.ToString("F2") + "," + recoveryPosition.y.ToString("F2") + ")",
+                enemy
+            );
+        }
+    }
+
+    private void ResetEnemyStuckCounter(GameObject enemy)
+    {
+        if (enemy == null)
+        {
+            return;
+        }
+
+        _lastEnemyPositions[enemy] = enemy.transform.position;
+        _enemyStillDecisionCounts[enemy] = 0;
+    }
+
+    private bool TryEndEnemyOutOfBoundsEpisode()
+    {
+        if (!EndEpisodeWhenEnemyOutOfBounds || MaxEnemyDistanceFromSpawnBeforeReset <= 0f)
+        {
+            return false;
+        }
+
+        Vector3 spawnPosition = GetSpawnPosition();
+        for (int i = 0; i < _trackedEnemies.Count; i++)
+        {
+            GameObject enemy = _trackedEnemies[i];
+            if (enemy == null || !enemy.activeInHierarchy)
+            {
+                continue;
+            }
+
+            Health health = enemy.GetComponent<Health>();
+            if (health != null && health.CurrentHealth <= 0f)
+            {
+                continue;
+            }
+
+            float distanceFromSpawn = Vector2.Distance(enemy.transform.position, spawnPosition);
+            if (distanceFromSpawn <= MaxEnemyDistanceFromSpawnBeforeReset)
+            {
+                continue;
+            }
+
+            AddReward(BrokenEpisodePenalty);
+            _episodeBrokenReason = BrokenEpisodeReason.EnemyOutOfBounds;
+            RecordEpisodeStats(0f, 0f);
+
+            if (DebugStuckLogs)
+            {
+                Debug.LogWarning(
+                    "[AgentBrokenEpisode] " +
+                    "reason=EnemyOutOfBounds" +
+                    " step=" + StepCount +
+                    " enemy=" + enemy.name +
+                    " enemyPos=(" + enemy.transform.position.x.ToString("F2") + "," + enemy.transform.position.y.ToString("F2") + ")" +
+                    " spawn=(" + spawnPosition.x.ToString("F2") + "," + spawnPosition.y.ToString("F2") + ")" +
+                    " distance=" + distanceFromSpawn.ToString("F2") +
+                    " maxDistance=" + MaxEnemyDistanceFromSpawnBeforeReset.ToString("F2"),
+                    enemy
+                );
+            }
+
+            EndEpisode();
+            return true;
+        }
+
+        return false;
+    }
+
+    private void StabilizeTrackedEnemies()
+    {
+        for (int i = 0; i < _trackedEnemies.Count; i++)
+        {
+            StabilizeTrainingCharacter(_trackedEnemies[i]);
+        }
+    }
+
+    private void StabilizeTrainingCharacter(GameObject characterObject)
+    {
+        if (characterObject == null)
+        {
+            return;
+        }
+
+        TopDownController controller = characterObject.GetComponent<TopDownController>();
+        if (controller != null)
+        {
+            controller.Reset();
+            controller.SetMovement(Vector2.zero);
+        }
+
+        Character character = characterObject.GetComponent<Character>();
+        if (character != null && character.MovementState != null)
+        {
+            CharacterStates.MovementStates movementState = character.MovementState.CurrentState;
+            if (movementState == CharacterStates.MovementStates.Falling ||
+                movementState == CharacterStates.MovementStates.FallingDownHole)
+            {
+                character.MovementState.ChangeState(CharacterStates.MovementStates.Idle);
+            }
+        }
+
+        Rigidbody2D rigidbody2D = characterObject.GetComponent<Rigidbody2D>();
+        if (rigidbody2D != null)
+        {
+            rigidbody2D.linearVelocity = Vector2.zero;
+            rigidbody2D.angularVelocity = 0f;
+        }
+
+        if (!DisableTrainingKnockback)
+        {
+            return;
+        }
+
+        Health health = characterObject.GetComponent<Health>();
+        if (health != null)
+        {
+            health.ImmuneToKnockback = true;
+            health.KnockbackForceMultiplier = 0f;
+        }
+    }
+
+    private void ResetEpisodeStats()
+    {
+        _episodeDamageDealt = 0f;
+        _episodeDamageTaken = 0f;
+        _episodeKills = 0;
+        _episodeAttackActions = 0;
+        _episodeAlignedAttacks = 0;
+        _episodeInvalidAttacks = 0;
+        _episodeDashActions = 0;
+        _episodeUsefulDashes = 0;
+        _episodeWastefulDashes = 0;
+        _episodeDecisionCount = 0;
+        _episodeDecisionsWithTarget = 0;
+        _episodeAttacksWithTarget = 0;
+        _episodeAttacksWithoutTarget = 0;
+        _episodeAttacksWhileWeaponReady = 0;
+        _episodeAttacksWhileWeaponNotReady = 0;
+        _episodeCooldownPatienceDecisions = 0;
+        _episodeBlockedAttackActions = 0;
+        _episodeBlockedDashActions = 0;
+        _episodeEnemyStuckRecoveries = 0;
+        _episodeBrokenReason = BrokenEpisodeReason.None;
+        _episodeStatsRecorded = false;
+    }
+
+    private void RecordEpisodeStats(float clearedRoom, float died)
+    {
+        if (_episodeStatsRecorded)
+        {
+            return;
+        }
+
+        _episodeStatsRecorded = true;
+        float attacks = Mathf.Max(1, _episodeAttackActions);
+        float dashes = Mathf.Max(1, _episodeDashActions);
+        float decisions = Mathf.Max(1, _episodeDecisionCount);
+        StatsRecorder stats = Academy.Instance.StatsRecorder;
+
+        stats.Add("AttentionAgent/EpisodeDamageDealt", _episodeDamageDealt);
+        stats.Add("AttentionAgent/EpisodeDamageTaken", _episodeDamageTaken);
+        stats.Add("AttentionAgent/EpisodeKills", _episodeKills);
+        stats.Add("AttentionAgent/ClearedRoom", clearedRoom);
+        stats.Add("AttentionAgent/Died", died);
+        stats.Add("AttentionAgent/AlignedAttackRate", _episodeAlignedAttacks / attacks);
+        stats.Add("AttentionAgent/InvalidAttackRate", _episodeInvalidAttacks / attacks);
+        stats.Add("AttentionAgent/UsefulDashRate", _episodeUsefulDashes / dashes);
+        stats.Add("AttentionAgent/WastefulDashRate", _episodeWastefulDashes / dashes);
+        stats.Add("AttentionAgent/AttackActionsPerDecision", _episodeAttackActions / decisions);
+        stats.Add("AttentionAgent/DashActionsPerDecision", _episodeDashActions / decisions);
+        stats.Add("AttentionAgent/TargetVisibleRate", _episodeDecisionsWithTarget / decisions);
+        stats.Add("AttentionAgent/AttackWithTargetRate", _episodeAttacksWithTarget / attacks);
+        stats.Add("AttentionAgent/AttackNoTargetRate", _episodeAttacksWithoutTarget / attacks);
+        stats.Add("AttentionAgent/AttackWeaponReadyRate", _episodeAttacksWhileWeaponReady / attacks);
+        stats.Add("AttentionAgent/AttackWeaponNotReadyRate", _episodeAttacksWhileWeaponNotReady / attacks);
+        stats.Add("AttentionAgent/CooldownPatiencePerDecision", _episodeCooldownPatienceDecisions / decisions);
+        stats.Add("AttentionAgent/BlockedAttackActionsPerDecision", _episodeBlockedAttackActions / decisions);
+        stats.Add("AttentionAgent/BlockedDashActionsPerDecision", _episodeBlockedDashActions / decisions);
+        stats.Add("AttentionAgent/EnemyStuckRecoveries", _episodeEnemyStuckRecoveries);
+        stats.Add("AttentionAgent/BrokenEpisode", _episodeBrokenReason == BrokenEpisodeReason.None ? 0f : 1f);
+        stats.Add("AttentionAgent/BrokenStuck", _episodeBrokenReason == BrokenEpisodeReason.Stuck ? 1f : 0f);
+        stats.Add("AttentionAgent/BrokenInvalidAttack", _episodeBrokenReason == BrokenEpisodeReason.ConsecutiveInvalidAttacks ? 1f : 0f);
+        stats.Add("AttentionAgent/BrokenAgentOutOfBounds", _episodeBrokenReason == BrokenEpisodeReason.AgentOutOfBounds ? 1f : 0f);
+        stats.Add("AttentionAgent/BrokenEnemyOutOfBounds", _episodeBrokenReason == BrokenEpisodeReason.EnemyOutOfBounds ? 1f : 0f);
+    }
+
+    private int SanitizeCombatAction(int requestedCombat)
+    {
+        if (requestedCombat == COMBAT_ATTACK)
+        {
+            if (!IsTargetValid(_currentTarget) || !IsWeaponReady())
+            {
+                _episodeBlockedAttackActions++;
+                return COMBAT_NONE;
+            }
+        }
+        else if (requestedCombat == COMBAT_DASH && !HasNearbyBulletThreat())
+        {
+            _episodeBlockedDashActions++;
+            return COMBAT_NONE;
+        }
+
+        return requestedCombat;
+    }
+
+    private float GetCurrentTargetDistance()
+    {
+        if (!IsTargetValid(_currentTarget))
+        {
+            return -1f;
+        }
+        return Vector2.Distance(transform.position, _currentTarget.position);
+    }
+
+    private Vector2 GetEffectiveAimDirection(Vector2 aimDirection)
+    {
+        if (aimDirection.sqrMagnitude > 0.0001f)
+        {
+            return aimDirection.normalized;
+        }
+
+        return _lastAimDirection.sqrMagnitude > 0.0001f
+            ? _lastAimDirection.normalized
+            : Vector2.right;
+    }
+
+    private Vector2 GetCombatAimDirection(Vector2 aimDirection, int combat)
+    {
+        if (AutoAimAttackAtCurrentTarget && combat == COMBAT_ATTACK && IsTargetValid(_currentTarget))
+        {
+            Vector2 toTarget = (Vector2)_currentTarget.position - (Vector2)transform.position;
+            if (toTarget.sqrMagnitude > 0.0001f)
+            {
+                return toTarget.normalized;
+            }
+        }
+
+        return GetEffectiveAimDirection(aimDirection);
+    }
+
+    private float GetAimDotToTarget(Vector2 aimDirection)
+    {
+        if (!IsTargetValid(_currentTarget) || aimDirection.sqrMagnitude <= 0.0001f)
+        {
+            return 0f;
+        }
+
+        Vector2 toTarget = ((Vector2)_currentTarget.position - (Vector2)transform.position).normalized;
+        return Vector2.Dot(aimDirection.normalized, toTarget);
     }
 
     private float GetTotalEnemyHealth()
@@ -993,12 +1970,32 @@ public class AttentionAgent : Agent
         }
     }
 
+    private void ResetEnemyStuckTracking()
+    {
+        _lastEnemyPositions.Clear();
+        _enemyStillDecisionCounts.Clear();
+        _enemyRecoveryCounts.Clear();
+
+        for (int i = 0; i < _trackedEnemies.Count; i++)
+        {
+            GameObject enemy = _trackedEnemies[i];
+            if (!IsLivingEnemy(enemy))
+            {
+                continue;
+            }
+
+            _lastEnemyPositions[enemy] = enemy.transform.position;
+            _enemyStillDecisionCounts[enemy] = 0;
+            _enemyRecoveryCounts[enemy] = 0;
+        }
+    }
+
     private bool HasAnyLivingEnemy()
     {
         return GetLivingEnemyCount() > 0;
     }
 
-    private void LogActionDecision(int moveX, int moveY, int combat, int aim, Vector2 movement, Vector2 aimDirection)
+    private void LogActionDecision(int moveX, int moveY, int requestedCombat, int combat, int aim, Vector2 movement, Vector2 aimDirection)
     {
         if (!DebugActionLogs)
         {
@@ -1015,32 +2012,80 @@ public class AttentionAgent : Agent
         bool hasTarget = _currentTarget != null;
         bool hasWeapon = _currentWeapon != null;
         bool weaponReady = IsWeaponReady();
+        bool combatSanitized = requestedCombat != combat;
         string moveXLabel = MoveXToLabel(moveX);
         string moveYLabel = MoveYToLabel(moveY);
+        string requestedCombatLabel = CombatToLabel(requestedCombat);
         string combatLabel = CombatToLabel(combat);
         string aimLabel = AimToLabel(aim);
         Vector3 pos = transform.position;
+        float movedSinceLastLog = Vector2.Distance(pos, _lastDebugPosition);
+        _stillDecisionCount = movedSinceLastLog <= DebugStuckDistanceEpsilon ? _stillDecisionCount + 1 : 0;
+        _lastDebugPosition = pos;
+
         float hp = agentHealth != null ? agentHealth.CurrentHealth : -1f;
         float maxHp = agentHealth != null ? agentHealth.MaximumHealth : -1f;
+        float targetDistance = hasTarget ? Vector2.Distance(pos, _currentTarget.position) : -1f;
+        float cooldownLeft = _currentWeapon != null ? _currentWeapon.CooldownTimeLeft : -1f;
+        string movementState = _character != null && _character.MovementState != null
+            ? _character.MovementState.CurrentState.ToString()
+            : "Unknown";
+        string conditionState = _character != null && _character.ConditionState != null
+            ? _character.ConditionState.CurrentState.ToString()
+            : "Unknown";
+        string groundedState = topDownController2D != null ? topDownController2D.Grounded.ToString() : "Unknown";
+        string overHoleState = topDownController2D != null ? topDownController2D.OverHole.ToString() : "Unknown";
 
         Debug.Log(
             "[AgentDecision] " +
             "step=" + StepCount +
             " moveX=" + moveX +
             " moveY=" + moveY +
+            " requestedCombat=" + requestedCombat +
             " combat=" + combat +
             " aim=" + aim +
-            " action=(" + moveXLabel + "," + moveYLabel + "," + combatLabel + "," + aimLabel + ")" +
+            " action=(" + moveXLabel + "," + moveYLabel + "," + requestedCombatLabel + "->" + combatLabel + "," + aimLabel + ")" +
             " movement=(" + movement.x.ToString("F2") + "," + movement.y.ToString("F2") + ")" +
             " aimDir=(" + aimDirection.x.ToString("F2") + "," + aimDirection.y.ToString("F2") + ")" +
             " pos=(" + pos.x.ToString("F2") + "," + pos.y.ToString("F2") + ")" +
+            " moved=" + movedSinceLastLog.ToString("F3") +
+            " stillCount=" + _stillDecisionCount +
             " hp=" + hp.ToString("F1") + "/" + maxHp.ToString("F1") +
             " reward=" + GetCumulativeReward().ToString("F3") +
             " target=" + hasTarget +
+            " targetDist=" + targetDistance.ToString("F2") +
             " weapon=" + hasWeapon +
-            " ready=" + weaponReady,
+            " ready=" + weaponReady +
+            " cooldown=" + cooldownLeft.ToString("F2") +
+            " sanitized=" + combatSanitized +
+            " moveState=" + movementState +
+            " condition=" + conditionState +
+            " grounded=" + groundedState +
+            " overHole=" + overHoleState,
             gameObject
         );
+
+        if (DebugStuckLogs && _stillDecisionCount >= Mathf.Max(1, DebugStuckDecisionThreshold))
+        {
+            Debug.LogWarning(
+                "[AgentStuck] " +
+                "step=" + StepCount +
+                " stillCount=" + _stillDecisionCount +
+                " moved=" + movedSinceLastLog.ToString("F3") +
+                " action=(" + moveXLabel + "," + moveYLabel + "," + requestedCombatLabel + "->" + combatLabel + "," + aimLabel + ")" +
+                " movement=(" + movement.x.ToString("F2") + "," + movement.y.ToString("F2") + ")" +
+                " target=" + hasTarget +
+                " targetDist=" + targetDistance.ToString("F2") +
+                " weaponReady=" + weaponReady +
+                " cooldown=" + cooldownLeft.ToString("F2") +
+                " sanitized=" + combatSanitized +
+                " moveState=" + movementState +
+                " condition=" + conditionState +
+                " grounded=" + groundedState +
+                " overHole=" + overHoleState,
+                gameObject
+            );
+        }
     }
 
     private string MoveXToLabel(int moveX)
@@ -1173,7 +2218,7 @@ public class AttentionAgent : Agent
         switch (combatAction)
         {
             case COMBAT_ATTACK:
-                AttackInAimDirection(aimDirection);
+                AttackInAimDirection(GetCombatAimDirection(aimDirection, combatAction));
                 break;
             case COMBAT_DASH:
                 DashInBestDirection(movement);

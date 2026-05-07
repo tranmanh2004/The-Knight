@@ -1,0 +1,56 @@
+{
+    "AttentionAgentConfig": {
+        "checkpoints": [
+            {
+                "steps": 49991,
+                "file_path": "results\\run6_baseline300014_guard_finetune_v1\\AttentionAgentConfig\\AttentionAgentConfig-49991.onnx",
+                "reward": 6.528870898112655,
+                "creation_time": 1777985730.329553,
+                "auxillary_file_paths": [
+                    "results\\run6_baseline300014_guard_finetune_v1\\AttentionAgentConfig\\AttentionAgentConfig-49991.pt"
+                ]
+            },
+            {
+                "steps": 99977,
+                "file_path": "results\\run6_baseline300014_guard_finetune_v1\\AttentionAgentConfig\\AttentionAgentConfig-99977.onnx",
+                "reward": 3.218117766897194,
+                "creation_time": 1777985811.4032674,
+                "auxillary_file_paths": [
+                    "results\\run6_baseline300014_guard_finetune_v1\\AttentionAgentConfig\\AttentionAgentConfig-99977.pt"
+                ]
+            },
+            {
+                "steps": 149936,
+                "file_path": "results\\run6_baseline300014_guard_finetune_v1\\AttentionAgentConfig\\AttentionAgentConfig-149936.onnx",
+                "reward": 5.791096797399223,
+                "creation_time": 1777985894.120601,
+                "auxillary_file_paths": [
+                    "results\\run6_baseline300014_guard_finetune_v1\\AttentionAgentConfig\\AttentionAgentConfig-149936.pt"
+                ]
+            },
+            {
+                "steps": 150040,
+                "file_path": "results\\run6_baseline300014_guard_finetune_v1\\AttentionAgentConfig\\AttentionAgentConfig-150040.onnx",
+                "reward": 5.512516433373094,
+                "creation_time": 1777985895.3298736,
+                "auxillary_file_paths": [
+                    "results\\run6_baseline300014_guard_finetune_v1\\AttentionAgentConfig\\AttentionAgentConfig-150040.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 150040,
+            "file_path": "results\\run6_baseline300014_guard_finetune_v1\\AttentionAgentConfig.onnx",
+            "reward": 5.512516433373094,
+            "creation_time": 1777985895.3298736,
+            "auxillary_file_paths": [
+                "results\\run6_baseline300014_guard_finetune_v1\\AttentionAgentConfig\\AttentionAgentConfig-150040.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.11.0+cpu"
+    }
+}

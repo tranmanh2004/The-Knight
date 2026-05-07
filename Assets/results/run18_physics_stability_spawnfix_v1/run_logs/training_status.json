@@ -1,0 +1,65 @@
+{
+    "AttentionAgentConfig": {
+        "checkpoints": [
+            {
+                "steps": 1699956,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run18_physics_stability_spawnfix_v1\\AttentionAgentConfig\\AttentionAgentConfig-1699956.onnx",
+                "reward": 6.972222030211828,
+                "creation_time": 1778053319.7405367,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run18_physics_stability_spawnfix_v1\\AttentionAgentConfig\\AttentionAgentConfig-1699956.pt"
+                ]
+            },
+            {
+                "steps": 1799951,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run18_physics_stability_spawnfix_v1\\AttentionAgentConfig\\AttentionAgentConfig-1799951.onnx",
+                "reward": 4.0571830846855175,
+                "creation_time": 1778053462.4511917,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run18_physics_stability_spawnfix_v1\\AttentionAgentConfig\\AttentionAgentConfig-1799951.pt"
+                ]
+            },
+            {
+                "steps": 1899993,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run18_physics_stability_spawnfix_v1\\AttentionAgentConfig\\AttentionAgentConfig-1899993.onnx",
+                "reward": 6.808539918988295,
+                "creation_time": 1778053606.788983,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run18_physics_stability_spawnfix_v1\\AttentionAgentConfig\\AttentionAgentConfig-1899993.pt"
+                ]
+            },
+            {
+                "steps": 1999995,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run18_physics_stability_spawnfix_v1\\AttentionAgentConfig\\AttentionAgentConfig-1999995.onnx",
+                "reward": 7.071044268017566,
+                "creation_time": 1778053823.917033,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run18_physics_stability_spawnfix_v1\\AttentionAgentConfig\\AttentionAgentConfig-1999995.pt"
+                ]
+            },
+            {
+                "steps": 2000059,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run18_physics_stability_spawnfix_v1\\AttentionAgentConfig\\AttentionAgentConfig-2000059.onnx",
+                "reward": 7.071044268017566,
+                "creation_time": 1778053825.835,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run18_physics_stability_spawnfix_v1\\AttentionAgentConfig\\AttentionAgentConfig-2000059.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 2000059,
+            "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run18_physics_stability_spawnfix_v1\\AttentionAgentConfig.onnx",
+            "reward": 7.071044268017566,
+            "creation_time": 1778053825.835,
+            "auxillary_file_paths": [
+                "C:\\Riot Games\\The-Knight\\Assets\\results\\run18_physics_stability_spawnfix_v1\\AttentionAgentConfig\\AttentionAgentConfig-2000059.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.11.0+cpu"
+    }
+}

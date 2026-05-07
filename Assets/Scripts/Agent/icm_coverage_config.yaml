@@ -23,7 +23,7 @@ behaviors:
         gamma: 0.99
         encoding_size: 256
         learning_rate: 1.0e-3
-    # WITH episodic coverage (set EpisodicCoverageReward=0.01 in Inspector)
+    # WITH episodic coverage requires changing the code-only EpisodicCoverageReward constant in AttentionAgent
     # Ablation Run 3: PPO + ICM + Episodic Coverage — thesis contribution
     max_steps: 300000
     time_horizon: 64

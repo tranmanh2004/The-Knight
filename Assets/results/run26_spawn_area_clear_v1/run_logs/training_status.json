@@ -1,0 +1,56 @@
+{
+    "AttentionAgentConfig": {
+        "checkpoints": [
+            {
+                "steps": 99969,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run26_spawn_area_clear_v1\\AttentionAgentConfig\\AttentionAgentConfig-99969.onnx",
+                "reward": 7.873953291667359,
+                "creation_time": 1778082495.9448972,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run26_spawn_area_clear_v1\\AttentionAgentConfig\\AttentionAgentConfig-99969.pt"
+                ]
+            },
+            {
+                "steps": 199937,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run26_spawn_area_clear_v1\\AttentionAgentConfig\\AttentionAgentConfig-199937.onnx",
+                "reward": 6.777615172901388,
+                "creation_time": 1778082646.432915,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run26_spawn_area_clear_v1\\AttentionAgentConfig\\AttentionAgentConfig-199937.pt"
+                ]
+            },
+            {
+                "steps": 299991,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run26_spawn_area_clear_v1\\AttentionAgentConfig\\AttentionAgentConfig-299991.onnx",
+                "reward": 8.60787940033428,
+                "creation_time": 1778082797.5964963,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run26_spawn_area_clear_v1\\AttentionAgentConfig\\AttentionAgentConfig-299991.pt"
+                ]
+            },
+            {
+                "steps": 300055,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run26_spawn_area_clear_v1\\AttentionAgentConfig\\AttentionAgentConfig-300055.onnx",
+                "reward": 8.60787940033428,
+                "creation_time": 1778082798.738472,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run26_spawn_area_clear_v1\\AttentionAgentConfig\\AttentionAgentConfig-300055.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 300055,
+            "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run26_spawn_area_clear_v1\\AttentionAgentConfig.onnx",
+            "reward": 8.60787940033428,
+            "creation_time": 1778082798.738472,
+            "auxillary_file_paths": [
+                "C:\\Riot Games\\The-Knight\\Assets\\results\\run26_spawn_area_clear_v1\\AttentionAgentConfig\\AttentionAgentConfig-300055.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.11.0+cpu"
+    }
+}

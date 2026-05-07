@@ -5340,8 +5340,8 @@ MonoBehaviour:
   DamageMMFeedbacks: {fileID: 5416683875187244353}
   FeedbackIsProportionalToDamage: 0
   PreventTakeSelfDamage: 0
-  ImmuneToKnockback: 0
-  ImmuneToKnockbackIfZeroDamage: 0
+  ImmuneToKnockback: 1
+  ImmuneToKnockbackIfZeroDamage: 1
   KnockbackForceMultiplier: 1
   DestroyOnDeath: 0
   DelayBeforeDestruction: 0

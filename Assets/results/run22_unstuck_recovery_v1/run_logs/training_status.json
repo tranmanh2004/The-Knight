@@ -1,0 +1,65 @@
+{
+    "AttentionAgentConfig": {
+        "checkpoints": [
+            {
+                "steps": 699953,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run22_unstuck_recovery_v1\\AttentionAgentConfig\\AttentionAgentConfig-699953.onnx",
+                "reward": 5.7714003914346295,
+                "creation_time": 1778077276.9418821,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run22_unstuck_recovery_v1\\AttentionAgentConfig\\AttentionAgentConfig-699953.pt"
+                ]
+            },
+            {
+                "steps": 799950,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run22_unstuck_recovery_v1\\AttentionAgentConfig\\AttentionAgentConfig-799950.onnx",
+                "reward": 8.34862013768993,
+                "creation_time": 1778077416.703739,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run22_unstuck_recovery_v1\\AttentionAgentConfig\\AttentionAgentConfig-799950.pt"
+                ]
+            },
+            {
+                "steps": 899966,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run22_unstuck_recovery_v1\\AttentionAgentConfig\\AttentionAgentConfig-899966.onnx",
+                "reward": 5.191977285262611,
+                "creation_time": 1778077559.7481549,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run22_unstuck_recovery_v1\\AttentionAgentConfig\\AttentionAgentConfig-899966.pt"
+                ]
+            },
+            {
+                "steps": 999967,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run22_unstuck_recovery_v1\\AttentionAgentConfig\\AttentionAgentConfig-999967.onnx",
+                "reward": 6.561102023050189,
+                "creation_time": 1778077700.1832373,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run22_unstuck_recovery_v1\\AttentionAgentConfig\\AttentionAgentConfig-999967.pt"
+                ]
+            },
+            {
+                "steps": 1000031,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run22_unstuck_recovery_v1\\AttentionAgentConfig\\AttentionAgentConfig-1000031.onnx",
+                "reward": 6.561102023050189,
+                "creation_time": 1778077701.2555242,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run22_unstuck_recovery_v1\\AttentionAgentConfig\\AttentionAgentConfig-1000031.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 1000031,
+            "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run22_unstuck_recovery_v1\\AttentionAgentConfig.onnx",
+            "reward": 6.561102023050189,
+            "creation_time": 1778077701.2555242,
+            "auxillary_file_paths": [
+                "C:\\Riot Games\\The-Knight\\Assets\\results\\run22_unstuck_recovery_v1\\AttentionAgentConfig\\AttentionAgentConfig-1000031.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.11.0+cpu"
+    }
+}

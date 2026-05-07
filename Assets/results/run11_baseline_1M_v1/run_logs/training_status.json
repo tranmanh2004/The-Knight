@@ -1,0 +1,29 @@
+{
+    "AttentionAgentConfig": {
+        "checkpoints": [
+            {
+                "steps": 82073,
+                "file_path": "results\\run11_baseline_1M_v1\\AttentionAgentConfig\\AttentionAgentConfig-82073.onnx",
+                "reward": null,
+                "creation_time": 1777992783.897227,
+                "auxillary_file_paths": [
+                    "results\\run11_baseline_1M_v1\\AttentionAgentConfig\\AttentionAgentConfig-82073.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 82073,
+            "file_path": "results\\run11_baseline_1M_v1\\AttentionAgentConfig.onnx",
+            "reward": null,
+            "creation_time": 1777992783.897227,
+            "auxillary_file_paths": [
+                "results\\run11_baseline_1M_v1\\AttentionAgentConfig\\AttentionAgentConfig-82073.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.11.0+cpu"
+    }
+}

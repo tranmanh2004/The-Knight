@@ -80,7 +80,20 @@ namespace MoreMountains.TopDownEngine
 				return;
 			}
 
-			RaycastHit2D hit = Physics2D.BoxCast(_collider.bounds.center, _collider.bounds.size, 0f, _direction.normalized, _direction.magnitude, ObstacleLayerMask);
+			if ((_collider == null) || (_direction.sqrMagnitude <= 0f))
+			{
+				_lastObstacleDetectionTimestamp = Time.time;
+				return;
+			}
+
+			float detectionDistance = Mathf.Max(0f, ObstaclesDetectionDistance);
+			RaycastHit2D hit = Physics2D.BoxCast(
+				_collider.bounds.center,
+				_collider.bounds.size,
+				0f,
+				_direction.normalized,
+				detectionDistance,
+				ObstacleLayerMask);
 			if (hit)
 			{
 				PickRandomDirection();

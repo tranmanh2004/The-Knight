@@ -22,6 +22,8 @@ public class TilemapGenerator : MonoBehaviour
     public Tilemap collisionTilemap;
     public TileBase floorTile;
     public TileBase wallTile;
+    [Tooltip("Ensures the floor tilemap has a trigger collider so TopDownController2D grounded checks can detect floor tiles during training.")]
+    public bool ensureFloorGroundCollider = true;
 
     [Header("Map Placement")]
     public Vector2Int startPosition = new Vector2Int(0, 0);
@@ -49,18 +51,49 @@ public class TilemapGenerator : MonoBehaviour
     [Min(1)]
     [Tooltip("Số enemy random spawn khi spawnOnlyOneEnemyFromText bật.")]
     public int randomEnemySpawnCount = 3;
+    [Min(0)]
+    [Tooltip("Số ô sàn trống cần có quanh điểm spawn enemy. 0 chỉ yêu cầu tâm enemy nằm trên ô sàn.")]
+    public int enemySpawnWallClearanceCells = 0;
+    [Min(0)]
+    [Tooltip("Clearance tối thiểu được ép lúc runtime để tránh enemy spawn sát tường trong training.")]
+    public int runtimeMinEnemySpawnWallClearanceCells = 0;
+    [Min(0)]
+    [Tooltip("Khoảng cách Manhattan tối thiểu từ enemy spawn tới player spawn.")]
+    public int enemySpawnMinDistanceFromPlayerCells = 3;
+    [Tooltip("Ưu tiên spawn enemy ở ô có đường nhìn theo grid tới player spawn. Nếu không có ô hợp lệ sẽ fallback về danh sách floor bình thường.")]
+    public bool preferEnemySpawnLineOfSightToPlayer = true;
+    [Min(0)]
+    [Tooltip("Số ô sàn trống cần có quanh điểm spawn player khi randomizePlayerSpawnFromFloor bật. 0 chỉ yêu cầu tâm player nằm trên ô sàn.")]
+    public int playerSpawnWallClearanceCells = 1;
     public GameObject[] enemyPrefabs;
     public Transform enemyParent;
+
+    [Header("Spawn Area Cleanup")]
+    [Tooltip("Regenerates the room on each runtime respawn so spawn cleanup does not accumulate across episodes.")]
+    public bool regenerateRoomOnRespawn = true;
+    [Tooltip("Clears nearby wall tiles around the selected player spawn.")]
+    public bool clearPlayerSpawnArea = true;
+    [Tooltip("Clears nearby wall tiles around selected enemy spawns.")]
+    public bool clearEnemySpawnArea = true;
+    [Min(0)]
+    [Tooltip("Radius in cells to clear around spawn points. 1 means a 3x3 area.")]
+    public int spawnAreaClearanceCells = 1;
+    [Tooltip("Keeps the outer map border intact while clearing spawn areas.")]
+    public bool preserveOuterWallBorder = true;
+    public bool logSpawnAreaCleanup = false;
 
     [Header("Enemy Object Pool")]
     [Tooltip("Instances pre-created per prefab at startup to avoid Instantiate during training.")]
     public int poolSizePerPrefab = 5;
+    [Tooltip("Use continuous collision detection on spawned enemy rigidbodies to reduce wall tunneling during training.")]
+    public bool enforceContinuousCollisionForEnemies = true;
 
     // --- Map parsing state ---
     private bool _hasPlayerSpawn;
     private Vector3Int _playerSpawnCell;
     private readonly List<Vector3Int> _enemySpawnCells = new List<Vector3Int>();
     private int[,] _lastRoomGrid;
+    private bool _hasGeneratedRuntimeRoom;
 
     // --- Active enemies for the current episode ---
     private readonly List<GameObject> _spawnedEnemies = new List<GameObject>();
@@ -102,8 +135,10 @@ public class TilemapGenerator : MonoBehaviour
         {
             collisionTilemap.ClearAllTiles();
         }
+        EnsureFloorGroundCollider();
         RenderToTilemap(roomGrid);
         UpdateLevelManagerSpawnPointIfNeeded();
+        _hasGeneratedRuntimeRoom = true;
         SpawnEnemiesFromTextIfNeeded();
     }
 
@@ -114,6 +149,21 @@ public class TilemapGenerator : MonoBehaviour
     /// </summary>
     public void RespawnEnemies()
     {
+        if (Application.isPlaying && regenerateRoomOnRespawn)
+        {
+            GenerateRoom();
+            return;
+        }
+
+        // During training, the first episode can start before the room has ever been
+        // rendered from the selected text map. Generate once so spawn candidates and
+        // actual wall/floor tiles stay in sync and enemies never spawn into scene walls.
+        if (Application.isPlaying && !_hasGeneratedRuntimeRoom)
+        {
+            GenerateRoom();
+            return;
+        }
+
         SpawnEnemiesFromTextIfNeeded();
     }
 
@@ -194,6 +244,12 @@ public class TilemapGenerator : MonoBehaviour
             character.RespawnAt(position, character.transform.localScale.x > 0
                 ? Character.FacingDirections.East
                 : Character.FacingDirections.West);
+            TopDownController controller = go.GetComponent<TopDownController>();
+            if (controller != null)
+            {
+                controller.Reset();
+                controller.SetMovement(Vector2.zero);
+            }
         }
         else
         {
@@ -202,6 +258,7 @@ public class TilemapGenerator : MonoBehaviour
             if (health != null)
                 health.Revive();
         }
+        ResetEnemyPhysics(go);
 
         // RespawnAt re-enables the brain via OnRevive callback, but ResetBrain()
         // ensures state machine restarts cleanly from the initial state.
@@ -220,6 +277,45 @@ public class TilemapGenerator : MonoBehaviour
         {
             handleWeapon.CurrentWeapon.WeaponState.ChangeState(Weapon.WeaponStates.WeaponIdle);
         }
+
+        ForceEnemyCollidersNonTrigger(go);
+    }
+
+    private void ResetEnemyPhysics(GameObject enemy)
+    {
+        if (enemy == null)
+        {
+            return;
+        }
+
+        Rigidbody2D rigidbody2D = enemy.GetComponent<Rigidbody2D>();
+        if (rigidbody2D != null)
+        {
+            rigidbody2D.linearVelocity = Vector2.zero;
+            rigidbody2D.angularVelocity = 0f;
+            if (enforceContinuousCollisionForEnemies)
+            {
+                rigidbody2D.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+            }
+        }
+    }
+
+    private void ForceEnemyCollidersNonTrigger(GameObject enemy)
+    {
+        if (enemy == null)
+        {
+            return;
+        }
+
+        Collider2D[] colliders = enemy.GetComponentsInChildren<Collider2D>(true);
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            if (colliders[i] != null)
+            {
+                colliders[i].isTrigger = false;
+            }
+        }
+
     }
 
     // -------------------------------------------------------------------------
@@ -370,6 +466,32 @@ public class TilemapGenerator : MonoBehaviour
         }
     }
 
+    private void EnsureFloorGroundCollider()
+    {
+        if (!ensureFloorGroundCollider || tilemap == null)
+        {
+            return;
+        }
+
+        int groundLayer = LayerMask.NameToLayer("Ground");
+        if (groundLayer >= 0)
+        {
+            tilemap.gameObject.layer = groundLayer;
+        }
+
+        TilemapCollider2D floorCollider = tilemap.GetComponent<TilemapCollider2D>();
+        if (floorCollider == null)
+        {
+            floorCollider = tilemap.gameObject.AddComponent<TilemapCollider2D>();
+        }
+
+        // TopDownController2D uses Physics2D.OverlapPoint to decide if the
+        // character is grounded. The floor needs a Collider2D for that test,
+        // but it must stay trigger-only so it never blocks top-down movement.
+        floorCollider.isTrigger = true;
+        floorCollider.enabled = true;
+    }
+
     private int[,] BuildGridFromText()
     {
         TextAsset sourceMap = GetSelectedMapTextAsset();
@@ -415,6 +537,11 @@ public class TilemapGenerator : MonoBehaviour
             SelectRandomPlayerSpawnCell(grid);
         }
 
+        if (clearPlayerSpawnArea && _hasPlayerSpawn)
+        {
+            ClearSpawnArea(grid, _playerSpawnCell, spawnAreaClearanceCells, false, "player");
+        }
+
         _lastRoomGrid = grid;
         return grid;
     }
@@ -422,7 +549,12 @@ public class TilemapGenerator : MonoBehaviour
     private void SelectRandomPlayerSpawnCell(int[,] grid)
     {
         List<Vector3Int> candidates = new List<Vector3Int>();
-        CollectPlayerSpawnCandidates(grid, candidates);
+        CollectPlayerSpawnCandidates(grid, candidates, playerSpawnWallClearanceCells);
+
+        if (candidates.Count == 0 && playerSpawnWallClearanceCells > 0)
+        {
+            CollectPlayerSpawnCandidates(grid, candidates, 0);
+        }
 
         if (candidates.Count == 0)
         {
@@ -434,7 +566,7 @@ public class TilemapGenerator : MonoBehaviour
         _hasPlayerSpawn = true;
     }
 
-    private void CollectPlayerSpawnCandidates(int[,] grid, List<Vector3Int> candidates)
+    private void CollectPlayerSpawnCandidates(int[,] grid, List<Vector3Int> candidates, int clearance)
     {
         int width = grid.GetLength(0);
         int height = grid.GetLength(1);
@@ -444,6 +576,11 @@ public class TilemapGenerator : MonoBehaviour
             for (int y = 0; y < height; y++)
             {
                 if (grid[x, y] == 1)
+                {
+                    continue;
+                }
+
+                if (!HasFloorClearance(grid, x, y, clearance))
                 {
                     continue;
                 }
@@ -463,14 +600,146 @@ public class TilemapGenerator : MonoBehaviour
 
         List<Vector3Int> candidates = new List<Vector3Int>();
         CollectEnemySpawnCandidates(_lastRoomGrid, candidates);
+        if (candidates.Count == 0 && Application.isPlaying && runtimeMinEnemySpawnWallClearanceCells > 0)
+        {
+            Debug.LogWarning("Không tìm thấy ô spawn enemy với runtime clearance; fallback về clearance gốc.", this);
+            int originalRuntimeClearance = runtimeMinEnemySpawnWallClearanceCells;
+            runtimeMinEnemySpawnWallClearanceCells = 0;
+            CollectEnemySpawnCandidates(_lastRoomGrid, candidates);
+            runtimeMinEnemySpawnWallClearanceCells = originalRuntimeClearance;
+        }
 
         int desiredCount = spawnOnlyOneEnemyFromText ? randomEnemySpawnCount : candidates.Count;
+        if (preferEnemySpawnLineOfSightToPlayer && _hasPlayerSpawn && desiredCount > 0)
+        {
+            List<Vector3Int> lineOfSightCandidates = new List<Vector3Int>();
+            for (int i = 0; i < candidates.Count; i++)
+            {
+                if (HasGridLineOfSight(_lastRoomGrid, _playerSpawnCell, candidates[i]))
+                {
+                    lineOfSightCandidates.Add(candidates[i]);
+                }
+            }
+
+            if (lineOfSightCandidates.Count >= desiredCount)
+            {
+                candidates = lineOfSightCandidates;
+            }
+            else if (lineOfSightCandidates.Count > 0)
+            {
+                candidates = lineOfSightCandidates;
+                desiredCount = Mathf.Min(desiredCount, candidates.Count);
+            }
+        }
+
         desiredCount = Mathf.Min(desiredCount, candidates.Count);
         for (int i = 0; i < desiredCount; i++)
         {
             int selectedIndex = Random.Range(0, candidates.Count);
             _enemySpawnCells.Add(candidates[selectedIndex]);
             candidates.RemoveAt(selectedIndex);
+        }
+
+        if (clearEnemySpawnArea && _enemySpawnCells.Count > 0)
+        {
+            ClearSpawnAreas(_lastRoomGrid, _enemySpawnCells, spawnAreaClearanceCells, true, "enemy");
+        }
+    }
+
+    private int ClearSpawnAreas(int[,] grid, List<Vector3Int> cells, int clearance, bool updateTilemaps, string label)
+    {
+        if (grid == null || cells == null)
+        {
+            return 0;
+        }
+
+        int totalCleared = 0;
+        for (int i = 0; i < cells.Count; i++)
+        {
+            totalCleared += ClearSpawnArea(grid, cells[i], clearance, updateTilemaps, label);
+        }
+
+        return totalCleared;
+    }
+
+    private int ClearSpawnArea(int[,] grid, Vector3Int centerCell, int clearance, bool updateTilemaps, string label)
+    {
+        if (grid == null)
+        {
+            return 0;
+        }
+
+        int centerX = centerCell.x - startPosition.x;
+        int centerY = centerCell.y - startPosition.y;
+        int safeClearance = Mathf.Max(0, clearance);
+        int cleared = 0;
+
+        for (int x = centerX - safeClearance; x <= centerX + safeClearance; x++)
+        {
+            for (int y = centerY - safeClearance; y <= centerY + safeClearance; y++)
+            {
+                if (!IsInsideGrid(grid, x, y))
+                {
+                    continue;
+                }
+
+                if (preserveOuterWallBorder && IsOuterBorderCell(grid, x, y))
+                {
+                    continue;
+                }
+
+                if (grid[x, y] != 1)
+                {
+                    continue;
+                }
+
+                grid[x, y] = 0;
+                cleared++;
+
+                if (updateTilemaps)
+                {
+                    ApplyGridCellToTilemaps(x, y, grid[x, y]);
+                }
+            }
+        }
+
+        if (logSpawnAreaCleanup && cleared > 0)
+        {
+            Debug.Log($"[SpawnAreaClear] label={label} center={centerCell} radius={safeClearance} clearedTiles={cleared}", this);
+        }
+
+        return cleared;
+    }
+
+    private bool IsInsideGrid(int[,] grid, int x, int y)
+    {
+        return x >= 0
+            && y >= 0
+            && x < grid.GetLength(0)
+            && y < grid.GetLength(1);
+    }
+
+    private bool IsOuterBorderCell(int[,] grid, int x, int y)
+    {
+        return x == 0
+            || y == 0
+            || x == grid.GetLength(0) - 1
+            || y == grid.GetLength(1) - 1;
+    }
+
+    private void ApplyGridCellToTilemaps(int gridX, int gridY, int tileType)
+    {
+        if (tilemap == null)
+        {
+            return;
+        }
+
+        Vector3Int pos = new Vector3Int(startPosition.x + gridX, startPosition.y + gridY, 0);
+        tilemap.SetTile(pos, tileType == 1 ? null : floorTile);
+
+        if (collisionTilemap != null)
+        {
+            collisionTilemap.SetTile(pos, tileType == 1 ? wallTile : null);
         }
     }
 
@@ -494,7 +763,98 @@ public class TilemapGenerator : MonoBehaviour
                     continue;
                 }
 
+                int effectiveClearance = Application.isPlaying
+                    ? Mathf.Max(enemySpawnWallClearanceCells, runtimeMinEnemySpawnWallClearanceCells)
+                    : enemySpawnWallClearanceCells;
+                if (!HasFloorClearance(grid, x, y, effectiveClearance))
+                {
+                    continue;
+                }
+
+                if (IsTooCloseToPlayerSpawn(cell))
+                {
+                    continue;
+                }
+
                 candidates.Add(cell);
+            }
+        }
+    }
+
+    private bool HasFloorClearance(int[,] grid, int centerX, int centerY, int clearance)
+    {
+        int safeClearance = Mathf.Max(0, clearance);
+        for (int x = centerX - safeClearance; x <= centerX + safeClearance; x++)
+        {
+            for (int y = centerY - safeClearance; y <= centerY + safeClearance; y++)
+            {
+                if (!IsFloorCell(grid, x, y))
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private bool IsFloorCell(int[,] grid, int x, int y)
+    {
+        return x >= 0
+            && y >= 0
+            && x < grid.GetLength(0)
+            && y < grid.GetLength(1)
+            && grid[x, y] != 1;
+    }
+
+    private bool IsTooCloseToPlayerSpawn(Vector3Int cell)
+    {
+        if (!_hasPlayerSpawn || enemySpawnMinDistanceFromPlayerCells <= 0)
+        {
+            return false;
+        }
+
+        int distance = Mathf.Abs(cell.x - _playerSpawnCell.x) + Mathf.Abs(cell.y - _playerSpawnCell.y);
+        return distance < enemySpawnMinDistanceFromPlayerCells;
+    }
+
+    private bool HasGridLineOfSight(int[,] grid, Vector3Int fromCell, Vector3Int toCell)
+    {
+        int x0 = fromCell.x - startPosition.x;
+        int y0 = fromCell.y - startPosition.y;
+        int x1 = toCell.x - startPosition.x;
+        int y1 = toCell.y - startPosition.y;
+
+        int dx = Mathf.Abs(x1 - x0);
+        int dy = Mathf.Abs(y1 - y0);
+        int sx = x0 < x1 ? 1 : -1;
+        int sy = y0 < y1 ? 1 : -1;
+        int error = dx - dy;
+        int x = x0;
+        int y = y0;
+
+        while (true)
+        {
+            if (!IsFloorCell(grid, x, y))
+            {
+                return false;
+            }
+
+            if (x == x1 && y == y1)
+            {
+                return true;
+            }
+
+            int twiceError = error * 2;
+            if (twiceError > -dy)
+            {
+                error -= dy;
+                x += sx;
+            }
+            if (twiceError < dx)
+            {
+                error += dx;
+                y += sy;
             }
         }
     }

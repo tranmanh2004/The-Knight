@@ -1,0 +1,42 @@
+{
+    "name": "root",
+    "metadata": {
+        "timer_format_version": "0.1.0",
+        "start_time_seconds": "1777945151",
+        "python_version": "3.10.12 | packaged by Anaconda, Inc. | (main, Jul  5 2023, 19:01:18) [MSC v.1916 64 bit (AMD64)]",
+        "command_line_arguments": "C:\\Users\\ADMIN\\anaconda3\\envs\\unity\\Scripts\\mlagents-learn Scripts\\Agent\\baseline_config.yaml --run-id=test-1 --env=C:\\Riot Games\\The-Knight\\Build\\The Knight.exe --num-envs=8 --no-graphics --torch-device cuda --quality-level 0 --force",
+        "mlagents_version": "1.1.0",
+        "mlagents_envs_version": "1.1.0",
+        "communication_protocol_version": "1.5.0",
+        "pytorch_version": "2.11.0+cpu",
+        "numpy_version": "1.23.5",
+        "end_time_seconds": "1777945154"
+    },
+    "total": 3.4892164999619126,
+    "count": 1,
+    "self": 0.2738835997879505,
+    "children": {
+        "run_training.setup": {
+            "total": 0.2566908001899719,
+            "count": 1,
+            "self": 0.2566908001899719
+        },
+        "TrainerController.start_learning": {
+            "total": 2.95864209998399,
+            "count": 1,
+            "self": 5.319993942975998e-05,
+            "children": {
+                "TrainerController._reset_env": {
+                    "total": 2.9584901998750865,
+                    "count": 1,
+                    "self": 2.9584901998750865
+                },
+                "TrainerController._save_models": {
+                    "total": 9.870016947388649e-05,
+                    "count": 1,
+                    "self": 9.870016947388649e-05
+                }
+            }
+        }
+    }
+}

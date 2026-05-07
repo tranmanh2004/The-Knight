@@ -1,0 +1,65 @@
+{
+    "AttentionAgentConfig": {
+        "checkpoints": [
+            {
+                "steps": 199993,
+                "file_path": "results\\run13_baseline_1M_v1\\AttentionAgentConfig\\AttentionAgentConfig-199993.onnx",
+                "reward": 4.8475141356650155,
+                "creation_time": 1777993781.1500766,
+                "auxillary_file_paths": [
+                    "results\\run13_baseline_1M_v1\\AttentionAgentConfig\\AttentionAgentConfig-199993.pt"
+                ]
+            },
+            {
+                "steps": 299948,
+                "file_path": "results\\run13_baseline_1M_v1\\AttentionAgentConfig\\AttentionAgentConfig-299948.onnx",
+                "reward": 2.0133267118196403,
+                "creation_time": 1777993947.9189258,
+                "auxillary_file_paths": [
+                    "results\\run13_baseline_1M_v1\\AttentionAgentConfig\\AttentionAgentConfig-299948.pt"
+                ]
+            },
+            {
+                "steps": 399992,
+                "file_path": "results\\run13_baseline_1M_v1\\AttentionAgentConfig\\AttentionAgentConfig-399992.onnx",
+                "reward": 5.877014580397652,
+                "creation_time": 1777994109.2280033,
+                "auxillary_file_paths": [
+                    "results\\run13_baseline_1M_v1\\AttentionAgentConfig\\AttentionAgentConfig-399992.pt"
+                ]
+            },
+            {
+                "steps": 499955,
+                "file_path": "results\\run13_baseline_1M_v1\\AttentionAgentConfig\\AttentionAgentConfig-499955.onnx",
+                "reward": 3.1161332002116575,
+                "creation_time": 1777994267.6823297,
+                "auxillary_file_paths": [
+                    "results\\run13_baseline_1M_v1\\AttentionAgentConfig\\AttentionAgentConfig-499955.pt"
+                ]
+            },
+            {
+                "steps": 571665,
+                "file_path": "results\\run13_baseline_1M_v1\\AttentionAgentConfig\\AttentionAgentConfig-571665.onnx",
+                "reward": 2.925293374640335,
+                "creation_time": 1777994381.1280372,
+                "auxillary_file_paths": [
+                    "results\\run13_baseline_1M_v1\\AttentionAgentConfig\\AttentionAgentConfig-571665.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 571665,
+            "file_path": "results\\run13_baseline_1M_v1\\AttentionAgentConfig.onnx",
+            "reward": 2.925293374640335,
+            "creation_time": 1777994381.1280372,
+            "auxillary_file_paths": [
+                "results\\run13_baseline_1M_v1\\AttentionAgentConfig\\AttentionAgentConfig-571665.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.11.0+cpu"
+    }
+}

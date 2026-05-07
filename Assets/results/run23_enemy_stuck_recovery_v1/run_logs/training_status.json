@@ -1,0 +1,56 @@
+{
+    "AttentionAgentConfig": {
+        "checkpoints": [
+            {
+                "steps": 99981,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run23_enemy_stuck_recovery_v1\\AttentionAgentConfig\\AttentionAgentConfig-99981.onnx",
+                "reward": 8.832195346731515,
+                "creation_time": 1778079337.581817,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run23_enemy_stuck_recovery_v1\\AttentionAgentConfig\\AttentionAgentConfig-99981.pt"
+                ]
+            },
+            {
+                "steps": 199994,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run23_enemy_stuck_recovery_v1\\AttentionAgentConfig\\AttentionAgentConfig-199994.onnx",
+                "reward": 9.098506738003847,
+                "creation_time": 1778079483.0647094,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run23_enemy_stuck_recovery_v1\\AttentionAgentConfig\\AttentionAgentConfig-199994.pt"
+                ]
+            },
+            {
+                "steps": 299988,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run23_enemy_stuck_recovery_v1\\AttentionAgentConfig\\AttentionAgentConfig-299988.onnx",
+                "reward": 9.570362880390059,
+                "creation_time": 1778079626.6884608,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run23_enemy_stuck_recovery_v1\\AttentionAgentConfig\\AttentionAgentConfig-299988.pt"
+                ]
+            },
+            {
+                "steps": 300052,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run23_enemy_stuck_recovery_v1\\AttentionAgentConfig\\AttentionAgentConfig-300052.onnx",
+                "reward": 9.570362880390059,
+                "creation_time": 1778079627.797508,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run23_enemy_stuck_recovery_v1\\AttentionAgentConfig\\AttentionAgentConfig-300052.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 300052,
+            "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run23_enemy_stuck_recovery_v1\\AttentionAgentConfig.onnx",
+            "reward": 9.570362880390059,
+            "creation_time": 1778079627.797508,
+            "auxillary_file_paths": [
+                "C:\\Riot Games\\The-Knight\\Assets\\results\\run23_enemy_stuck_recovery_v1\\AttentionAgentConfig\\AttentionAgentConfig-300052.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.11.0+cpu"
+    }
+}

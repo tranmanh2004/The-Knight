@@ -1,0 +1,38 @@
+{
+    "AttentionAgentConfig": {
+        "checkpoints": [
+            {
+                "steps": 499967,
+                "file_path": "results\\baseline_readyreward_beta001_500k_v1\\AttentionAgentConfig\\AttentionAgentConfig-499967.onnx",
+                "reward": 0.4739410113543272,
+                "creation_time": 1777908032.7349727,
+                "auxillary_file_paths": [
+                    "results\\baseline_readyreward_beta001_500k_v1\\AttentionAgentConfig\\AttentionAgentConfig-499967.pt"
+                ]
+            },
+            {
+                "steps": 500007,
+                "file_path": "results\\baseline_readyreward_beta001_500k_v1\\AttentionAgentConfig\\AttentionAgentConfig-500007.onnx",
+                "reward": 0.28414587100798433,
+                "creation_time": 1777908033.9093754,
+                "auxillary_file_paths": [
+                    "results\\baseline_readyreward_beta001_500k_v1\\AttentionAgentConfig\\AttentionAgentConfig-500007.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 500007,
+            "file_path": "results\\baseline_readyreward_beta001_500k_v1\\AttentionAgentConfig.onnx",
+            "reward": 0.28414587100798433,
+            "creation_time": 1777908033.9093754,
+            "auxillary_file_paths": [
+                "results\\baseline_readyreward_beta001_500k_v1\\AttentionAgentConfig\\AttentionAgentConfig-500007.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.11.0+cpu"
+    }
+}

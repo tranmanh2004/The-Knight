@@ -449,8 +449,8 @@ MonoBehaviour:
   DamageMMFeedbacks: {fileID: 3547864438223399480}
   FeedbackIsProportionalToDamage: 0
   PreventTakeSelfDamage: 0
-  ImmuneToKnockback: 0
-  ImmuneToKnockbackIfZeroDamage: 0
+  ImmuneToKnockback: 1
+  ImmuneToKnockbackIfZeroDamage: 1
   KnockbackForceMultiplier: 1
   DestroyOnDeath: 0
   DelayBeforeDestruction: 0
@@ -586,7 +586,7 @@ MonoBehaviour:
   InitializationMode: 0
   Label: 
   UseMinimumXDistance: 1
-  MinimumXDistance: 0.1
+  MinimumXDistance: 1
 --- !u!114 &114778105809703722
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10753,6 +10753,9 @@ MonoBehaviour:
     OnPause:
       m_PersistentCalls:
         m_Calls: []
+    OnStop:
+      m_PersistentCalls:
+        m_Calls: []
     OnResume:
       m_PersistentCalls:
         m_Calls: []
@@ -10784,6 +10787,7 @@ MonoBehaviour:
   - rid: 1
   KeepPlayModeChanges: 0
   PerformanceMode: 0
+  RestoreInitialValuesOnDisable: 0
   StopFeedbacksOnDisable: 0
   PlayCount: 0
   references:
@@ -11107,6 +11111,9 @@ MonoBehaviour:
     OnPause:
       m_PersistentCalls:
         m_Calls: []
+    OnStop:
+      m_PersistentCalls:
+        m_Calls: []
     OnResume:
       m_PersistentCalls:
         m_Calls: []
@@ -11139,6 +11146,7 @@ MonoBehaviour:
   - rid: 1597474022493519923
   KeepPlayModeChanges: 0
   PerformanceMode: 0
+  RestoreInitialValuesOnDisable: 0
   StopFeedbacksOnDisable: 0
   PlayCount: 0
   references:
@@ -11429,6 +11437,7 @@ MonoBehaviour:
         DebugActive: 0
         TargetGameObject: {fileID: 1422487604856424639}
         ExtraTargetGameObjects: []
+        IgnorePlayDirection: 0
         SetStateOnInit: 0
         StateOnInit: 1
         SetStateOnPlay: 1

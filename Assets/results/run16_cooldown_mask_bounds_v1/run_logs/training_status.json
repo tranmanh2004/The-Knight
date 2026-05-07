@@ -1,0 +1,65 @@
+{
+    "AttentionAgentConfig": {
+        "checkpoints": [
+            {
+                "steps": 1699953,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run16_cooldown_mask_bounds_v1\\AttentionAgentConfig\\AttentionAgentConfig-1699953.onnx",
+                "reward": 6.484428094699979,
+                "creation_time": 1778038867.3856366,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run16_cooldown_mask_bounds_v1\\AttentionAgentConfig\\AttentionAgentConfig-1699953.pt"
+                ]
+            },
+            {
+                "steps": 1799990,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run16_cooldown_mask_bounds_v1\\AttentionAgentConfig\\AttentionAgentConfig-1799990.onnx",
+                "reward": 5.050050467252731,
+                "creation_time": 1778039010.2177167,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run16_cooldown_mask_bounds_v1\\AttentionAgentConfig\\AttentionAgentConfig-1799990.pt"
+                ]
+            },
+            {
+                "steps": 1899972,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run16_cooldown_mask_bounds_v1\\AttentionAgentConfig\\AttentionAgentConfig-1899972.onnx",
+                "reward": 5.730885080226204,
+                "creation_time": 1778039150.9318995,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run16_cooldown_mask_bounds_v1\\AttentionAgentConfig\\AttentionAgentConfig-1899972.pt"
+                ]
+            },
+            {
+                "steps": 1999952,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run16_cooldown_mask_bounds_v1\\AttentionAgentConfig\\AttentionAgentConfig-1999952.onnx",
+                "reward": 9.205060975439846,
+                "creation_time": 1778039293.746438,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run16_cooldown_mask_bounds_v1\\AttentionAgentConfig\\AttentionAgentConfig-1999952.pt"
+                ]
+            },
+            {
+                "steps": 2000016,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run16_cooldown_mask_bounds_v1\\AttentionAgentConfig\\AttentionAgentConfig-2000016.onnx",
+                "reward": 9.205060975439846,
+                "creation_time": 1778039294.9243567,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run16_cooldown_mask_bounds_v1\\AttentionAgentConfig\\AttentionAgentConfig-2000016.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 2000016,
+            "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run16_cooldown_mask_bounds_v1\\AttentionAgentConfig.onnx",
+            "reward": 9.205060975439846,
+            "creation_time": 1778039294.9243567,
+            "auxillary_file_paths": [
+                "C:\\Riot Games\\The-Knight\\Assets\\results\\run16_cooldown_mask_bounds_v1\\AttentionAgentConfig\\AttentionAgentConfig-2000016.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.11.0+cpu"
+    }
+}

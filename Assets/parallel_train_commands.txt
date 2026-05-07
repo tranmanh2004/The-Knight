@@ -1,0 +1,9 @@
+mlagents-learn "C:\Riot Games\The-Knight\Assets\Scripts\Agent\parallel_control_config.yaml" --run-id=parallel_a_control_v1 --initialize-from=run3_attackmask_v1 --results-dir="C:\Riot Games\The-Knight\Assets\results" --env="C:\Riot Games\The-Knight\Build\The Knight.exe" --num-envs=2 --base-port=5005 --no-graphics --torch-device cpu --quality-level 0 --force
+
+mlagents-learn "C:\Riot Games\The-Knight\Assets\Scripts\Agent\parallel_low_beta_config.yaml" --run-id=parallel_b_lowbeta_v1 --initialize-from=run3_attackmask_v1 --results-dir="C:\Riot Games\The-Knight\Assets\results" --env="C:\Riot Games\The-Knight\Build\The Knight.exe" --num-envs=2 --base-port=5015 --no-graphics --torch-device cpu --quality-level 0 --force
+
+mlagents-learn "C:\Riot Games\The-Knight\Assets\Scripts\Agent\parallel_low_lr_config.yaml" --run-id=parallel_c_lowlr_v1 --initialize-from=run3_attackmask_v1 --results-dir="C:\Riot Games\The-Knight\Assets\results" --env="C:\Riot Games\The-Knight\Build\The Knight.exe" --num-envs=2 --base-port=5025 --no-graphics --torch-device cpu --quality-level 0 --force
+
+mlagents-learn "C:\Riot Games\The-Knight\Assets\Scripts\Agent\parallel_long_horizon_config.yaml" --run-id=parallel_d_longhorizon_v1 --initialize-from=run3_attackmask_v1 --results-dir="C:\Riot Games\The-Knight\Assets\results" --env="C:\Riot Games\The-Knight\Build\The Knight.exe" --num-envs=2 --base-port=5035 --no-graphics --torch-device cpu --quality-level 0 --force
+
+mlagents-learn "C:\Riot Games\The-Knight\Assets\Scripts\Agent\parallel_more_epochs_config.yaml" --run-id=parallel_e_moreepochs_v1 --initialize-from=run3_attackmask_v1 --results-dir="C:\Riot Games\The-Knight\Assets\results" --env="C:\Riot Games\The-Knight\Build\The Knight.exe" --num-envs=2 --base-port=5045 --no-graphics --torch-device cpu --quality-level 0 --force

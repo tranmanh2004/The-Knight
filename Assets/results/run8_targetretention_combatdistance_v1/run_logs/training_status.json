@@ -1,0 +1,56 @@
+{
+    "AttentionAgentConfig": {
+        "checkpoints": [
+            {
+                "steps": 49947,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run8_targetretention_combatdistance_v1\\AttentionAgentConfig\\AttentionAgentConfig-49947.onnx",
+                "reward": 6.5470399502664804,
+                "creation_time": 1777987217.9430592,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run8_targetretention_combatdistance_v1\\AttentionAgentConfig\\AttentionAgentConfig-49947.pt"
+                ]
+            },
+            {
+                "steps": 99984,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run8_targetretention_combatdistance_v1\\AttentionAgentConfig\\AttentionAgentConfig-99984.onnx",
+                "reward": 6.456374680325389,
+                "creation_time": 1777987296.929695,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run8_targetretention_combatdistance_v1\\AttentionAgentConfig\\AttentionAgentConfig-99984.pt"
+                ]
+            },
+            {
+                "steps": 149957,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run8_targetretention_combatdistance_v1\\AttentionAgentConfig\\AttentionAgentConfig-149957.onnx",
+                "reward": 2.841730095860031,
+                "creation_time": 1777987377.7260776,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run8_targetretention_combatdistance_v1\\AttentionAgentConfig\\AttentionAgentConfig-149957.pt"
+                ]
+            },
+            {
+                "steps": 150021,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run8_targetretention_combatdistance_v1\\AttentionAgentConfig\\AttentionAgentConfig-150021.onnx",
+                "reward": 2.841730095860031,
+                "creation_time": 1777987378.9589844,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run8_targetretention_combatdistance_v1\\AttentionAgentConfig\\AttentionAgentConfig-150021.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 150021,
+            "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run8_targetretention_combatdistance_v1\\AttentionAgentConfig.onnx",
+            "reward": 2.841730095860031,
+            "creation_time": 1777987378.9589844,
+            "auxillary_file_paths": [
+                "C:\\Riot Games\\The-Knight\\Assets\\results\\run8_targetretention_combatdistance_v1\\AttentionAgentConfig\\AttentionAgentConfig-150021.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.11.0+cpu"
+    }
+}

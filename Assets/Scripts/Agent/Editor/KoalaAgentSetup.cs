@@ -87,7 +87,7 @@ public class KoalaAgentSetup : Editor
 
         var actionSpec = Unity.MLAgents.Actuators.ActionSpec.MakeDiscrete(3, 3, 3, 9);
         bp.BrainParameters.ActionSpec = actionSpec;
-        bp.BrainParameters.VectorObservationSize = 199;
+        bp.BrainParameters.VectorObservationSize = AttentionAgent.VectorObservationSize;
         bp.BrainParameters.NumStackedVectorObservations = 1;
 
         // ── 14. DecisionRequester ────────────────────────────────────────────
@@ -98,13 +98,6 @@ public class KoalaAgentSetup : Editor
         // ── 15. AttentionAgent ───────────────────────────────────────────────
         AttentionAgent agent = GetOrAdd<AttentionAgent>(koala);
         agent.MaxStep = 5000;
-        agent.DealDamageReward    =  0.5f;
-        agent.TakeDamagePenalty   = -0.5f;
-        agent.KillEnemyReward     =  1.0f;
-        agent.AgentDiedPenalty    = -1.0f;
-        agent.TimePenalty         = -0.001f;
-        agent.DodgeSuccessReward  =  0.2f;
-        agent.EpisodicCoverageReward = 0f;
         agent.VisionRadius        = 20f;
         agent.MaxEnemies          = 3;
         agent.MaxBullets          = 10;
@@ -140,7 +133,7 @@ public class KoalaAgentSetup : Editor
             "✓ AIDecisionDetectTargetRadius2D\n" +
             "✓ CharacterDash2D\n" +
             "✓ AIBrain compatibility target only (no policy states)\n" +
-            "✓ BehaviorParameters (obs=199, branches=[3,3,3,9])\n" +
+            "✓ BehaviorParameters (obs=" + AttentionAgent.VectorObservationSize + ", branches=[3,3,3,9])\n" +
             "✓ DecisionRequester (period=5)\n" +
             "✓ AttentionAgent\n\n" +
             "✓ Map generation per episode: " + (roomGen != null ? "ENABLED (Map found)" : "DISABLED — 'Map' GameObject not found") + "\n\n" +

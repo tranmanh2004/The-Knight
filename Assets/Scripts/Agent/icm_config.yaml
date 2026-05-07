@@ -23,10 +23,10 @@ behaviors:
         gamma: 0.99
         encoding_size: 256
         learning_rate: 1.0e-3
-    # NO episodic coverage (set EpisodicCoverageReward=0 in Inspector)
+    # NO episodic coverage (EpisodicCoverageReward is code-only in AttentionAgent)
     # Ablation Run 2: PPO + ICM — replicates paper's proposed method
-    max_steps: 5000000
+    max_steps: 1500000
     time_horizon: 64
     summary_freq: 10000
     keep_checkpoints: 5
-    checkpoint_interval: 1000000
+    checkpoint_interval: 500000

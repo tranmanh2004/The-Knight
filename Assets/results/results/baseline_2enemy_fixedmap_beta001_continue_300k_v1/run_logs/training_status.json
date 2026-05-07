@@ -1,0 +1,65 @@
+{
+    "AttentionAgentConfig": {
+        "checkpoints": [
+            {
+                "steps": 149977,
+                "file_path": "results\\baseline_2enemy_fixedmap_beta001_continue_300k_v1\\AttentionAgentConfig\\AttentionAgentConfig-149977.onnx",
+                "reward": -0.6513441435992717,
+                "creation_time": 1777909205.622578,
+                "auxillary_file_paths": [
+                    "results\\baseline_2enemy_fixedmap_beta001_continue_300k_v1\\AttentionAgentConfig\\AttentionAgentConfig-149977.pt"
+                ]
+            },
+            {
+                "steps": 199998,
+                "file_path": "results\\baseline_2enemy_fixedmap_beta001_continue_300k_v1\\AttentionAgentConfig\\AttentionAgentConfig-199998.onnx",
+                "reward": 1.5869723206484003,
+                "creation_time": 1777909279.6849399,
+                "auxillary_file_paths": [
+                    "results\\baseline_2enemy_fixedmap_beta001_continue_300k_v1\\AttentionAgentConfig\\AttentionAgentConfig-199998.pt"
+                ]
+            },
+            {
+                "steps": 249975,
+                "file_path": "results\\baseline_2enemy_fixedmap_beta001_continue_300k_v1\\AttentionAgentConfig\\AttentionAgentConfig-249975.onnx",
+                "reward": 0.955209547188133,
+                "creation_time": 1777909356.8390226,
+                "auxillary_file_paths": [
+                    "results\\baseline_2enemy_fixedmap_beta001_continue_300k_v1\\AttentionAgentConfig\\AttentionAgentConfig-249975.pt"
+                ]
+            },
+            {
+                "steps": 299949,
+                "file_path": "results\\baseline_2enemy_fixedmap_beta001_continue_300k_v1\\AttentionAgentConfig\\AttentionAgentConfig-299949.onnx",
+                "reward": -1.0114985661847251,
+                "creation_time": 1777909430.6252053,
+                "auxillary_file_paths": [
+                    "results\\baseline_2enemy_fixedmap_beta001_continue_300k_v1\\AttentionAgentConfig\\AttentionAgentConfig-299949.pt"
+                ]
+            },
+            {
+                "steps": 300013,
+                "file_path": "results\\baseline_2enemy_fixedmap_beta001_continue_300k_v1\\AttentionAgentConfig\\AttentionAgentConfig-300013.onnx",
+                "reward": -1.0114985661847251,
+                "creation_time": 1777909431.7938893,
+                "auxillary_file_paths": [
+                    "results\\baseline_2enemy_fixedmap_beta001_continue_300k_v1\\AttentionAgentConfig\\AttentionAgentConfig-300013.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 300013,
+            "file_path": "results\\baseline_2enemy_fixedmap_beta001_continue_300k_v1\\AttentionAgentConfig.onnx",
+            "reward": -1.0114985661847251,
+            "creation_time": 1777909431.7938893,
+            "auxillary_file_paths": [
+                "results\\baseline_2enemy_fixedmap_beta001_continue_300k_v1\\AttentionAgentConfig\\AttentionAgentConfig-300013.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.11.0+cpu"
+    }
+}

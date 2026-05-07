@@ -1,0 +1,65 @@
+{
+    "AttentionAgentConfig": {
+        "checkpoints": [
+            {
+                "steps": 124993,
+                "file_path": "results\\diagnose_hardguard_v1\\AttentionAgentConfig\\AttentionAgentConfig-124993.onnx",
+                "reward": 1.6406733219822247,
+                "creation_time": 1777902750.5554938,
+                "auxillary_file_paths": [
+                    "results\\diagnose_hardguard_v1\\AttentionAgentConfig\\AttentionAgentConfig-124993.pt"
+                ]
+            },
+            {
+                "steps": 149962,
+                "file_path": "results\\diagnose_hardguard_v1\\AttentionAgentConfig\\AttentionAgentConfig-149962.onnx",
+                "reward": 3.754784107208252,
+                "creation_time": 1777902784.3962684,
+                "auxillary_file_paths": [
+                    "results\\diagnose_hardguard_v1\\AttentionAgentConfig\\AttentionAgentConfig-149962.pt"
+                ]
+            },
+            {
+                "steps": 174962,
+                "file_path": "results\\diagnose_hardguard_v1\\AttentionAgentConfig\\AttentionAgentConfig-174962.onnx",
+                "reward": 1.6267718584587176,
+                "creation_time": 1777902818.5387337,
+                "auxillary_file_paths": [
+                    "results\\diagnose_hardguard_v1\\AttentionAgentConfig\\AttentionAgentConfig-174962.pt"
+                ]
+            },
+            {
+                "steps": 199947,
+                "file_path": "results\\diagnose_hardguard_v1\\AttentionAgentConfig\\AttentionAgentConfig-199947.onnx",
+                "reward": 0.8452042248100042,
+                "creation_time": 1777902852.508048,
+                "auxillary_file_paths": [
+                    "results\\diagnose_hardguard_v1\\AttentionAgentConfig\\AttentionAgentConfig-199947.pt"
+                ]
+            },
+            {
+                "steps": 200011,
+                "file_path": "results\\diagnose_hardguard_v1\\AttentionAgentConfig\\AttentionAgentConfig-200011.onnx",
+                "reward": 0.8452042248100042,
+                "creation_time": 1777902853.6838217,
+                "auxillary_file_paths": [
+                    "results\\diagnose_hardguard_v1\\AttentionAgentConfig\\AttentionAgentConfig-200011.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 200011,
+            "file_path": "results\\diagnose_hardguard_v1\\AttentionAgentConfig.onnx",
+            "reward": 0.8452042248100042,
+            "creation_time": 1777902853.6838217,
+            "auxillary_file_paths": [
+                "results\\diagnose_hardguard_v1\\AttentionAgentConfig\\AttentionAgentConfig-200011.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.11.0+cpu"
+    }
+}

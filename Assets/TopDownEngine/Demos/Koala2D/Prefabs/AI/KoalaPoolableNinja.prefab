@@ -222,7 +222,7 @@ BoxCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
@@ -450,8 +450,8 @@ MonoBehaviour:
   DamageMMFeedbacks: {fileID: 2893587470352998581}
   FeedbackIsProportionalToDamage: 0
   PreventTakeSelfDamage: 0
-  ImmuneToKnockback: 0
-  ImmuneToKnockbackIfZeroDamage: 0
+  ImmuneToKnockback: 1
+  ImmuneToKnockbackIfZeroDamage: 1
   KnockbackForceMultiplier: 1
   DestroyOnDeath: 0
   DelayBeforeDestruction: 0
@@ -595,7 +595,7 @@ MonoBehaviour:
   InitializationMode: 0
   Label: 
   UseMinimumXDistance: 1
-  MinimumXDistance: 0.1
+  MinimumXDistance: 1
 --- !u!114 &114103483350062584
 MonoBehaviour:
   m_ObjectHideFlags: 0
