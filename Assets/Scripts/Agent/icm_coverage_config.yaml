@@ -4,11 +4,11 @@ behaviors:
     hyperparameters:
       batch_size: 2048
       buffer_size: 20480
-      learning_rate: 3.0e-4
-      beta: 0.01
-      epsilon: 0.2
+      learning_rate: 3.0e-5
+      beta: 0.004
+      epsilon: 0.1
       lambd: 0.95
-      num_epoch: 3
+      num_epoch: 2
       learning_rate_schedule: linear
     network_settings:
       hidden_units: 256
@@ -19,7 +19,7 @@ behaviors:
         gamma: 0.99
         strength: 1.0
       curiosity: # ICM — Pathak et al. 2017
-        strength: 0.02
+        strength: 0.01
         gamma: 0.99
         encoding_size: 256
         learning_rate: 1.0e-3
@@ -28,5 +28,5 @@ behaviors:
     max_steps: 300000
     time_horizon: 64
     summary_freq: 10000
-    keep_checkpoints: 5
+    keep_checkpoints: 40
     checkpoint_interval: 10000

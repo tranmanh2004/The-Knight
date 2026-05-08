@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.Tilemaps;
+using UnityEngine.Serialization;
 using MoreMountains.TopDownEngine;
 using System.Collections.Generic;
 using MoreMountains.Tools;
@@ -46,22 +47,12 @@ public class TilemapGenerator : MonoBehaviour
 
     [Header("Random Enemy Spawn")]
     public bool spawnEnemiesFromText = true;
-    [Tooltip("Nếu bật, mỗi map spawn số enemy giới hạn ở ô sàn ngẫu nhiên.")]
-    public bool spawnOnlyOneEnemyFromText = true;
+    [FormerlySerializedAs("spawnOnlyOneEnemyFromText")]
+    [Tooltip("Nếu bật, mỗi map spawn số enemy giới hạn ở ô sàn ngẫu nhiên reachable từ player.")]
+    public bool limitRandomEnemySpawnCount = true;
     [Min(1)]
-    [Tooltip("Số enemy random spawn khi spawnOnlyOneEnemyFromText bật.")]
+    [Tooltip("Số enemy random spawn khi limitRandomEnemySpawnCount bật.")]
     public int randomEnemySpawnCount = 3;
-    [Min(0)]
-    [Tooltip("Số ô sàn trống cần có quanh điểm spawn enemy. 0 chỉ yêu cầu tâm enemy nằm trên ô sàn.")]
-    public int enemySpawnWallClearanceCells = 0;
-    [Min(0)]
-    [Tooltip("Clearance tối thiểu được ép lúc runtime để tránh enemy spawn sát tường trong training.")]
-    public int runtimeMinEnemySpawnWallClearanceCells = 0;
-    [Min(0)]
-    [Tooltip("Khoảng cách Manhattan tối thiểu từ enemy spawn tới player spawn.")]
-    public int enemySpawnMinDistanceFromPlayerCells = 3;
-    [Tooltip("Ưu tiên spawn enemy ở ô có đường nhìn theo grid tới player spawn. Nếu không có ô hợp lệ sẽ fallback về danh sách floor bình thường.")]
-    public bool preferEnemySpawnLineOfSightToPlayer = true;
     [Min(0)]
     [Tooltip("Số ô sàn trống cần có quanh điểm spawn player khi randomizePlayerSpawnFromFloor bật. 0 chỉ yêu cầu tâm player nằm trên ô sàn.")]
     public int playerSpawnWallClearanceCells = 1;
@@ -73,10 +64,8 @@ public class TilemapGenerator : MonoBehaviour
     public bool regenerateRoomOnRespawn = true;
     [Tooltip("Clears nearby wall tiles around the selected player spawn.")]
     public bool clearPlayerSpawnArea = true;
-    [Tooltip("Clears nearby wall tiles around selected enemy spawns.")]
-    public bool clearEnemySpawnArea = true;
     [Min(0)]
-    [Tooltip("Radius in cells to clear around spawn points. 1 means a 3x3 area.")]
+    [Tooltip("Radius in cells to clear around the player spawn point. 1 means a 3x3 area.")]
     public int spawnAreaClearanceCells = 1;
     [Tooltip("Keeps the outer map border intact while clearing spawn areas.")]
     public bool preserveOuterWallBorder = true;
@@ -93,6 +82,7 @@ public class TilemapGenerator : MonoBehaviour
     private Vector3Int _playerSpawnCell;
     private readonly List<Vector3Int> _enemySpawnCells = new List<Vector3Int>();
     private int[,] _lastRoomGrid;
+    private bool[,] _reachableFromPlayerSpawnCache;
     private bool _hasGeneratedRuntimeRoom;
 
     // --- Active enemies for the current episode ---
@@ -293,6 +283,7 @@ public class TilemapGenerator : MonoBehaviour
         {
             rigidbody2D.linearVelocity = Vector2.zero;
             rigidbody2D.angularVelocity = 0f;
+            rigidbody2D.gravityScale = 0f;
             if (enforceContinuousCollisionForEnemies)
             {
                 rigidbody2D.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
@@ -499,6 +490,7 @@ public class TilemapGenerator : MonoBehaviour
 
         _hasPlayerSpawn = false;
         _enemySpawnCells.Clear();
+        _reachableFromPlayerSpawnCache = null;
 
         string text = sourceMap.text.Replace("\r\n", "\n").TrimEnd('\n');
         string[] lines = text.Split(new[] { '\n' }, System.StringSplitOptions.RemoveEmptyEntries);
@@ -543,6 +535,7 @@ public class TilemapGenerator : MonoBehaviour
         }
 
         _lastRoomGrid = grid;
+        _reachableFromPlayerSpawnCache = BuildReachableFromPlayerSpawnCache(grid);
         return grid;
     }
 
@@ -600,38 +593,12 @@ public class TilemapGenerator : MonoBehaviour
 
         List<Vector3Int> candidates = new List<Vector3Int>();
         CollectEnemySpawnCandidates(_lastRoomGrid, candidates);
-        if (candidates.Count == 0 && Application.isPlaying && runtimeMinEnemySpawnWallClearanceCells > 0)
+        if (candidates.Count == 0 && _hasPlayerSpawn)
         {
-            Debug.LogWarning("Không tìm thấy ô spawn enemy với runtime clearance; fallback về clearance gốc.", this);
-            int originalRuntimeClearance = runtimeMinEnemySpawnWallClearanceCells;
-            runtimeMinEnemySpawnWallClearanceCells = 0;
-            CollectEnemySpawnCandidates(_lastRoomGrid, candidates);
-            runtimeMinEnemySpawnWallClearanceCells = originalRuntimeClearance;
+            Debug.LogWarning("Không tìm thấy ô spawn enemy reachable từ player spawn.", this);
         }
 
-        int desiredCount = spawnOnlyOneEnemyFromText ? randomEnemySpawnCount : candidates.Count;
-        if (preferEnemySpawnLineOfSightToPlayer && _hasPlayerSpawn && desiredCount > 0)
-        {
-            List<Vector3Int> lineOfSightCandidates = new List<Vector3Int>();
-            for (int i = 0; i < candidates.Count; i++)
-            {
-                if (HasGridLineOfSight(_lastRoomGrid, _playerSpawnCell, candidates[i]))
-                {
-                    lineOfSightCandidates.Add(candidates[i]);
-                }
-            }
-
-            if (lineOfSightCandidates.Count >= desiredCount)
-            {
-                candidates = lineOfSightCandidates;
-            }
-            else if (lineOfSightCandidates.Count > 0)
-            {
-                candidates = lineOfSightCandidates;
-                desiredCount = Mathf.Min(desiredCount, candidates.Count);
-            }
-        }
-
+        int desiredCount = limitRandomEnemySpawnCount ? randomEnemySpawnCount : candidates.Count;
         desiredCount = Mathf.Min(desiredCount, candidates.Count);
         for (int i = 0; i < desiredCount; i++)
         {
@@ -640,26 +607,6 @@ public class TilemapGenerator : MonoBehaviour
             candidates.RemoveAt(selectedIndex);
         }
 
-        if (clearEnemySpawnArea && _enemySpawnCells.Count > 0)
-        {
-            ClearSpawnAreas(_lastRoomGrid, _enemySpawnCells, spawnAreaClearanceCells, true, "enemy");
-        }
-    }
-
-    private int ClearSpawnAreas(int[,] grid, List<Vector3Int> cells, int clearance, bool updateTilemaps, string label)
-    {
-        if (grid == null || cells == null)
-        {
-            return 0;
-        }
-
-        int totalCleared = 0;
-        for (int i = 0; i < cells.Count; i++)
-        {
-            totalCleared += ClearSpawnArea(grid, cells[i], clearance, updateTilemaps, label);
-        }
-
-        return totalCleared;
     }
 
     private int ClearSpawnArea(int[,] grid, Vector3Int centerCell, int clearance, bool updateTilemaps, string label)
@@ -763,15 +710,7 @@ public class TilemapGenerator : MonoBehaviour
                     continue;
                 }
 
-                int effectiveClearance = Application.isPlaying
-                    ? Mathf.Max(enemySpawnWallClearanceCells, runtimeMinEnemySpawnWallClearanceCells)
-                    : enemySpawnWallClearanceCells;
-                if (!HasFloorClearance(grid, x, y, effectiveClearance))
-                {
-                    continue;
-                }
-
-                if (IsTooCloseToPlayerSpawn(cell))
+                if (_hasPlayerSpawn && !IsReachableFromPlayerSpawn(grid, x, y))
                 {
                     continue;
                 }
@@ -807,56 +746,64 @@ public class TilemapGenerator : MonoBehaviour
             && grid[x, y] != 1;
     }
 
-    private bool IsTooCloseToPlayerSpawn(Vector3Int cell)
+    private bool[,] BuildReachableFromPlayerSpawnCache(int[,] grid)
     {
-        if (!_hasPlayerSpawn || enemySpawnMinDistanceFromPlayerCells <= 0)
+        if (grid == null || !_hasPlayerSpawn)
         {
-            return false;
+            return null;
         }
 
-        int distance = Mathf.Abs(cell.x - _playerSpawnCell.x) + Mathf.Abs(cell.y - _playerSpawnCell.y);
-        return distance < enemySpawnMinDistanceFromPlayerCells;
+        int width = grid.GetLength(0);
+        int height = grid.GetLength(1);
+        int startX = _playerSpawnCell.x - startPosition.x;
+        int startY = _playerSpawnCell.y - startPosition.y;
+
+        if (!IsFloorCell(grid, startX, startY))
+        {
+            return null;
+        }
+
+        bool[,] reachable = new bool[width, height];
+        Queue<Vector2Int> queue = new Queue<Vector2Int>();
+        queue.Enqueue(new Vector2Int(startX, startY));
+        reachable[startX, startY] = true;
+
+        while (queue.Count > 0)
+        {
+            Vector2Int current = queue.Dequeue();
+            EnqueueReachableCell(grid, reachable, queue, current.x + 1, current.y);
+            EnqueueReachableCell(grid, reachable, queue, current.x - 1, current.y);
+            EnqueueReachableCell(grid, reachable, queue, current.x, current.y + 1);
+            EnqueueReachableCell(grid, reachable, queue, current.x, current.y - 1);
+        }
+
+        return reachable;
     }
 
-    private bool HasGridLineOfSight(int[,] grid, Vector3Int fromCell, Vector3Int toCell)
+    private void EnqueueReachableCell(int[,] grid, bool[,] reachable, Queue<Vector2Int> queue, int x, int y)
     {
-        int x0 = fromCell.x - startPosition.x;
-        int y0 = fromCell.y - startPosition.y;
-        int x1 = toCell.x - startPosition.x;
-        int y1 = toCell.y - startPosition.y;
-
-        int dx = Mathf.Abs(x1 - x0);
-        int dy = Mathf.Abs(y1 - y0);
-        int sx = x0 < x1 ? 1 : -1;
-        int sy = y0 < y1 ? 1 : -1;
-        int error = dx - dy;
-        int x = x0;
-        int y = y0;
-
-        while (true)
+        if (!IsFloorCell(grid, x, y) || reachable[x, y])
         {
-            if (!IsFloorCell(grid, x, y))
-            {
-                return false;
-            }
-
-            if (x == x1 && y == y1)
-            {
-                return true;
-            }
-
-            int twiceError = error * 2;
-            if (twiceError > -dy)
-            {
-                error -= dy;
-                x += sx;
-            }
-            if (twiceError < dx)
-            {
-                error += dx;
-                y += sy;
-            }
+            return;
         }
+
+        reachable[x, y] = true;
+        queue.Enqueue(new Vector2Int(x, y));
+    }
+
+    private bool IsReachableFromPlayerSpawn(int[,] grid, int x, int y)
+    {
+        if (_reachableFromPlayerSpawnCache == null)
+        {
+            _reachableFromPlayerSpawnCache = BuildReachableFromPlayerSpawnCache(grid);
+        }
+
+        return _reachableFromPlayerSpawnCache != null
+            && x >= 0
+            && y >= 0
+            && x < _reachableFromPlayerSpawnCache.GetLength(0)
+            && y < _reachableFromPlayerSpawnCache.GetLength(1)
+            && _reachableFromPlayerSpawnCache[x, y];
     }
 
     private TextAsset GetSelectedMapTextAsset()

@@ -4183,9 +4183,9 @@ MonoBehaviour:
   MaxConsecutiveInvalidAttacks: 20
   BrokenEpisodePenalty: -1
   DisableTrainingKnockback: 1
-  DebugActionLogs: 1
-  DebugLogEveryNSteps: 10
-  DebugStuckLogs: 1
+  DebugActionLogs: 0
+  DebugLogEveryNSteps: 100
+  DebugStuckLogs: 0
   DebugStuckDecisionThreshold: 10
   DebugStuckDistanceEpsilon: 0.05
   _currentTarget: {fileID: 0}
@@ -4675,12 +4675,8 @@ MonoBehaviour:
   playerSpawnPointTransform: {fileID: 1952825987}
   randomizePlayerSpawnFromFloor: 1
   spawnEnemiesFromText: 1
-  spawnOnlyOneEnemyFromText: 1
+  limitRandomEnemySpawnCount: 1
   randomEnemySpawnCount: 2
-  enemySpawnWallClearanceCells: 0
-  runtimeMinEnemySpawnWallClearanceCells: 0
-  enemySpawnMinDistanceFromPlayerCells: 3
-  preferEnemySpawnLineOfSightToPlayer: 1
   playerSpawnWallClearanceCells: 1
   enemyPrefabs:
   - {fileID: 1170912388798894, guid: 3d2a551cb5b32194898fd8fb30716e53, type: 3}

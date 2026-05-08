@@ -1,2 +1,2 @@
 tensorboard --logdir "C:\Riot Games\The-Knight\Assets\results"
-mlagents-learn "C:\Riot Games\The-Knight\Assets\Scripts\Agent\stability_finetune_config.yaml" --run-id=run26_spawn_area_clear_v1 --initialize-from=run25_stability_finetune_v1 --results-dir="C:\Riot Games\The-Knight\Assets\results" --env="C:\Riot Games\The-Knight\Build\The Knight.exe" --num-envs=8 --no-graphics --torch-device cuda --quality-level 0 --force
+mlagents-learn "C:\Riot Games\The-Knight\Assets\Scripts\Agent\icm_config.yaml" --run-id=run32_reachable_spawn_icm_tuned_v1 --initialize-from=run25_stability_finetune_v1 --results-dir="C:\Riot Games\The-Knight\Assets\results" --env="C:\Riot Games\The-Knight\Build\The Knight.exe" --num-envs=8 --no-graphics --torch-device cuda --quality-level 0 --force

@@ -7,7 +7,8 @@
       "Bash(grep:*)",
       "WebFetch(domain:arxiv.org)",
       "WebFetch(domain:ar5iv.labs.arxiv.org)",
-      "mcp__UnityMCP__read_console"
+      "mcp__UnityMCP__read_console",
+      "Bash(curl -s -m 3 http://localhost:8080/mcp)"
     ]
   },
   "enabledMcpjsonServers": [

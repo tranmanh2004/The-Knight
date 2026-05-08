@@ -1,0 +1,344 @@
+{
+    "AttentionAgentConfig": {
+        "checkpoints": [
+            {
+                "steps": 99993,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-99993.onnx",
+                "reward": 5.4448242066428065,
+                "creation_time": 1778167967.4646664,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-99993.pt"
+                ]
+            },
+            {
+                "steps": 199978,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-199978.onnx",
+                "reward": 2.0401895524313054,
+                "creation_time": 1778168119.7294705,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-199978.pt"
+                ]
+            },
+            {
+                "steps": 299943,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-299943.onnx",
+                "reward": 1.0493231845398745,
+                "creation_time": 1778168269.9320242,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-299943.pt"
+                ]
+            },
+            {
+                "steps": 399984,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-399984.onnx",
+                "reward": 0.35218344908207655,
+                "creation_time": 1778168498.9340513,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-399984.pt"
+                ]
+            },
+            {
+                "steps": 499987,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-499987.onnx",
+                "reward": 2.078539776382968,
+                "creation_time": 1778168754.7176933,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-499987.pt"
+                ]
+            },
+            {
+                "steps": 599984,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-599984.onnx",
+                "reward": 1.8557692527770997,
+                "creation_time": 1778169009.5571642,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-599984.pt"
+                ]
+            },
+            {
+                "steps": 699948,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-699948.onnx",
+                "reward": -0.08174524642527103,
+                "creation_time": 1778169261.765982,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-699948.pt"
+                ]
+            },
+            {
+                "steps": 799939,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-799939.onnx",
+                "reward": 3.2772745460582278,
+                "creation_time": 1778169509.5448809,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-799939.pt"
+                ]
+            },
+            {
+                "steps": 899993,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-899993.onnx",
+                "reward": 3.557213519513607,
+                "creation_time": 1778169762.3126578,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-899993.pt"
+                ]
+            },
+            {
+                "steps": 999976,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-999976.onnx",
+                "reward": 3.014131367883899,
+                "creation_time": 1778170013.7960813,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-999976.pt"
+                ]
+            },
+            {
+                "steps": 1099955,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-1099955.onnx",
+                "reward": 6.098878613508799,
+                "creation_time": 1778170266.442348,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-1099955.pt"
+                ]
+            },
+            {
+                "steps": 1199984,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-1199984.onnx",
+                "reward": 4.440876669366844,
+                "creation_time": 1778170518.6156735,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-1199984.pt"
+                ]
+            },
+            {
+                "steps": 1299937,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-1299937.onnx",
+                "reward": 5.885981017309758,
+                "creation_time": 1778170770.426583,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-1299937.pt"
+                ]
+            },
+            {
+                "steps": 1399961,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-1399961.onnx",
+                "reward": 5.69210411954139,
+                "creation_time": 1778171022.6984255,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-1399961.pt"
+                ]
+            },
+            {
+                "steps": 1499999,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-1499999.onnx",
+                "reward": 3.406845450401306,
+                "creation_time": 1778171275.2092433,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-1499999.pt"
+                ]
+            },
+            {
+                "steps": 1599955,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-1599955.onnx",
+                "reward": 2.7041225374230873,
+                "creation_time": 1778171521.4255948,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-1599955.pt"
+                ]
+            },
+            {
+                "steps": 1699984,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-1699984.onnx",
+                "reward": 1.9676376162096858,
+                "creation_time": 1778171773.8013706,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-1699984.pt"
+                ]
+            },
+            {
+                "steps": 1799998,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-1799998.onnx",
+                "reward": 4.738195547395769,
+                "creation_time": 1778172026.4498093,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-1799998.pt"
+                ]
+            },
+            {
+                "steps": 1899964,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-1899964.onnx",
+                "reward": 1.897035900154151,
+                "creation_time": 1778172278.900854,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-1899964.pt"
+                ]
+            },
+            {
+                "steps": 1999966,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-1999966.onnx",
+                "reward": 3.771066141501069,
+                "creation_time": 1778172531.834152,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-1999966.pt"
+                ]
+            },
+            {
+                "steps": 2099962,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-2099962.onnx",
+                "reward": 3.1114110352678432,
+                "creation_time": 1778172784.2471924,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-2099962.pt"
+                ]
+            },
+            {
+                "steps": 2199964,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-2199964.onnx",
+                "reward": 1.6776355242888843,
+                "creation_time": 1778173037.1873007,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-2199964.pt"
+                ]
+            },
+            {
+                "steps": 2299986,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-2299986.onnx",
+                "reward": 2.075495257973671,
+                "creation_time": 1778173288.7555768,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-2299986.pt"
+                ]
+            },
+            {
+                "steps": 2399969,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-2399969.onnx",
+                "reward": 4.667012982070446,
+                "creation_time": 1778173536.462618,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-2399969.pt"
+                ]
+            },
+            {
+                "steps": 2499970,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-2499970.onnx",
+                "reward": 3.04481655705188,
+                "creation_time": 1778173790.0182722,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-2499970.pt"
+                ]
+            },
+            {
+                "steps": 2599961,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-2599961.onnx",
+                "reward": 3.1454835231933327,
+                "creation_time": 1778174042.0773683,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-2599961.pt"
+                ]
+            },
+            {
+                "steps": 2699953,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-2699953.onnx",
+                "reward": 4.675546120619401,
+                "creation_time": 1778174296.3378615,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-2699953.pt"
+                ]
+            },
+            {
+                "steps": 2799956,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-2799956.onnx",
+                "reward": 2.479035447455115,
+                "creation_time": 1778174549.9054441,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-2799956.pt"
+                ]
+            },
+            {
+                "steps": 2899946,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-2899946.onnx",
+                "reward": 5.778861318156123,
+                "creation_time": 1778174802.92688,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-2899946.pt"
+                ]
+            },
+            {
+                "steps": 2999962,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-2999962.onnx",
+                "reward": 6.943167256812255,
+                "creation_time": 1778175055.2165835,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-2999962.pt"
+                ]
+            },
+            {
+                "steps": 3099955,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-3099955.onnx",
+                "reward": 8.209634426049888,
+                "creation_time": 1778175308.6566405,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-3099955.pt"
+                ]
+            },
+            {
+                "steps": 3199987,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-3199987.onnx",
+                "reward": 1.910502521807085,
+                "creation_time": 1778175556.9776752,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-3199987.pt"
+                ]
+            },
+            {
+                "steps": 3299943,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-3299943.onnx",
+                "reward": 2.875913681952577,
+                "creation_time": 1778175808.8072224,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-3299943.pt"
+                ]
+            },
+            {
+                "steps": 3399991,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-3399991.onnx",
+                "reward": 3.4778712807517302,
+                "creation_time": 1778176062.1033127,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-3399991.pt"
+                ]
+            },
+            {
+                "steps": 3499949,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-3499949.onnx",
+                "reward": 2.4973468949588447,
+                "creation_time": 1778176315.3879054,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-3499949.pt"
+                ]
+            },
+            {
+                "steps": 3500013,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-3500013.onnx",
+                "reward": 2.4973468949588447,
+                "creation_time": 1778176317.2429936,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-3500013.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 3500013,
+            "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig.onnx",
+            "reward": 2.4973468949588447,
+            "creation_time": 1778176317.2429936,
+            "auxillary_file_paths": [
+                "C:\\Riot Games\\The-Knight\\Assets\\results\\run33_clean_env_icm_v1\\AttentionAgentConfig\\AttentionAgentConfig-3500013.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.11.0+cpu"
+    }
+}

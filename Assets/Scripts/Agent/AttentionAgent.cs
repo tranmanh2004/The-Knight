@@ -137,6 +137,10 @@ public class AttentionAgent : Agent
     public int MaxEnemyStuckRecoveriesPerEpisode = 6;
     [Tooltip("Max recoveries for the same enemy in one episode.")]
     public int MaxEnemyStuckRecoveriesPerEnemy = 2;
+    [Tooltip("Last-chance teleport-to-spawn recoveries for the agent per episode before truncating instead of hard EndEpisode. Set 0 to disable (revert to old hard-broken behaviour).")]
+    public int MaxAgentStuckRecoveriesPerEpisode = 3;
+    [Tooltip("Soft penalty applied when the agent is teleported to spawn area as stuck recovery. Replaces the hard BrokenEpisodePenalty noise that poisoned ICM forward model in run31.")]
+    public float AgentStuckRecoveryPenalty = -0.05f;
     [Tooltip("World-space movement below this value counts as still for enemy stuck detection.")]
     public float EnemyStuckDistanceEpsilon = 0.04f;
     [Tooltip("Minimum distance from the agent when choosing an enemy recovery point.")]
@@ -217,6 +221,7 @@ public class AttentionAgent : Agent
     private int _stillDecisionCount = 0;
     private int _consecutiveInvalidAttacks = 0;
     private int _groundedStuckRecoveries = 0;
+    private int _agentStuckRecoveries = 0;
 
     // --- Object Lists (cached to avoid GC allocation) ---
     private List<GameObject> _enemies = new List<GameObject>();
@@ -402,6 +407,7 @@ public class AttentionAgent : Agent
         _stillDecisionCount = 0;
         _consecutiveInvalidAttacks = 0;
         _groundedStuckRecoveries = 0;
+        _agentStuckRecoveries = 0;
 
         RefreshTrackedEnemies();
         StabilizeTrackedEnemies();
@@ -1238,12 +1244,16 @@ public class AttentionAgent : Agent
 
         if (EndEpisodeWhenStuck && _stillDecisionCount >= MaxStillDecisionsBeforeReset)
         {
+            if (TryRecoverAgentStuckToSpawn())
+            {
+                return false;
+            }
+
             if (DebugStuckLogs)
-                Debug.LogWarning("[AgentBrokenEpisode] reason=Stuck step=" + StepCount + " stillCount=" + _stillDecisionCount, gameObject);
-            AddReward(BrokenEpisodePenalty);
+                Debug.LogWarning("[AgentBrokenEpisode] reason=Stuck(truncated) step=" + StepCount + " stillCount=" + _stillDecisionCount, gameObject);
             _episodeBrokenReason = BrokenEpisodeReason.Stuck;
             RecordEpisodeStats(0f, 0f);
-            EndEpisode();
+            EpisodeInterrupted();
             return true;
         }
 
@@ -1358,7 +1368,11 @@ public class AttentionAgent : Agent
 
     private bool TryFindGroundedStuckRecoveryPosition(out Vector2 recoveryPosition)
     {
-        Vector2 origin = transform.position;
+        return TryFindGroundedStuckRecoveryPositionFrom(transform.position, out recoveryPosition);
+    }
+
+    private bool TryFindGroundedStuckRecoveryPositionFrom(Vector2 origin, out Vector2 recoveryPosition)
+    {
         float step = Mathf.Max(0.1f, GroundedStuckRecoverySearchStep);
         float radius = Mathf.Max(step, GroundedStuckRecoverySearchRadius);
         float bestScore = float.MaxValue;
@@ -1536,7 +1550,11 @@ public class AttentionAgent : Agent
 
     private bool TryFindEnemyRecoveryPosition(GameObject enemy, out Vector2 recoveryPosition)
     {
-        Vector2 origin = enemy.transform.position;
+        return TryFindEnemyRecoveryPositionFrom(enemy, enemy.transform.position, out recoveryPosition);
+    }
+
+    private bool TryFindEnemyRecoveryPositionFrom(GameObject enemy, Vector2 origin, out Vector2 recoveryPosition)
+    {
         float step = Mathf.Max(0.1f, EnemyStuckRecoverySearchStep);
         float radius = Mathf.Max(step, EnemyStuckRecoverySearchRadius);
         float minAgentDistance = Mathf.Max(0f, EnemyStuckRecoveryMinDistanceFromAgent);
@@ -1666,6 +1684,83 @@ public class AttentionAgent : Agent
         _enemyStillDecisionCounts[enemy] = 0;
     }
 
+    private bool TryRecoverOutOfBoundsEnemyToSpawn(GameObject enemy, Vector2 spawnPosition, float distanceFromSpawn)
+    {
+        if (!RecoverEnemyStuckDuringTraining)
+        {
+            return false;
+        }
+
+        if (_episodeEnemyStuckRecoveries >= Mathf.Max(0, MaxEnemyStuckRecoveriesPerEpisode))
+        {
+            return false;
+        }
+
+        int perEnemyRecoveries = GetDictionaryCount(_enemyRecoveryCounts, enemy);
+        if (perEnemyRecoveries >= Mathf.Max(0, MaxEnemyStuckRecoveriesPerEnemy))
+        {
+            return false;
+        }
+
+        Vector2 recoveryPosition;
+        if (!TryFindEnemyRecoveryPositionFrom(enemy, spawnPosition, out recoveryPosition))
+        {
+            return false;
+        }
+
+        if (DebugStuckLogs)
+        {
+            Debug.LogWarning(
+                "[EnemyOutOfBoundsRecover] " +
+                "step=" + StepCount +
+                " enemy=" + enemy.name +
+                " distance=" + distanceFromSpawn.ToString("F2") +
+                " spawn=(" + spawnPosition.x.ToString("F2") + "," + spawnPosition.y.ToString("F2") + ")",
+                enemy
+            );
+        }
+
+        RecoverEnemyToPosition(enemy, recoveryPosition);
+        return true;
+    }
+
+    private bool TryRecoverAgentStuckToSpawn()
+    {
+        if (_agentStuckRecoveries >= Mathf.Max(0, MaxAgentStuckRecoveriesPerEpisode))
+        {
+            return false;
+        }
+
+        Vector3 spawnPosition = GetSpawnPosition();
+        Vector2 recoveryPosition;
+        if (!TryFindGroundedStuckRecoveryPositionFrom(spawnPosition, out recoveryPosition))
+        {
+            recoveryPosition = spawnPosition;
+        }
+
+        Vector3 oldPosition = transform.position;
+        transform.position = new Vector3(recoveryPosition.x, recoveryPosition.y, oldPosition.z);
+        StabilizeTrainingCharacter(gameObject);
+        _lastDebugPosition = transform.position;
+        _stillDecisionCount = 0;
+        _agentStuckRecoveries++;
+        AddReward(AgentStuckRecoveryPenalty);
+
+        if (DebugStuckLogs)
+        {
+            Debug.LogWarning(
+                "[AgentStuckRecover] " +
+                "step=" + StepCount +
+                " count=" + _agentStuckRecoveries +
+                " from=(" + oldPosition.x.ToString("F2") + "," + oldPosition.y.ToString("F2") + ")" +
+                " to=(" + recoveryPosition.x.ToString("F2") + "," + recoveryPosition.y.ToString("F2") + ")",
+                gameObject
+            );
+        }
+
+        return true;
+    }
+
     private bool TryEndEnemyOutOfBoundsEpisode()
     {
         if (!EndEpisodeWhenEnemyOutOfBounds || MaxEnemyDistanceFromSpawnBeforeReset <= 0f)
@@ -1694,7 +1789,11 @@ public class AttentionAgent : Agent
                 continue;
             }
 
-            AddReward(BrokenEpisodePenalty);
+            if (TryRecoverOutOfBoundsEnemyToSpawn(enemy, spawnPosition, distanceFromSpawn))
+            {
+                return false;
+            }
+
             _episodeBrokenReason = BrokenEpisodeReason.EnemyOutOfBounds;
             RecordEpisodeStats(0f, 0f);
 
@@ -1702,7 +1801,7 @@ public class AttentionAgent : Agent
             {
                 Debug.LogWarning(
                     "[AgentBrokenEpisode] " +
-                    "reason=EnemyOutOfBounds" +
+                    "reason=EnemyOutOfBounds(truncated)" +
                     " step=" + StepCount +
                     " enemy=" + enemy.name +
                     " enemyPos=(" + enemy.transform.position.x.ToString("F2") + "," + enemy.transform.position.y.ToString("F2") + ")" +
@@ -1713,7 +1812,7 @@ public class AttentionAgent : Agent
                 );
             }
 
-            EndEpisode();
+            EpisodeInterrupted();
             return true;
         }
 
@@ -1831,6 +1930,7 @@ public class AttentionAgent : Agent
         stats.Add("AttentionAgent/BlockedAttackActionsPerDecision", _episodeBlockedAttackActions / decisions);
         stats.Add("AttentionAgent/BlockedDashActionsPerDecision", _episodeBlockedDashActions / decisions);
         stats.Add("AttentionAgent/EnemyStuckRecoveries", _episodeEnemyStuckRecoveries);
+        stats.Add("AttentionAgent/AgentStuckRecoveries", _agentStuckRecoveries);
         stats.Add("AttentionAgent/BrokenEpisode", _episodeBrokenReason == BrokenEpisodeReason.None ? 0f : 1f);
         stats.Add("AttentionAgent/BrokenStuck", _episodeBrokenReason == BrokenEpisodeReason.Stuck ? 1f : 0f);
         stats.Add("AttentionAgent/BrokenInvalidAttack", _episodeBrokenReason == BrokenEpisodeReason.ConsecutiveInvalidAttacks ? 1f : 0f);
