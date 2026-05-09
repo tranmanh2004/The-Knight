@@ -4,6 +4,7 @@ using UnityEngine.Serialization;
 using MoreMountains.TopDownEngine;
 using System.Collections.Generic;
 using MoreMountains.Tools;
+using Unity.MLAgents;
 #if UNITY_EDITOR
 using UnityEditor;
 using System.IO;
@@ -15,7 +16,8 @@ public class TilemapGenerator : MonoBehaviour
     {
         SingleTextAsset,
         FolderByIndex,
-        FolderRandom
+        FolderRandom,
+        Curriculum
     }
 
     [Header("Tilemap References")]
@@ -35,9 +37,28 @@ public class TilemapGenerator : MonoBehaviour
     public int selectedFolderMapIndex = 0;
     [SerializeField] private TextAsset[] folderTextMaps;
 
+    [Header("Curriculum (4-tier difficulty)")]
+    [Tooltip("Maps for difficulty=0 (Easy + fixed spawn). Filled by 'Refresh Curriculum Maps' or manually.")]
+    [SerializeField] private TextAsset[] easyMaps;
+    [Tooltip("Maps for difficulty=1 (Medium + fixed spawn).")]
+    [SerializeField] private TextAsset[] mediumMaps;
+    [Tooltip("Maps for difficulty=2 (Hard + fixed spawn) and difficulty=3 (Hard + random spawn).")]
+    [SerializeField] private TextAsset[] hardMaps;
+    [Tooltip("Fallback difficulty when Academy not running (Editor edit mode). 0=Easy, 1=Medium, 2=Hard-Fixed, 3=Hard-Random.")]
+    [Range(0, 3)] public int defaultDifficulty = 3;
+    [Tooltip("Log mỗi lần GenerateRoom chọn difficulty + map. Tắt khi train production.")]
+    public bool logCurriculumChoice = false;
+    [Tooltip("Min ratio of reachable floor cells from chosen fixed spawn (0.5 = 50% of total floor cells).")]
+    [Range(0.1f, 1.0f)] public float fixedSpawnMinReachableRatio = 0.5f;
+    [Tooltip("Log warning khi map fail validation cho fixed spawn.")]
+    public bool logFixedSpawnValidation = true;
+
     #if UNITY_EDITOR
     public DefaultAsset textMapFolder;
     public bool autoRefreshFolderMaps = false;
+    public DefaultAsset easyMapFolder;
+    public DefaultAsset mediumMapFolder;
+    public DefaultAsset hardMapFolder;
     #endif
 
     [Header("Spawn Point Reference")]
@@ -84,6 +105,11 @@ public class TilemapGenerator : MonoBehaviour
     private int[,] _lastRoomGrid;
     private bool[,] _reachableFromPlayerSpawnCache;
     private bool _hasGeneratedRuntimeRoom;
+
+    // --- Fixed-spawn caches keyed by map name (deterministic per map) ---
+    private readonly Dictionary<string, Vector2Int> _fixedPlayerSpawnCache = new Dictionary<string, Vector2Int>();
+    private readonly Dictionary<string, List<Vector2Int>> _fixedEnemySpawnCache = new Dictionary<string, List<Vector2Int>>();
+    private string _currentMapKey;
 
     // --- Active enemies for the current episode ---
     private readonly List<GameObject> _spawnedEnemies = new List<GameObject>();
@@ -491,6 +517,7 @@ public class TilemapGenerator : MonoBehaviour
         _hasPlayerSpawn = false;
         _enemySpawnCells.Clear();
         _reachableFromPlayerSpawnCache = null;
+        _currentMapKey = sourceMap.name;
 
         string text = sourceMap.text.Replace("\r\n", "\n").TrimEnd('\n');
         string[] lines = text.Split(new[] { '\n' }, System.StringSplitOptions.RemoveEmptyEntries);
@@ -524,7 +551,20 @@ public class TilemapGenerator : MonoBehaviour
             }
         }
 
-        if (randomizePlayerSpawnFromFloor)
+        bool useFixed = UseFixedSpawn();
+
+        if (useFixed)
+        {
+            if (!TrySelectFixedPlayerSpawnCell(grid, _currentMapKey))
+            {
+                if (logFixedSpawnValidation)
+                {
+                    Debug.LogWarning($"[TilemapGenerator] Fixed spawn validation FAILED for map={_currentMapKey} → fallback to random.", this);
+                }
+                SelectRandomPlayerSpawnCell(grid);
+            }
+        }
+        else if (randomizePlayerSpawnFromFloor)
         {
             SelectRandomPlayerSpawnCell(grid);
         }
@@ -537,6 +577,118 @@ public class TilemapGenerator : MonoBehaviour
         _lastRoomGrid = grid;
         _reachableFromPlayerSpawnCache = BuildReachableFromPlayerSpawnCache(grid);
         return grid;
+    }
+
+    // Pick deterministic player spawn: floor cell with MAX BFS reachability among floor cells
+    // having at least the required clearance. Falls back to clearance=0 if needed. Cached per map.
+    private bool TrySelectFixedPlayerSpawnCell(int[,] grid, string mapKey)
+    {
+        if (grid == null || string.IsNullOrEmpty(mapKey)) return false;
+
+        if (_fixedPlayerSpawnCache.TryGetValue(mapKey, out Vector2Int cached))
+        {
+            _playerSpawnCell = new Vector3Int(startPosition.x + cached.x, startPosition.y + cached.y, 0);
+            _hasPlayerSpawn = true;
+            return true;
+        }
+
+        int totalFloor = CountFloorCells(grid);
+        if (totalFloor == 0) return false;
+        int requiredReachable = Mathf.Max(1, Mathf.CeilToInt(totalFloor * fixedSpawnMinReachableRatio));
+
+        // Try with full clearance first; fallback to clearance=0 if no candidate found.
+        Vector2Int? best = FindMaxReachCell(grid, playerSpawnWallClearanceCells, requiredReachable);
+        if (!best.HasValue && playerSpawnWallClearanceCells > 0)
+        {
+            best = FindMaxReachCell(grid, 0, requiredReachable);
+        }
+
+        if (!best.HasValue) return false;
+
+        Vector2Int cell = best.Value;
+        _fixedPlayerSpawnCache[mapKey] = cell;
+        _playerSpawnCell = new Vector3Int(startPosition.x + cell.x, startPosition.y + cell.y, 0);
+        _hasPlayerSpawn = true;
+        return true;
+    }
+
+    // Scan all candidate cells with given clearance, pick the one with MAX reachable count.
+    // Returns null if no cell meets requiredReachable, or no cell satisfies clearance at all.
+    private Vector2Int? FindMaxReachCell(int[,] grid, int clearance, int requiredReachable)
+    {
+        int width = grid.GetLength(0);
+        int height = grid.GetLength(1);
+        Vector2 center = new Vector2((width - 1) * 0.5f, (height - 1) * 0.5f);
+
+        int bestReach = -1;
+        Vector2Int bestCell = default;
+        float bestCenterDist = float.MaxValue;
+        bool foundAny = false;
+
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                if (grid[x, y] == 1) continue;
+                if (!HasFloorClearance(grid, x, y, clearance)) continue;
+
+                int reach = CountReachableFromCell(grid, x, y);
+                if (reach < requiredReachable) continue;
+
+                float centerDist = ((new Vector2(x, y)) - center).sqrMagnitude;
+                bool better = reach > bestReach
+                              || (reach == bestReach && centerDist < bestCenterDist);
+                if (better)
+                {
+                    bestReach = reach;
+                    bestCell = new Vector2Int(x, y);
+                    bestCenterDist = centerDist;
+                    foundAny = true;
+                }
+            }
+        }
+
+        return foundAny ? (Vector2Int?)bestCell : null;
+    }
+
+    private int CountFloorCells(int[,] grid)
+    {
+        int n = 0;
+        int w = grid.GetLength(0);
+        int h = grid.GetLength(1);
+        for (int x = 0; x < w; x++)
+            for (int y = 0; y < h; y++)
+                if (grid[x, y] != 1) n++;
+        return n;
+    }
+
+    private int CountReachableFromCell(int[,] grid, int sx, int sy)
+    {
+        if (!IsFloorCell(grid, sx, sy)) return 0;
+        int w = grid.GetLength(0);
+        int h = grid.GetLength(1);
+        bool[,] vis = new bool[w, h];
+        Queue<Vector2Int> q = new Queue<Vector2Int>();
+        q.Enqueue(new Vector2Int(sx, sy));
+        vis[sx, sy] = true;
+        int count = 1;
+        while (q.Count > 0)
+        {
+            Vector2Int c = q.Dequeue();
+            int[] dx = { 1, -1, 0, 0 };
+            int[] dy = { 0, 0, 1, -1 };
+            for (int k = 0; k < 4; k++)
+            {
+                int nx = c.x + dx[k], ny = c.y + dy[k];
+                if (IsFloorCell(grid, nx, ny) && !vis[nx, ny])
+                {
+                    vis[nx, ny] = true;
+                    count++;
+                    q.Enqueue(new Vector2Int(nx, ny));
+                }
+            }
+        }
+        return count;
     }
 
     private void SelectRandomPlayerSpawnCell(int[,] grid)
@@ -591,6 +743,12 @@ public class TilemapGenerator : MonoBehaviour
             return;
         }
 
+        bool useFixed = UseFixedSpawn();
+        if (useFixed && TrySelectFixedEnemySpawnCells(_lastRoomGrid, _currentMapKey))
+        {
+            return;
+        }
+
         List<Vector3Int> candidates = new List<Vector3Int>();
         CollectEnemySpawnCandidates(_lastRoomGrid, candidates);
         if (candidates.Count == 0 && _hasPlayerSpawn)
@@ -607,6 +765,80 @@ public class TilemapGenerator : MonoBehaviour
             candidates.RemoveAt(selectedIndex);
         }
 
+    }
+
+    // Fixed enemy spawn: spread N enemies across the MIDDLE 50% of the distance distribution
+    // (percentiles 25%-75%), deterministic per map+player. Avoids enemies-in-corner problem
+    // where farthest spawn made Easy lessons unreasonably hard.
+    private bool TrySelectFixedEnemySpawnCells(int[,] grid, string mapKey)
+    {
+        if (grid == null || string.IsNullOrEmpty(mapKey) || !_hasPlayerSpawn) return false;
+
+        if (_fixedEnemySpawnCache.TryGetValue(mapKey, out List<Vector2Int> cached))
+        {
+            for (int i = 0; i < cached.Count; i++)
+            {
+                Vector2Int c = cached[i];
+                _enemySpawnCells.Add(new Vector3Int(startPosition.x + c.x, startPosition.y + c.y, 0));
+            }
+            return _enemySpawnCells.Count > 0;
+        }
+
+        int desiredCount = limitRandomEnemySpawnCount ? randomEnemySpawnCount : 9999;
+        if (desiredCount <= 0) return false;
+
+        List<KeyValuePair<Vector2Int, int>> ranked = new List<KeyValuePair<Vector2Int, int>>();
+        int width = grid.GetLength(0);
+        int height = grid.GetLength(1);
+        int playerX = _playerSpawnCell.x - startPosition.x;
+        int playerY = _playerSpawnCell.y - startPosition.y;
+
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                if (grid[x, y] == 1) continue;
+                if (x == playerX && y == playerY) continue;
+                if (!IsReachableFromPlayerSpawn(grid, x, y)) continue;
+                int dist = Mathf.Abs(x - playerX) + Mathf.Abs(y - playerY);
+                ranked.Add(new KeyValuePair<Vector2Int, int>(new Vector2Int(x, y), dist));
+            }
+        }
+        if (ranked.Count == 0) return false;
+
+        // Sort ASCENDING by distance, deterministic tie-break by x*1000+y
+        ranked.Sort((a, b) =>
+        {
+            int cmp = a.Value.CompareTo(b.Value);
+            if (cmp != 0) return cmp;
+            int aKey = a.Key.x * 1000 + a.Key.y;
+            int bKey = b.Key.x * 1000 + b.Key.y;
+            return aKey.CompareTo(bKey);
+        });
+
+        int n = ranked.Count;
+        int take = Mathf.Min(desiredCount, n);
+        List<Vector2Int> chosen = new List<Vector2Int>(take);
+        HashSet<int> usedIndices = new HashSet<int>();
+
+        // Pick at percentiles 0.25, 0.50, 0.75 (or evenly spread within [0.25, 0.75] for take>3).
+        for (int i = 0; i < take; i++)
+        {
+            float pct = take == 1 ? 0.5f : 0.25f + 0.5f * i / (take - 1);
+            int idx = Mathf.Clamp(Mathf.FloorToInt(pct * n), 0, n - 1);
+            int probe = idx;
+            while (usedIndices.Contains(probe))
+            {
+                probe = (probe + 1) % n;
+                if (probe == idx) break;
+            }
+            usedIndices.Add(probe);
+            chosen.Add(ranked[probe].Key);
+            _enemySpawnCells.Add(new Vector3Int(startPosition.x + ranked[probe].Key.x, startPosition.y + ranked[probe].Key.y, 0));
+        }
+
+        _fixedEnemySpawnCache[mapKey] = chosen;
+        return _enemySpawnCells.Count > 0;
     }
 
     private int ClearSpawnArea(int[,] grid, Vector3Int centerCell, int clearance, bool updateTilemaps, string label)
@@ -821,9 +1053,66 @@ public class TilemapGenerator : MonoBehaviour
                 if (folderTextMaps == null || folderTextMaps.Length == 0) return null;
                 return folderTextMaps[Random.Range(0, folderTextMaps.Length)];
 
+            case MapSelectionMode.Curriculum:
+                return PickCurriculumMap();
+
             default:
                 return roomLayoutText;
         }
+    }
+
+    private int CurrentDifficulty()
+    {
+        try
+        {
+            if (Academy.IsInitialized)
+            {
+                float v = Academy.Instance.EnvironmentParameters.GetWithDefault("difficulty", (float)defaultDifficulty);
+                return Mathf.Clamp(Mathf.RoundToInt(v), 0, 3);
+            }
+        }
+        catch
+        {
+            // Editor edit-mode: Academy not initialized. Fall through.
+        }
+        return Mathf.Clamp(defaultDifficulty, 0, 3);
+    }
+
+    // 0=Easy+Fixed, 1=Medium+Fixed, 2=Hard+Fixed, 3=Hard+Random.
+    // Difficulties 0-2 use fixed (deterministic) spawn; 3 uses random spawn.
+    private bool UseFixedSpawn()
+    {
+        return CurrentDifficulty() <= 2;
+    }
+
+    private TextAsset PickCurriculumMap()
+    {
+        int diff = CurrentDifficulty();
+        TextAsset[] pool;
+        string label;
+        switch (diff)
+        {
+            case 0: pool = easyMaps;   label = "Easy+Fixed";   break;
+            case 1: pool = mediumMaps; label = "Medium+Fixed"; break;
+            case 2: pool = hardMaps;   label = "Hard+Fixed";   break;
+            default: pool = hardMaps;  label = "Hard+Random";  break;
+        }
+
+        if (pool == null || pool.Length == 0)
+        {
+            Debug.LogWarning(
+                $"[TilemapGenerator] Curriculum pool for difficulty={diff} ({label}) is empty. Fallback to roomLayoutText.",
+                this
+            );
+            return roomLayoutText;
+        }
+
+        TextAsset chosen = pool[Random.Range(0, pool.Length)];
+        if (logCurriculumChoice)
+        {
+            Debug.Log($"[TilemapGenerator] Curriculum picked difficulty={diff} ({label}) map={chosen.name}", this);
+        }
+        return chosen;
     }
 
     private void UpdateLevelManagerSpawnPointIfNeeded()
@@ -851,6 +1140,126 @@ public class TilemapGenerator : MonoBehaviour
     // -------------------------------------------------------------------------
 
 #if UNITY_EDITOR
+    [ContextMenu("Refresh Curriculum Maps")]
+    public void RefreshCurriculumMaps()
+    {
+        easyMaps = LoadFolderTextAssets(easyMapFolder);
+        mediumMaps = LoadFolderTextAssets(mediumMapFolder);
+        hardMaps = LoadFolderTextAssets(hardMapFolder);
+        Debug.Log(
+            $"[TilemapGenerator] Curriculum maps loaded — easy={easyMaps.Length}  medium={mediumMaps.Length}  hard={hardMaps.Length}",
+            this
+        );
+    }
+
+    [ContextMenu("Validate Maps For Fixed Spawn")]
+    public void ValidateMapsForFixedSpawn()
+    {
+        int e = ValidatePool(easyMaps, "Easy");
+        int m = ValidatePool(mediumMaps, "Medium");
+        int h = ValidatePool(hardMaps, "Hard");
+        Debug.Log($"[ValidateFixedSpawn] PASS Easy={e}/{(easyMaps==null?0:easyMaps.Length)}  Medium={m}/{(mediumMaps==null?0:mediumMaps.Length)}  Hard={h}/{(hardMaps==null?0:hardMaps.Length)}", this);
+    }
+
+    private int ValidatePool(TextAsset[] pool, string label)
+    {
+        if (pool == null) return 0;
+        int pass = 0;
+        for (int i = 0; i < pool.Length; i++)
+        {
+            TextAsset map = pool[i];
+            if (map == null) continue;
+            int[,] grid = ParseGridForValidation(map);
+            if (grid == null)
+            {
+                Debug.LogWarning($"[ValidateFixedSpawn] {label}/{map.name}: FAIL (could not parse grid)", this);
+                continue;
+            }
+
+            int totalFloor = CountFloorCells(grid);
+            int required = Mathf.Max(1, Mathf.CeilToInt(totalFloor * fixedSpawnMinReachableRatio));
+
+            Vector2Int? best = FindMaxReachCell(grid, playerSpawnWallClearanceCells, required);
+            string clearanceTag = $"clearance={playerSpawnWallClearanceCells}";
+            if (!best.HasValue && playerSpawnWallClearanceCells > 0)
+            {
+                best = FindMaxReachCell(grid, 0, required);
+                clearanceTag = "clearance=0 (fallback)";
+            }
+
+            if (best.HasValue)
+            {
+                Vector2Int cell = best.Value;
+                int reach = CountReachableFromCell(grid, cell.x, cell.y);
+                pass++;
+                Debug.Log($"[ValidateFixedSpawn] {label}/{map.name}: PASS  spawn=({cell.x},{cell.y})  reach={reach}/{totalFloor} ({100f*reach/totalFloor:F0}%)  {clearanceTag}", map);
+            }
+            else
+            {
+                int absoluteMax = ComputeAbsoluteMaxReach(grid);
+                Debug.LogWarning($"[ValidateFixedSpawn] {label}/{map.name}: FAIL  totalFloor={totalFloor}  required≥{required}  bestPossibleReach={absoluteMax} ({100f*absoluteMax/totalFloor:F0}%)", map);
+            }
+        }
+        return pass;
+    }
+
+    private int ComputeAbsoluteMaxReach(int[,] grid)
+    {
+        int width = grid.GetLength(0);
+        int height = grid.GetLength(1);
+        int max = 0;
+        for (int x = 0; x < width; x++)
+            for (int y = 0; y < height; y++)
+                if (grid[x, y] != 1)
+                {
+                    int r = CountReachableFromCell(grid, x, y);
+                    if (r > max) max = r;
+                }
+        return max;
+    }
+
+    private int[,] ParseGridForValidation(TextAsset asset)
+    {
+        if (asset == null) return null;
+        string text = asset.text.Replace("\r\n", "\n").TrimEnd('\n');
+        string[] lines = text.Split(new[] { '\n' }, System.StringSplitOptions.RemoveEmptyEntries);
+        if (lines.Length == 0) return null;
+        int parsedHeight = lines.Length;
+        int parsedWidth = 0;
+        for (int i = 0; i < lines.Length; i++)
+            if (lines[i].Length > parsedWidth) parsedWidth = lines[i].Length;
+        int[,] grid = new int[parsedWidth, parsedHeight];
+        for (int row = 0; row < parsedHeight; row++)
+        {
+            string line = lines[row];
+            for (int col = 0; col < parsedWidth; col++)
+            {
+                char c = col < line.Length ? line[col] : '.';
+                int x = col;
+                int y = parsedHeight - 1 - row;
+                grid[x, y] = CharToTileType(c);
+            }
+        }
+        return grid;
+    }
+
+    private TextAsset[] LoadFolderTextAssets(DefaultAsset folder)
+    {
+        if (folder == null) return new TextAsset[0];
+        string folderPath = AssetDatabase.GetAssetPath(folder);
+        if (string.IsNullOrEmpty(folderPath) || !AssetDatabase.IsValidFolder(folderPath)) return new TextAsset[0];
+        string[] guids = AssetDatabase.FindAssets("t:TextAsset", new[] { folderPath });
+        List<TextAsset> found = new List<TextAsset>();
+        for (int i = 0; i < guids.Length; i++)
+        {
+            string assetPath = AssetDatabase.GUIDToAssetPath(guids[i]);
+            if (!assetPath.EndsWith(".txt", System.StringComparison.OrdinalIgnoreCase)) continue;
+            TextAsset textAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(assetPath);
+            if (textAsset != null) found.Add(textAsset);
+        }
+        return found.ToArray();
+    }
+
     [ContextMenu("Refresh Text Maps From Folder")]
     public void RefreshTextMapsFromFolder()
     {

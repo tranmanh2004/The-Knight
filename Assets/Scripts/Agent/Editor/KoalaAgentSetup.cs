@@ -7,7 +7,7 @@ using MoreMountains.Tools;
 
 /// <summary>
 /// Editor tool: finds the "Koala" GameObject in the active scene and adds all
-/// components needed for ML-Agents training (AttentionAgent, BehaviorParameters,
+/// components needed for ML-Agents training (CombatAgent, BehaviorParameters,
 /// DecisionRequester, AIBrain compatibility target cache, AIDecisionDetectTargetRadius2D,
 /// Health, movement, weapon, and dash abilities).
 ///
@@ -82,12 +82,12 @@ public class KoalaAgentSetup : Editor
 
         // ── 12. BehaviorParameters ───────────────────────────────────────────
         BehaviorParameters bp = GetOrAdd<BehaviorParameters>(koala);
-        bp.BehaviorName = "AttentionAgentConfig";
+        bp.BehaviorName = "CombatAgentConfig";
         bp.BehaviorType = BehaviorType.Default;
 
         var actionSpec = Unity.MLAgents.Actuators.ActionSpec.MakeDiscrete(3, 3, 3, 9);
         bp.BrainParameters.ActionSpec = actionSpec;
-        bp.BrainParameters.VectorObservationSize = AttentionAgent.VectorObservationSize;
+        bp.BrainParameters.VectorObservationSize = CombatAgent.VectorObservationSize;
         bp.BrainParameters.NumStackedVectorObservations = 1;
 
         // ── 14. DecisionRequester ────────────────────────────────────────────
@@ -95,8 +95,8 @@ public class KoalaAgentSetup : Editor
         dr.DecisionPeriod = 5;
         dr.TakeActionsBetweenDecisions = true;
 
-        // ── 15. AttentionAgent ───────────────────────────────────────────────
-        AttentionAgent agent = GetOrAdd<AttentionAgent>(koala);
+        // ── 15. CombatAgent ───────────────────────────────────────────────
+        CombatAgent agent = GetOrAdd<CombatAgent>(koala);
         agent.MaxStep = 5000;
         agent.VisionRadius        = 20f;
         agent.MaxEnemies          = 3;
@@ -133,9 +133,9 @@ public class KoalaAgentSetup : Editor
             "✓ AIDecisionDetectTargetRadius2D\n" +
             "✓ CharacterDash2D\n" +
             "✓ AIBrain compatibility target only (no policy states)\n" +
-            "✓ BehaviorParameters (obs=" + AttentionAgent.VectorObservationSize + ", branches=[3,3,3,9])\n" +
+            "✓ BehaviorParameters (obs=" + CombatAgent.VectorObservationSize + ", branches=[3,3,3,9])\n" +
             "✓ DecisionRequester (period=5)\n" +
-            "✓ AttentionAgent\n\n" +
+            "✓ CombatAgent\n\n" +
             "✓ Map generation per episode: " + (roomGen != null ? "ENABLED (Map found)" : "DISABLED — 'Map' GameObject not found") + "\n\n" +
             "Next: assign a weapon to CharacterHandleWeapon, then save the scene.",
             "OK");

@@ -1,5 +1,5 @@
 behaviors:
-  AttentionAgentConfig:
+  CombatAgentConfig:
     trainer_type: ppo
     hyperparameters:
       batch_size: 2048
@@ -23,10 +23,12 @@ behaviors:
         gamma: 0.99
         encoding_size: 256
         learning_rate: 1.0e-3
-    # WITH episodic coverage requires changing the code-only EpisodicCoverageReward constant in AttentionAgent
+    # WITH episodic coverage — EpisodicCoverageReward = 0.005f wired in CombatAgent.OnActionReceived (run37+)
     # Ablation Run 3: PPO + ICM + Episodic Coverage — thesis contribution
-    max_steps: 300000
+    # Mirror run35 (ICM scratch 1M) + episodic coverage bonus to test if exploration shaping
+    # bridges the gap to RND/init25 baselines.
+    max_steps: 1000000
     time_horizon: 64
     summary_freq: 10000
-    keep_checkpoints: 40
-    checkpoint_interval: 10000
+    keep_checkpoints: 10
+    checkpoint_interval: 100000

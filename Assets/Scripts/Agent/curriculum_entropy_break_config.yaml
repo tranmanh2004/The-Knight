@@ -1,0 +1,61 @@
+behaviors:
+  CombatAgentConfig:
+    trainer_type: ppo
+    hyperparameters:
+      batch_size: 2048
+      buffer_size: 20480
+      learning_rate: 3.0e-5
+      beta: 0.001
+      epsilon: 0.25
+      lambd: 0.85
+      num_epoch: 6
+      learning_rate_schedule: linear
+    network_settings:
+      hidden_units: 256
+      num_layers: 2
+      normalize: true
+    reward_signals:
+      extrinsic:
+        gamma: 0.99
+        strength: 1.0
+    # run49: PPO + Curriculum + ENTROPY-BREAK hyperparameters
+    # Diagnosis from run46/47/48: entropy stuck at 4.40 across 7M+ steps. NOT a beta issue
+    # (run48 with beta=0.001 didn't help). Real cause: weak policy gradient due to
+    # high reward variance (Hard episode reward ranges 0.5-7.5 on same policy).
+    #
+    # Strategy: strengthen gradient WITHOUT touching reward shape.
+    #   num_epoch:  2 -> 6      (3x more gradient updates per buffer)
+    #   epsilon:    0.1 -> 0.25 (allow larger policy updates per step)
+    #   lambd:      0.95 -> 0.85 (reduce GAE variance, sharper advantage estimates)
+    #   learning_rate: keep 3e-5 (run48 showed 1e-4 too aggressive -> collapse)
+    #   beta: keep 0.001 (already tested, not the bottleneck)
+    #
+    # Train from scratch (no init-from): num_epoch change can corrupt loaded weights.
+    # Watch entropy drop in first 500k - if still 4.40 plateau -> escalate to reward scaling.
+    max_steps: 3000000
+    time_horizon: 64
+    summary_freq: 10000
+    keep_checkpoints: 15
+    checkpoint_interval: 100000
+
+environment_parameters:
+  difficulty:
+    curriculum:
+      - name: Easy
+        completion_criteria:
+          measure: reward
+          behavior: CombatAgentConfig
+          signal_smoothing: true
+          min_lesson_length: 100
+          threshold: 5.0
+        value: 0
+      - name: Medium
+        completion_criteria:
+          measure: reward
+          behavior: CombatAgentConfig
+          signal_smoothing: true
+          min_lesson_length: 100
+          threshold: 3.5
+        value: 1
+      - name: Hard
+        value: 2

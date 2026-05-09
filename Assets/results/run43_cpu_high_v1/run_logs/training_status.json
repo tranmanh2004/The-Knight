@@ -1,0 +1,29 @@
+{
+    "AttentionAgentConfig": {
+        "checkpoints": [
+            {
+                "steps": 10092,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run43_cpu_high_v1\\AttentionAgentConfig\\AttentionAgentConfig-10092.onnx",
+                "reward": 1.0335416095331311,
+                "creation_time": 1778262485.9049277,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run43_cpu_high_v1\\AttentionAgentConfig\\AttentionAgentConfig-10092.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 10092,
+            "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run43_cpu_high_v1\\AttentionAgentConfig.onnx",
+            "reward": 1.0335416095331311,
+            "creation_time": 1778262485.9049277,
+            "auxillary_file_paths": [
+                "C:\\Riot Games\\The-Knight\\Assets\\results\\run43_cpu_high_v1\\AttentionAgentConfig\\AttentionAgentConfig-10092.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.2.2+cpu"
+    }
+}

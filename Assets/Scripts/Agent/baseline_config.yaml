@@ -1,5 +1,5 @@
 behaviors:
-  AttentionAgentConfig:
+  CombatAgentConfig:
     trainer_type: ppo
     hyperparameters:
       batch_size: 2048
@@ -18,7 +18,7 @@ behaviors:
       extrinsic:
         gamma: 0.99
         strength: 1.0
-    # NO curiosity, NO episodic coverage (EpisodicCoverageReward is code-only in AttentionAgent)
+    # NO curiosity, NO episodic coverage (EpisodicCoverageReward is code-only in CombatAgent)
     # Curriculum Run: PPO baseline with two enemies, fixed map/weapon, LOS spawn, and soft cooldown attack guard.
     max_steps: 1000000
     time_horizon: 64

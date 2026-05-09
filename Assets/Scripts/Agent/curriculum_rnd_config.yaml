@@ -1,0 +1,63 @@
+behaviors:
+  CombatAgentConfig:
+    trainer_type: ppo
+    hyperparameters:
+      batch_size: 2048
+      buffer_size: 20480
+      learning_rate: 3.0e-5
+      beta: 0.004
+      epsilon: 0.1
+      lambd: 0.95
+      num_epoch: 2
+      learning_rate_schedule: linear
+    network_settings:
+      hidden_units: 256
+      num_layers: 2
+      normalize: true
+    reward_signals:
+      extrinsic:
+        gamma: 0.99
+        strength: 1.0
+      rnd:  # Random Network Distillation - Burda et al. 2018
+        strength: 0.01
+        gamma: 0.99
+        encoding_size: 256
+        learning_rate: 1.0e-4
+    # run51: PPO + RND + Curriculum
+    # Final cell in ablation matrix:
+    #   PPO   scratch=run34(2.07)   +curr=run46(3.84)  <-- best
+    #   ICM   scratch=run35(2.42)   +curr=run50(3.56)  <-- encoding collapse
+    #   RND   scratch=run36(2.49)   +curr=run51(?)     <-- this run
+    #   LSTM  scratch=run42(2.40)   +curr=run47(3.77)
+    #
+    # Hypothesis: RND avoids ICM's inverse-model collapse (no encoding to degenerate).
+    # Curriculum scaffolds exploration; RND adds state novelty bonus on top.
+    # Expected: 3.9-4.3 mean Hard (slight improvement over run46).
+    # If reward signal is redundant with curriculum -> tied with run46 (~3.8).
+    max_steps: 3000000
+    time_horizon: 64
+    summary_freq: 10000
+    keep_checkpoints: 15
+    checkpoint_interval: 100000
+
+environment_parameters:
+  difficulty:
+    curriculum:
+      - name: Easy
+        completion_criteria:
+          measure: reward
+          behavior: CombatAgentConfig
+          signal_smoothing: true
+          min_lesson_length: 100
+          threshold: 5.0
+        value: 0
+      - name: Medium
+        completion_criteria:
+          measure: reward
+          behavior: CombatAgentConfig
+          signal_smoothing: true
+          min_lesson_length: 100
+          threshold: 3.5
+        value: 1
+      - name: Hard
+        value: 2

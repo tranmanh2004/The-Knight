@@ -4,7 +4,7 @@ using MoreMountains.Tools;
 
 public class TrainingManager : MonoBehaviour, MMEventListener<TopDownEngineEvent>
 {
-    [SerializeField] private AttentionAgent attentionAgent;
+    [SerializeField] private CombatAgent combatAgent;
     [SerializeField] private TilemapGenerator tilemapGenerator;
 
     void OnEnable()
@@ -24,8 +24,8 @@ public class TrainingManager : MonoBehaviour, MMEventListener<TopDownEngineEvent
             if (tilemapGenerator != null)
                 tilemapGenerator.RespawnEnemies();
 
-            if (attentionAgent != null)
-                attentionAgent.EndEpisode();
+            if (combatAgent != null)
+                combatAgent.EndEpisode();
             else
                 TopDownEngineEvent.Trigger(TopDownEngineEventTypes.RespawnStarted, null);
         }

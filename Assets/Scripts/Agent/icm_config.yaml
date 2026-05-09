@@ -1,5 +1,5 @@
 behaviors:
-  AttentionAgentConfig:
+  CombatAgentConfig:
     trainer_type: ppo
     hyperparameters:
       batch_size: 2048
@@ -23,7 +23,7 @@ behaviors:
         gamma: 0.99
         encoding_size: 256
         learning_rate: 1.0e-3
-    # NO episodic coverage (EpisodicCoverageReward is code-only in AttentionAgent)
+    # NO episodic coverage (EpisodicCoverageReward is code-only in CombatAgent)
     # Ablation Run 2: PPO + ICM — replicates paper's proposed method
     max_steps: 3500000
     time_horizon: 64

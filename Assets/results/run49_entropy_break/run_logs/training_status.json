@@ -1,0 +1,86 @@
+{
+    "difficulty": {
+        "lesson_num": 2
+    },
+    "AttentionAgentConfig": {
+        "checkpoints": [
+            {
+                "steps": 99950,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run49_entropy_break\\AttentionAgentConfig\\AttentionAgentConfig-99950.onnx",
+                "reward": 4.200483172917022,
+                "creation_time": 1778287171.93929,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run49_entropy_break\\AttentionAgentConfig\\AttentionAgentConfig-99950.pt"
+                ]
+            },
+            {
+                "steps": 199964,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run49_entropy_break\\AttentionAgentConfig\\AttentionAgentConfig-199964.onnx",
+                "reward": 3.891320313929635,
+                "creation_time": 1778287323.325289,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run49_entropy_break\\AttentionAgentConfig\\AttentionAgentConfig-199964.pt"
+                ]
+            },
+            {
+                "steps": 299938,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run49_entropy_break\\AttentionAgentConfig\\AttentionAgentConfig-299938.onnx",
+                "reward": 6.527263529953503,
+                "creation_time": 1778287476.701945,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run49_entropy_break\\AttentionAgentConfig\\AttentionAgentConfig-299938.pt"
+                ]
+            },
+            {
+                "steps": 399983,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run49_entropy_break\\AttentionAgentConfig\\AttentionAgentConfig-399983.onnx",
+                "reward": 6.091108965997894,
+                "creation_time": 1778287694.776001,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run49_entropy_break\\AttentionAgentConfig\\AttentionAgentConfig-399983.pt"
+                ]
+            },
+            {
+                "steps": 499968,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run49_entropy_break\\AttentionAgentConfig\\AttentionAgentConfig-499968.onnx",
+                "reward": 3.1686323646456005,
+                "creation_time": 1778287846.6097507,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run49_entropy_break\\AttentionAgentConfig\\AttentionAgentConfig-499968.pt"
+                ]
+            },
+            {
+                "steps": 599989,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run49_entropy_break\\AttentionAgentConfig\\AttentionAgentConfig-599989.onnx",
+                "reward": 0.9625782314687967,
+                "creation_time": 1778287997.502835,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run49_entropy_break\\AttentionAgentConfig\\AttentionAgentConfig-599989.pt"
+                ]
+            },
+            {
+                "steps": 661022,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run49_entropy_break\\AttentionAgentConfig\\AttentionAgentConfig-661022.onnx",
+                "reward": 2.742794798221439,
+                "creation_time": 1778288089.0763478,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run49_entropy_break\\AttentionAgentConfig\\AttentionAgentConfig-661022.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 661022,
+            "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run49_entropy_break\\AttentionAgentConfig.onnx",
+            "reward": 2.742794798221439,
+            "creation_time": 1778288089.0763478,
+            "auxillary_file_paths": [
+                "C:\\Riot Games\\The-Knight\\Assets\\results\\run49_entropy_break\\AttentionAgentConfig\\AttentionAgentConfig-661022.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.2.2+cpu"
+    }
+}

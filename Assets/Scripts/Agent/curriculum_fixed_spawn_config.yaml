@@ -1,0 +1,68 @@
+behaviors:
+  CombatAgentConfig:
+    trainer_type: ppo
+    hyperparameters:
+      batch_size: 2048
+      buffer_size: 20480
+      learning_rate: 3.0e-5
+      beta: 0.004
+      epsilon: 0.1
+      lambd: 0.95
+      num_epoch: 2
+      learning_rate_schedule: linear
+    network_settings:
+      hidden_units: 256
+      num_layers: 2
+      normalize: true
+    reward_signals:
+      extrinsic:
+        gamma: 0.99
+        strength: 1.0
+    # run53: PPO + Curriculum + FIXED-then-RANDOM spawn (4 lessons)
+    # Diagnosis from run46-52: entropy plateau 4.40 not from hyperparams.
+    # Root cause = environment variance (procgen + random spawn -> reward CV ~40% on Hard).
+    # Hypothesis: separating "navigation+combat learning" from "spawn invariance" helps
+    # gradient signal converge.
+    #   L0 (Easy + Fixed spawn):    learn basic mechanics, deterministic
+    #   L1 (Medium + Fixed spawn):  learn complex maps, deterministic
+    #   L2 (Hard + Fixed spawn):    learn 50 Hard maps, deterministic per map
+    #   L3 (Hard + Random spawn):   add spawn invariance robustness
+    #
+    # Fixed spawn = deterministic per-map: agent always spawns at same center cell,
+    # enemies always spawn at farthest reachable cells.
+    # Validation: each map must have spawn cell with >= 50% reachable floor cells.
+    max_steps: 3000000
+    time_horizon: 64
+    summary_freq: 10000
+    keep_checkpoints: 15
+    checkpoint_interval: 100000
+
+environment_parameters:
+  difficulty:
+    curriculum:
+      - name: Easy_Fixed
+        completion_criteria:
+          measure: reward
+          behavior: CombatAgentConfig
+          signal_smoothing: true
+          min_lesson_length: 100
+          threshold: 5.0
+        value: 0
+      - name: Medium_Fixed
+        completion_criteria:
+          measure: reward
+          behavior: CombatAgentConfig
+          signal_smoothing: true
+          min_lesson_length: 100
+          threshold: 4.0
+        value: 1
+      - name: Hard_Fixed
+        completion_criteria:
+          measure: reward
+          behavior: CombatAgentConfig
+          signal_smoothing: true
+          min_lesson_length: 200
+          threshold: 4.0
+        value: 2
+      - name: Hard_Random
+        value: 3

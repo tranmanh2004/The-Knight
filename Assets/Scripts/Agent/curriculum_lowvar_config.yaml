@@ -1,0 +1,63 @@
+behaviors:
+  CombatAgentConfig:
+    trainer_type: ppo
+    hyperparameters:
+      batch_size: 8192
+      buffer_size: 81920
+      learning_rate: 3.0e-5
+      beta: 0.004
+      epsilon: 0.1
+      lambd: 0.95
+      num_epoch: 2
+      learning_rate_schedule: linear
+    network_settings:
+      hidden_units: 256
+      num_layers: 2
+      normalize: true
+    reward_signals:
+      extrinsic:
+        gamma: 0.99
+        strength: 1.0
+    # run52: PPO + Curriculum + LARGE BATCH (variance reduction)
+    # Diagnosis: entropy plateau not from beta (run48-49 confirmed) but from
+    # high reward variance between episodes (CV ~40% on Hard).
+    # Reward noise -> advantage estimates noisy -> gradient direction inconsistent
+    # -> policy gradient cancels across batches -> entropy stays high.
+    #
+    # Strategy: average noise across larger samples.
+    #   batch_size:  2048  -> 8192   (4x, sharper gradient per update)
+    #   buffer_size: 20480 -> 81920  (4x, maintain 10:1 ratio with batch_size)
+    #
+    # Trade-off: longer time between updates (each update needs 81920 timesteps).
+    # With num_envs=8, that's ~10k env steps per env per update.
+    # Total updates over 3M = 3M / 81920 = ~37 (vs run46 ~146).
+    # If gradient quality > update count, win. If not, this hurts.
+    #
+    # Match run46 hyperparams otherwise for direct A/B comparison.
+    max_steps: 3000000
+    time_horizon: 64
+    summary_freq: 10000
+    keep_checkpoints: 15
+    checkpoint_interval: 100000
+
+environment_parameters:
+  difficulty:
+    curriculum:
+      - name: Easy
+        completion_criteria:
+          measure: reward
+          behavior: CombatAgentConfig
+          signal_smoothing: true
+          min_lesson_length: 100
+          threshold: 5.0
+        value: 0
+      - name: Medium
+        completion_criteria:
+          measure: reward
+          behavior: CombatAgentConfig
+          signal_smoothing: true
+          min_lesson_length: 100
+          threshold: 3.5
+        value: 1
+      - name: Hard
+        value: 2

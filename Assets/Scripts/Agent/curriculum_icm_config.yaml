@@ -1,0 +1,65 @@
+behaviors:
+  CombatAgentConfig:
+    trainer_type: ppo
+    hyperparameters:
+      batch_size: 2048
+      buffer_size: 20480
+      learning_rate: 3.0e-5
+      beta: 0.004
+      epsilon: 0.1
+      lambd: 0.95
+      num_epoch: 2
+      learning_rate_schedule: linear
+    network_settings:
+      hidden_units: 256
+      num_layers: 2
+      normalize: true
+    reward_signals:
+      extrinsic:
+        gamma: 0.99
+        strength: 1.0
+      curiosity:  # ICM - Pathak et al. 2017
+        strength: 0.01
+        gamma: 0.99
+        encoding_size: 256
+        learning_rate: 1.0e-3
+    # run50: PPO + ICM + Curriculum
+    # Combine 2 different approaches:
+    #   - Curriculum (run46): 3.84 mean Hard, the breakthrough factor
+    #   - ICM (run35): had encoding collapse on flat training, but maybe curriculum's
+    #     gradual difficulty progression helps ICM forward model train better
+    #     (easier states first -> meaningful inverse loss -> stable curiosity signal)
+    #
+    # Hypothesis: ICM failed in run35 due to too-hard observations from start.
+    # If curriculum gives ICM time to learn encoding on Easy/Medium maps before Hard,
+    # the curiosity signal may be useful instead of degenerate.
+    #
+    # Match run46 hyperparams (beta 0.004, lr 3e-5) for direct comparison.
+    # No init-from: ICM forward/inverse models need to train from scratch alongside policy.
+    max_steps: 3000000
+    time_horizon: 64
+    summary_freq: 10000
+    keep_checkpoints: 15
+    checkpoint_interval: 100000
+
+environment_parameters:
+  difficulty:
+    curriculum:
+      - name: Easy
+        completion_criteria:
+          measure: reward
+          behavior: CombatAgentConfig
+          signal_smoothing: true
+          min_lesson_length: 100
+          threshold: 5.0
+        value: 0
+      - name: Medium
+        completion_criteria:
+          measure: reward
+          behavior: CombatAgentConfig
+          signal_smoothing: true
+          min_lesson_length: 100
+          threshold: 3.5
+        value: 1
+      - name: Hard
+        value: 2

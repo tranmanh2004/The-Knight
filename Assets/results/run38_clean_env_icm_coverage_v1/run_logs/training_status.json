@@ -1,0 +1,110 @@
+{
+    "AttentionAgentConfig": {
+        "checkpoints": [
+            {
+                "steps": 199976,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run38_clean_env_icm_coverage_v1\\AttentionAgentConfig\\AttentionAgentConfig-199976.onnx",
+                "reward": 2.075022443611589,
+                "creation_time": 1778249810.442073,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run38_clean_env_icm_coverage_v1\\AttentionAgentConfig\\AttentionAgentConfig-199976.pt"
+                ]
+            },
+            {
+                "steps": 299994,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run38_clean_env_icm_coverage_v1\\AttentionAgentConfig\\AttentionAgentConfig-299994.onnx",
+                "reward": 1.9085783099134763,
+                "creation_time": 1778249956.2196455,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run38_clean_env_icm_coverage_v1\\AttentionAgentConfig\\AttentionAgentConfig-299994.pt"
+                ]
+            },
+            {
+                "steps": 399940,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run38_clean_env_icm_coverage_v1\\AttentionAgentConfig\\AttentionAgentConfig-399940.onnx",
+                "reward": 1.9097777465358377,
+                "creation_time": 1778250102.9569983,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run38_clean_env_icm_coverage_v1\\AttentionAgentConfig\\AttentionAgentConfig-399940.pt"
+                ]
+            },
+            {
+                "steps": 499990,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run38_clean_env_icm_coverage_v1\\AttentionAgentConfig\\AttentionAgentConfig-499990.onnx",
+                "reward": 3.5414051209162505,
+                "creation_time": 1778250295.7724457,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run38_clean_env_icm_coverage_v1\\AttentionAgentConfig\\AttentionAgentConfig-499990.pt"
+                ]
+            },
+            {
+                "steps": 599991,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run38_clean_env_icm_coverage_v1\\AttentionAgentConfig\\AttentionAgentConfig-599991.onnx",
+                "reward": 1.8605389565229415,
+                "creation_time": 1778250470.855719,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run38_clean_env_icm_coverage_v1\\AttentionAgentConfig\\AttentionAgentConfig-599991.pt"
+                ]
+            },
+            {
+                "steps": 699997,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run38_clean_env_icm_coverage_v1\\AttentionAgentConfig\\AttentionAgentConfig-699997.onnx",
+                "reward": 4.999906111508608,
+                "creation_time": 1778250616.5284119,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run38_clean_env_icm_coverage_v1\\AttentionAgentConfig\\AttentionAgentConfig-699997.pt"
+                ]
+            },
+            {
+                "steps": 799987,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run38_clean_env_icm_coverage_v1\\AttentionAgentConfig\\AttentionAgentConfig-799987.onnx",
+                "reward": -1.1682723592966795,
+                "creation_time": 1778250760.092607,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run38_clean_env_icm_coverage_v1\\AttentionAgentConfig\\AttentionAgentConfig-799987.pt"
+                ]
+            },
+            {
+                "steps": 899953,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run38_clean_env_icm_coverage_v1\\AttentionAgentConfig\\AttentionAgentConfig-899953.onnx",
+                "reward": 1.5692695556698661,
+                "creation_time": 1778250901.14263,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run38_clean_env_icm_coverage_v1\\AttentionAgentConfig\\AttentionAgentConfig-899953.pt"
+                ]
+            },
+            {
+                "steps": 999996,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run38_clean_env_icm_coverage_v1\\AttentionAgentConfig\\AttentionAgentConfig-999996.onnx",
+                "reward": 2.196016226708889,
+                "creation_time": 1778251044.245565,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run38_clean_env_icm_coverage_v1\\AttentionAgentConfig\\AttentionAgentConfig-999996.pt"
+                ]
+            },
+            {
+                "steps": 1000060,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run38_clean_env_icm_coverage_v1\\AttentionAgentConfig\\AttentionAgentConfig-1000060.onnx",
+                "reward": 2.196016226708889,
+                "creation_time": 1778251045.4604619,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run38_clean_env_icm_coverage_v1\\AttentionAgentConfig\\AttentionAgentConfig-1000060.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 1000060,
+            "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run38_clean_env_icm_coverage_v1\\AttentionAgentConfig.onnx",
+            "reward": 2.196016226708889,
+            "creation_time": 1778251045.4604619,
+            "auxillary_file_paths": [
+                "C:\\Riot Games\\The-Knight\\Assets\\results\\run38_clean_env_icm_coverage_v1\\AttentionAgentConfig\\AttentionAgentConfig-1000060.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.11.0+cpu"
+    }
+}

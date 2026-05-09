@@ -14,7 +14,7 @@ This is a Unity project — there is no CLI build script. All building is done t
 - **Play in Editor:** Press Play in Unity; the main development scene is `Assets/TopDownEngine/Demos/Koala2D/MyPGC.unity`
 - **Standalone build output:** `/Build/The Knight.exe` (Windows)
 - **ML-Agents training:** Run `mlagents-learn <config>.yaml --run-id=<RunName>` from project root, then press Play in Editor
-  - Config files: `Assets/Scripts/Agent/AttentionAgentConfig.yaml`, `Assets/Scripts/Agent/melee_config.yaml`
+  - Config files: `Assets/Scripts/Agent/CombatAgentConfig.yaml`, `Assets/Scripts/Agent/melee_config.yaml`
   - Training results: `Assets/Scripts/Agent/results/`
 
 ## Architecture
@@ -40,11 +40,11 @@ Characters are assembled from `MonoBehaviour` components attached to a `Characte
 - `Health.cs` — damage, death, respawn events
 - `CharacterHandleWeapon.cs` — weapon equip/fire
 
-AI characters use an `AIBrain` state machine composed of `AIAction` and `AIDecision` components. Custom ML agents (`AttentionAgent`, `MeleeAgent`) extend `Agent` (Unity ML-Agents) and override this with neural-network-driven actions.
+AI characters use an `AIBrain` state machine composed of `AIAction` and `AIDecision` components. Custom ML agents (`CombatAgent`, `MeleeAgent`) extend `Agent` (Unity ML-Agents) and override this with neural-network-driven actions.
 
 ### ML Agents
 
-**AttentionAgent** (`Assets/Scripts/Agent/AttentionAgent.cs`):
+**CombatAgent** (`Assets/Scripts/Agent/CombatAgent.cs`):
 - 321-dimensional observation vector: player stats (13), global (6), enemies (54), bullets (120), items (68), hazards (60)
 - 5 discrete actions: Moving, Deciding, Attacking, Dashing, MoveAway
 - PPO trainer with curiosity reward signal
@@ -78,7 +78,7 @@ Key event types: `PlayerDeath`, `RespawnStarted`, `RespawnComplete`, `GameOver`,
 | Purpose | Path |
 |---|---|
 | Active dev scene | `TopDownEngine/Demos/Koala2D/MyPGC.unity` |
-| ML attention agent | `Scripts/Agent/AttentionAgent.cs` |
+| ML combat agent | `Scripts/Agent/CombatAgent.cs` |
 | ML melee agent | `Scripts/Agent/MeleeAgent.cs` |
 | Training episode manager | `Scripts/Agent/TrainingManager.cs` |
 | Agent setup editor tool | `Scripts/Agent/Editor/KoalaAgentSetup.cs` |

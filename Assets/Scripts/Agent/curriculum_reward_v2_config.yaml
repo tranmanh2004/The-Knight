@@ -1,0 +1,61 @@
+behaviors:
+  CombatAgentConfig:
+    trainer_type: ppo
+    hyperparameters:
+      batch_size: 2048
+      buffer_size: 20480
+      learning_rate: 3.0e-5
+      beta: 0.004
+      epsilon: 0.1
+      lambd: 0.95
+      num_epoch: 2
+      learning_rate_schedule: linear
+    network_settings:
+      hidden_units: 256
+      num_layers: 2
+      normalize: true
+    reward_signals:
+      extrinsic:
+        gamma: 0.99
+        strength: 1.0
+    # run55: PPO + Curriculum + REWARD v2
+    # Reward landscape changes (in CombatAgent.cs):
+    #   Outcome ↑: KillEnemy 3→5, AllEnemiesKilled 5→10, DealDamage 1→1.5, AttackAligned 0.05→0.15
+    #   Shaping ↓: ApproachTarget 0.008→0.003 (cut 63%), IdleNearEnemy 4x harder (-0.0005→-0.002)
+    #
+    # Hypothesis: gradient gap between successful/unsuccessful episodes increased ~14x,
+    # giving policy gradient enough strength to push entropy below 4.40 plateau.
+    #
+    # Threshold tuning: doubled to match doubled outcome rewards.
+    #   L0 Easy: 5.0 → 8.0  (Easy max episode now ~25 vs 13 before)
+    #   L1 Medium: 2.5 → 5.0
+    #   L2 Hard: terminal
+    #
+    # Direct A/B with run46 (same yaml structure, same curriculum, only reward changed).
+    max_steps: 3000000
+    time_horizon: 64
+    summary_freq: 10000
+    keep_checkpoints: 15
+    checkpoint_interval: 100000
+
+environment_parameters:
+  difficulty:
+    curriculum:
+      - name: Easy
+        completion_criteria:
+          measure: reward
+          behavior: CombatAgentConfig
+          signal_smoothing: true
+          min_lesson_length: 100
+          threshold: 8.0
+        value: 0
+      - name: Medium
+        completion_criteria:
+          measure: reward
+          behavior: CombatAgentConfig
+          signal_smoothing: true
+          min_lesson_length: 100
+          threshold: 5.0
+        value: 1
+      - name: Hard
+        value: 2

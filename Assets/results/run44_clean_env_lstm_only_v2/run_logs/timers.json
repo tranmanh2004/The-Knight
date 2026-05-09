@@ -1,0 +1,42 @@
+{
+    "name": "root",
+    "metadata": {
+        "timer_format_version": "0.1.0",
+        "start_time_seconds": "1778263971",
+        "python_version": "3.10.12 | packaged by Anaconda, Inc. | (main, Jul  5 2023, 19:01:18) [MSC v.1916 64 bit (AMD64)]",
+        "command_line_arguments": "C:\\Users\\ADMIN\\anaconda3\\envs\\unity1\\Scripts\\mlagents-learn C:\\Riot Games\\The-Knight\\Assets\\Scripts\\Agent\\lstm_only_config.yaml --run-id=run44_clean_env_lstm_only_v2 --results-dir=C:\\Riot Games\\The-Knight\\Assets\\results --env=C:\\Riot Games\\The-Knight\\Build\\The Knight.exe --num-envs=8 --no-graphics --quality-level 0 --force",
+        "mlagents_version": "1.1.0",
+        "mlagents_envs_version": "1.1.0",
+        "communication_protocol_version": "1.5.0",
+        "pytorch_version": "2.2.2+cpu",
+        "numpy_version": "1.23.5",
+        "end_time_seconds": "1778263974"
+    },
+    "total": 2.665656500030309,
+    "count": 1,
+    "self": 0.39944970002397895,
+    "children": {
+        "run_training.setup": {
+            "total": 0.37179180001839995,
+            "count": 1,
+            "self": 0.37179180001839995
+        },
+        "TrainerController.start_learning": {
+            "total": 1.89441499998793,
+            "count": 1,
+            "self": 9.540049359202385e-05,
+            "children": {
+                "TrainerController._reset_env": {
+                    "total": 1.894306999631226,
+                    "count": 1,
+                    "self": 1.894306999631226
+                },
+                "TrainerController._save_models": {
+                    "total": 1.2599863111972809e-05,
+                    "count": 1,
+                    "self": 1.2599863111972809e-05
+                }
+            }
+        }
+    }
+}

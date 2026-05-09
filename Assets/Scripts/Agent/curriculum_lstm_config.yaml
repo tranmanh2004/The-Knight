@@ -1,0 +1,56 @@
+behaviors:
+  CombatAgentConfig:
+    trainer_type: ppo
+    hyperparameters:
+      batch_size: 2048
+      buffer_size: 20480
+      learning_rate: 1.0e-4
+      beta: 0.001
+      epsilon: 0.1
+      lambd: 0.95
+      num_epoch: 2
+      learning_rate_schedule: linear
+    network_settings:
+      hidden_units: 256
+      num_layers: 2
+      normalize: true
+      memory:
+        sequence_length: 64
+        memory_size: 256
+    reward_signals:
+      extrinsic:
+        gamma: 0.99
+        strength: 1.0
+    # run47: PPO + LSTM + Curriculum
+    # Stack 2 best findings:
+    #   - Curriculum (run46): Hard mean 3.84, +55% vs baseline 2.487 (best so far)
+    #   - LSTM memory (run42): only architecture with INCREASING first->tail pattern
+    # Hypothesis: LSTM memory + curriculum should converge entropy (run46 stuck 4.47->4.41)
+    # and break ceiling ~4.0 on Hard.
+    max_steps: 3000000
+    time_horizon: 64
+    summary_freq: 10000
+    keep_checkpoints: 15
+    checkpoint_interval: 100000
+
+environment_parameters:
+  difficulty:
+    curriculum:
+      - name: Easy
+        completion_criteria:
+          measure: reward
+          behavior: CombatAgentConfig
+          signal_smoothing: true
+          min_lesson_length: 100
+          threshold: 5.0
+        value: 0
+      - name: Medium
+        completion_criteria:
+          measure: reward
+          behavior: CombatAgentConfig
+          signal_smoothing: true
+          min_lesson_length: 100
+          threshold: 3.5
+        value: 1
+      - name: Hard
+        value: 2

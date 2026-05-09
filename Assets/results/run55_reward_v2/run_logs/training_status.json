@@ -1,0 +1,158 @@
+{
+    "difficulty": {
+        "lesson_num": 2
+    },
+    "AttentionAgentConfig": {
+        "checkpoints": [
+            {
+                "steps": 1699940,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig\\AttentionAgentConfig-1699940.onnx",
+                "reward": 9.682035206329255,
+                "creation_time": 1778303943.2479446,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig\\AttentionAgentConfig-1699940.pt"
+                ]
+            },
+            {
+                "steps": 1799990,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig\\AttentionAgentConfig-1799990.onnx",
+                "reward": 9.365059799359491,
+                "creation_time": 1778304082.3962107,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig\\AttentionAgentConfig-1799990.pt"
+                ]
+            },
+            {
+                "steps": 1899984,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig\\AttentionAgentConfig-1899984.onnx",
+                "reward": 8.897653138812851,
+                "creation_time": 1778304221.972646,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig\\AttentionAgentConfig-1899984.pt"
+                ]
+            },
+            {
+                "steps": 1999944,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig\\AttentionAgentConfig-1999944.onnx",
+                "reward": 11.432210722068946,
+                "creation_time": 1778304359.6239944,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig\\AttentionAgentConfig-1999944.pt"
+                ]
+            },
+            {
+                "steps": 2099992,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig\\AttentionAgentConfig-2099992.onnx",
+                "reward": 6.636963759362698,
+                "creation_time": 1778304496.947481,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig\\AttentionAgentConfig-2099992.pt"
+                ]
+            },
+            {
+                "steps": 2199939,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig\\AttentionAgentConfig-2199939.onnx",
+                "reward": 16.949667337536813,
+                "creation_time": 1778304632.6154609,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig\\AttentionAgentConfig-2199939.pt"
+                ]
+            },
+            {
+                "steps": 2299997,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig\\AttentionAgentConfig-2299997.onnx",
+                "reward": 15.327995333820581,
+                "creation_time": 1778304774.2111669,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig\\AttentionAgentConfig-2299997.pt"
+                ]
+            },
+            {
+                "steps": 2399949,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig\\AttentionAgentConfig-2399949.onnx",
+                "reward": 10.392049057616127,
+                "creation_time": 1778304923.6485775,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig\\AttentionAgentConfig-2399949.pt"
+                ]
+            },
+            {
+                "steps": 2499942,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig\\AttentionAgentConfig-2499942.onnx",
+                "reward": 12.162562117418823,
+                "creation_time": 1778305054.266044,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig\\AttentionAgentConfig-2499942.pt"
+                ]
+            },
+            {
+                "steps": 2599975,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig\\AttentionAgentConfig-2599975.onnx",
+                "reward": 11.570385748814596,
+                "creation_time": 1778305183.9456894,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig\\AttentionAgentConfig-2599975.pt"
+                ]
+            },
+            {
+                "steps": 2699996,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig\\AttentionAgentConfig-2699996.onnx",
+                "reward": 7.837572288595968,
+                "creation_time": 1778305314.8982544,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig\\AttentionAgentConfig-2699996.pt"
+                ]
+            },
+            {
+                "steps": 2799996,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig\\AttentionAgentConfig-2799996.onnx",
+                "reward": 13.821319906839303,
+                "creation_time": 1778306601.788743,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig\\AttentionAgentConfig-2799996.pt"
+                ]
+            },
+            {
+                "steps": 2899997,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig\\AttentionAgentConfig-2899997.onnx",
+                "reward": 12.61661721020937,
+                "creation_time": 1778306742.3606422,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig\\AttentionAgentConfig-2899997.pt"
+                ]
+            },
+            {
+                "steps": 2999938,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig\\AttentionAgentConfig-2999938.onnx",
+                "reward": 9.829606149345636,
+                "creation_time": 1778306884.1573584,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig\\AttentionAgentConfig-2999938.pt"
+                ]
+            },
+            {
+                "steps": 3000002,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig\\AttentionAgentConfig-3000002.onnx",
+                "reward": 9.829606149345636,
+                "creation_time": 1778306884.2143464,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig\\AttentionAgentConfig-3000002.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 3000002,
+            "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig.onnx",
+            "reward": 9.829606149345636,
+            "creation_time": 1778306884.2143464,
+            "auxillary_file_paths": [
+                "C:\\Riot Games\\The-Knight\\Assets\\results\\run55_reward_v2\\AttentionAgentConfig\\AttentionAgentConfig-3000002.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.2.2+cpu"
+    }
+}

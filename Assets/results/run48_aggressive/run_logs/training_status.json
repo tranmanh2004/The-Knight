@@ -1,0 +1,86 @@
+{
+    "difficulty": {
+        "lesson_num": 2
+    },
+    "AttentionAgentConfig": {
+        "checkpoints": [
+            {
+                "steps": 99953,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run48_aggressive\\AttentionAgentConfig\\AttentionAgentConfig-99953.onnx",
+                "reward": 5.195470050120583,
+                "creation_time": 1778285887.0166292,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run48_aggressive\\AttentionAgentConfig\\AttentionAgentConfig-99953.pt"
+                ]
+            },
+            {
+                "steps": 199941,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run48_aggressive\\AttentionAgentConfig\\AttentionAgentConfig-199941.onnx",
+                "reward": 1.9040565936722689,
+                "creation_time": 1778286012.5267682,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run48_aggressive\\AttentionAgentConfig\\AttentionAgentConfig-199941.pt"
+                ]
+            },
+            {
+                "steps": 299953,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run48_aggressive\\AttentionAgentConfig\\AttentionAgentConfig-299953.onnx",
+                "reward": 5.510168141271505,
+                "creation_time": 1778286138.368914,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run48_aggressive\\AttentionAgentConfig\\AttentionAgentConfig-299953.pt"
+                ]
+            },
+            {
+                "steps": 399963,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run48_aggressive\\AttentionAgentConfig\\AttentionAgentConfig-399963.onnx",
+                "reward": 4.772365036021386,
+                "creation_time": 1778286263.7686262,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run48_aggressive\\AttentionAgentConfig\\AttentionAgentConfig-399963.pt"
+                ]
+            },
+            {
+                "steps": 499975,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run48_aggressive\\AttentionAgentConfig\\AttentionAgentConfig-499975.onnx",
+                "reward": 2.173258821790417,
+                "creation_time": 1778286390.7649066,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run48_aggressive\\AttentionAgentConfig\\AttentionAgentConfig-499975.pt"
+                ]
+            },
+            {
+                "steps": 599982,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run48_aggressive\\AttentionAgentConfig\\AttentionAgentConfig-599982.onnx",
+                "reward": 3.749278991616198,
+                "creation_time": 1778286581.9267874,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run48_aggressive\\AttentionAgentConfig\\AttentionAgentConfig-599982.pt"
+                ]
+            },
+            {
+                "steps": 628589,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run48_aggressive\\AttentionAgentConfig\\AttentionAgentConfig-628589.onnx",
+                "reward": 5.0116277985274795,
+                "creation_time": 1778286617.2587817,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run48_aggressive\\AttentionAgentConfig\\AttentionAgentConfig-628589.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 628589,
+            "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run48_aggressive\\AttentionAgentConfig.onnx",
+            "reward": 5.0116277985274795,
+            "creation_time": 1778286617.2587817,
+            "auxillary_file_paths": [
+                "C:\\Riot Games\\The-Knight\\Assets\\results\\run48_aggressive\\AttentionAgentConfig\\AttentionAgentConfig-628589.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.2.2+cpu"
+    }
+}

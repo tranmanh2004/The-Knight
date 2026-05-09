@@ -1,0 +1,158 @@
+{
+    "difficulty": {
+        "lesson_num": 2
+    },
+    "CombatAgentConfig": {
+        "checkpoints": [
+            {
+                "steps": 1699952,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig\\CombatAgentConfig-1699952.onnx",
+                "reward": 2.1067302175190137,
+                "creation_time": 1778317613.1294785,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig\\CombatAgentConfig-1699952.pt"
+                ]
+            },
+            {
+                "steps": 1799992,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig\\CombatAgentConfig-1799992.onnx",
+                "reward": 3.6246561180977594,
+                "creation_time": 1778317750.0338273,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig\\CombatAgentConfig-1799992.pt"
+                ]
+            },
+            {
+                "steps": 1899937,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig\\CombatAgentConfig-1899937.onnx",
+                "reward": 5.729303547864159,
+                "creation_time": 1778317885.3098316,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig\\CombatAgentConfig-1899937.pt"
+                ]
+            },
+            {
+                "steps": 1999992,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig\\CombatAgentConfig-1999992.onnx",
+                "reward": 2.377628579397093,
+                "creation_time": 1778318024.6684246,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig\\CombatAgentConfig-1999992.pt"
+                ]
+            },
+            {
+                "steps": 2099983,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig\\CombatAgentConfig-2099983.onnx",
+                "reward": 6.834595736914447,
+                "creation_time": 1778318169.689087,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig\\CombatAgentConfig-2099983.pt"
+                ]
+            },
+            {
+                "steps": 2199987,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig\\CombatAgentConfig-2199987.onnx",
+                "reward": 6.323433820986086,
+                "creation_time": 1778318308.205354,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig\\CombatAgentConfig-2199987.pt"
+                ]
+            },
+            {
+                "steps": 2299977,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig\\CombatAgentConfig-2299977.onnx",
+                "reward": -1.8654910176992416,
+                "creation_time": 1778318447.448302,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig\\CombatAgentConfig-2299977.pt"
+                ]
+            },
+            {
+                "steps": 2399978,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig\\CombatAgentConfig-2399978.onnx",
+                "reward": null,
+                "creation_time": 1778318587.0960073,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig\\CombatAgentConfig-2399978.pt"
+                ]
+            },
+            {
+                "steps": 2499938,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig\\CombatAgentConfig-2499938.onnx",
+                "reward": 5.631277221888304,
+                "creation_time": 1778318721.536809,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig\\CombatAgentConfig-2499938.pt"
+                ]
+            },
+            {
+                "steps": 2599969,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig\\CombatAgentConfig-2599969.onnx",
+                "reward": 1.8644926604918308,
+                "creation_time": 1778318858.7794192,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig\\CombatAgentConfig-2599969.pt"
+                ]
+            },
+            {
+                "steps": 2699941,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig\\CombatAgentConfig-2699941.onnx",
+                "reward": 4.740066332742572,
+                "creation_time": 1778318994.2336814,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig\\CombatAgentConfig-2699941.pt"
+                ]
+            },
+            {
+                "steps": 2799971,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig\\CombatAgentConfig-2799971.onnx",
+                "reward": 2.9714076795304813,
+                "creation_time": 1778319130.1727953,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig\\CombatAgentConfig-2799971.pt"
+                ]
+            },
+            {
+                "steps": 2899994,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig\\CombatAgentConfig-2899994.onnx",
+                "reward": 7.174896265634081,
+                "creation_time": 1778319265.9429755,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig\\CombatAgentConfig-2899994.pt"
+                ]
+            },
+            {
+                "steps": 2999972,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig\\CombatAgentConfig-2999972.onnx",
+                "reward": 5.490975140593946,
+                "creation_time": 1778319401.6497393,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig\\CombatAgentConfig-2999972.pt"
+                ]
+            },
+            {
+                "steps": 3000036,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig\\CombatAgentConfig-3000036.onnx",
+                "reward": 5.490975140593946,
+                "creation_time": 1778319401.7023878,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig\\CombatAgentConfig-3000036.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 3000036,
+            "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig.onnx",
+            "reward": 5.490975140593946,
+            "creation_time": 1778319401.7023878,
+            "auxillary_file_paths": [
+                "C:\\Riot Games\\The-Knight\\Assets\\results\\run50_curr_icm\\CombatAgentConfig\\CombatAgentConfig-3000036.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.2.2+cpu"
+    }
+}
