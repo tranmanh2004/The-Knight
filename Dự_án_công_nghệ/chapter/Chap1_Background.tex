@@ -71,6 +71,28 @@ Các phương pháp Actor-Critic kết hợp hai thành phần:
 
 Actor chịu trách nhiệm quyết định tác nhân nên làm gì, trong khi Critic đánh giá hành động đó tốt hơn hay kém hơn kỳ vọng. Thiết kế này giúp giảm phương sai so với policy gradient thuần túy và phù hợp với các bài toán điều khiển phức tạp. Trong Unity ML-Agents, PPO được triển khai theo hướng Actor-Critic, do đó phù hợp với hệ thống CombatAgent.
 
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  box/.style={draw, rounded corners=3pt, minimum width=2.5cm, minimum height=0.8cm, align=center, font=\small},
+  >=stealth
+]
+\node[box, fill=gray!15] (s)  at (0,0)     {Trạng thái $s_t$};
+\node[box, fill=blue!12] (sh) at (4.0,0)   {Lớp nền\\chia sẻ};
+\node[box, fill=orange!20] (ac) at (8.0, 1.1)  {Actor\\$\pi_\theta(a|s)$};
+\node[box, fill=green!15]  (cr) at (8.0,-1.1)  {Critic\\$V_\phi(s)$};
+\node[box, fill=orange!30] (a)  at (12.0, 1.1) {Hành động $a_t$};
+\node[box, fill=green!25]  (v)  at (12.0,-1.1) {Giá trị $V(s_t)$};
+\draw[->] (s) -- (sh);
+\draw[->] (sh.north east) -- (ac.west);
+\draw[->] (sh.south east) -- (cr.west);
+\draw[->] (ac) -- (a);
+\draw[->] (cr) -- (v);
+\end{tikzpicture}
+\caption{Kiến trúc Actor-Critic: Actor và Critic chia sẻ các lớp nền chung, sau đó phân nhánh -- Actor sinh phân phối hành động $\pi_\theta(a|s)$, Critic ước lượng giá trị $V_\phi(s)$ làm baseline cho GAE.}
+\label{fig:actor_critic}
+\end{figure}
+
 \section{Proximal Policy Optimization}
 \subsection{Lý do lựa chọn PPO}
 
@@ -229,6 +251,41 @@ Quy trình ICM có thể tóm tắt như sau:
     \item Lấy sai số dự đoán forward làm phần thưởng khám phá.
 \end{enumerate}
 
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  box/.style={draw, rounded corners=3pt, minimum width=2.75cm, minimum height=0.8cm, align=center, font=\scriptsize},
+  >=stealth
+]
+\node[font=\small] (st)  at (0, 1.7)  {$s_t$};
+\node[font=\small] (at)  at (0,-0.2)  {$a_t$};
+\node[font=\small] (st1) at (0,-2.1)  {$s_{t+1}$};
+
+\node[box, fill=gray!12] (enc1) at (2.5, 1.7)  {Encoder $\phi$};
+\node[box, fill=gray!12] (enc2) at (2.5,-2.1)  {Encoder $\phi$};
+\node[font=\tiny, gray] at (2.5, 0.75) {shared weights};
+
+\node[box, fill=orange!14, minimum width=3.15cm] (inv) at (6.4, 2.25)
+  {Inverse model\\$\hat{a}_t=g(\phi_t,\phi_{t+1})$};
+\node[box, fill=blue!12, minimum width=3.15cm] (fwd) at (6.4,-0.2)
+  {Forward model\\$\hat{\phi}_{t+1}=f(\phi_t,a_t)$};
+\node[box, fill=green!14, minimum width=3.75cm] (rew) at (10.6,-0.2)
+  {Intrinsic reward\\$r_t^{ICM}=\frac{1}{2}\|\hat{\phi}_{t+1}-\phi_{t+1}\|^2$};
+
+\draw[->] (st) -- (enc1);
+\draw[->] (st1) -- (enc2);
+
+\draw[->] (enc1.east) -- node[above, font=\scriptsize]{$\phi_t$} (inv.west);
+\draw[->] (enc1.east) -- ++(0.9,0) |- node[pos=0.25, right, font=\scriptsize]{$\phi_t$} (fwd.west);
+\draw[->] (enc2.east) -- ++(0.7,0) |- node[pos=0.25, right, font=\scriptsize]{$\phi_{t+1}$} (inv.west);
+\draw[->] (at.east) -- (fwd.west);
+\draw[->] (fwd.east) -- node[above, font=\scriptsize]{$\hat{\phi}_{t+1}$} (rew.west);
+\draw[->, dashed] (enc2.east) -- ++(3.6,0) -| node[pos=0.25, below, font=\scriptsize]{$\phi_{t+1}$} (rew.south);
+\end{tikzpicture}
+\caption{Kiến trúc ICM: hai Encoder $\phi$ chia sẻ trọng số để mã hóa $s_t$ và $s_{t+1}$ thành đặc trưng. Inverse model dự đoán hành động $\hat{a}_t$ từ hai đặc trưng; Forward model nhận $\phi(s_t)$ và $a_t$ để dự đoán $\hat{\phi}_{t+1}$; sai số tạo phần thưởng nội tại $r_t^{ICM}$.}
+\label{fig:icm_arch}
+\end{figure}
+
 Trong bài toán của đề tài, ICM có ý nghĩa vì nó khuyến khích CombatAgent tạo ra các chuyển tiếp trạng thái mới, ví dụ tiếp cận vị trí chiến đấu khác, tương tác với kẻ địch hoặc né các cấu hình đạn khác nhau. Tuy nhiên, do action space của CombatAgent là rời rạc nhiều nhánh $(3,3,3,9)$, inverse model cũng khó hơn: nó phải học quan hệ giữa chuyển trạng thái và tổ hợp hành động di chuyển--chiến đấu--ngắm.
 
 \textbf{Random Network Distillation (RND).}
@@ -290,23 +347,118 @@ Hai kỹ thuật này được đưa vào các run ablation để kiểm tra xem
 
 \subsection{Bộ nhớ LSTM}
 
-Long Short-Term Memory (LSTM) là kiến trúc mạng hồi tiếp có khả năng giữ thông tin qua nhiều bước thời gian \cite{Hochreiter1997}. Trong môi trường game hành động, bộ nhớ có thể hữu ích khi quyết định hiện tại phụ thuộc vào lịch sử gần đây, ví dụ hướng di chuyển của đạn, thời điểm hồi chiêu hoặc trạng thái kẻ địch vừa rời khỏi vùng quan sát.
+Long Short-Term Memory (LSTM) là kiến trúc mạng hồi tiếp có khả năng giữ thông tin qua nhiều bước thời gian \cite{Hochreiter1997}. Khác với mạng nơ-ron thông thường xử lý từng quan sát độc lập, LSTM duy trì một trạng thái ẩn $h_t$ và một trạng thái cell $c_t$ qua các bước thời gian, cho phép tích lũy và xóa thông tin có chọn lọc.
 
-Đề tài triển khai các cấu hình PPO kết hợp LSTM để kiểm tra giả thuyết rằng thông tin lịch sử giúp cải thiện chính sách. Các kết quả định lượng ở Chương~4 cho thấy LSTM là một hướng đáng phân tích, nhưng không tạo ra cải thiện đột phá trong các run đã thực hiện.
+\textbf{Cơ chế cổng của LSTM.} Tại mỗi bước $t$, LSTM nhận đầu vào hiện tại $x_t$ và trạng thái ẩn trước đó $h_{t-1}$, rồi tính toán qua bốn phép biến đổi song song:
+
+\begin{align}
+    f_t &= \sigma\!\left(W_f [h_{t-1},\, x_t] + b_f\right), \label{eq:lstm_forget} \\
+    i_t &= \sigma\!\left(W_i [h_{t-1},\, x_t] + b_i\right), \label{eq:lstm_input} \\
+    \tilde{c}_t &= \tanh\!\left(W_c [h_{t-1},\, x_t] + b_c\right), \label{eq:lstm_candidate} \\
+    o_t &= \sigma\!\left(W_o [h_{t-1},\, x_t] + b_o\right). \label{eq:lstm_output}
+\end{align}
+
+Trong đó $\sigma$ là hàm sigmoid, $[h_{t-1}, x_t]$ là phép ghép nối hai vectơ, và $W_f, W_i, W_c, W_o$ là các ma trận trọng số được học. Bốn đại lượng này lần lượt đóng vai trò: $f_t$ (forget gate) quyết định bao nhiêu thông tin cell cũ được giữ lại; $i_t$ (input gate) quyết định bao nhiêu thông tin mới được ghi vào; $\tilde{c}_t$ là giá trị cell ứng viên; $o_t$ (output gate) quyết định phần nào của cell trở thành đầu ra.
+
+Trạng thái cell và trạng thái ẩn được cập nhật như sau:
+
+\begin{align}
+    c_t &= f_t \odot c_{t-1} + i_t \odot \tilde{c}_t, \label{eq:lstm_cell} \\
+    h_t &= o_t \odot \tanh(c_t). \label{eq:lstm_hidden}
+\end{align}
+
+Phép nhân theo phần tử $\odot$ cho phép forget gate và input gate kiểm soát độc lập từng chiều của cell state, tạo ra khả năng giữ thông tin dài hạn mà gradient descent truyền thống thường khó đạt được do vấn đề vanishing gradient.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  gate/.style={draw, rounded corners=3pt, minimum width=3.0cm, minimum height=0.8cm, align=center, font=\scriptsize},
+  >=stealth
+]
+\node[font=\small] (inp) at (0,0) {$[h_{t-1},\,x_t]$};
+
+\node[gate, fill=red!15]  (f)  at (5.0,  2.1) {Forget gate\\$f_t=\sigma(W_f[\cdot]+b_f)$};
+\node[gate, fill=blue!15] (ig) at (5.0,  0.7) {Input gate\\$i_t=\sigma(W_i[\cdot]+b_i)$};
+\node[gate, fill=cyan!12] (ct) at (5.0, -0.7) {Candidate\\$\tilde{c}_t=\tanh(W_c[\cdot]+b_c)$};
+\node[gate, fill=green!15](og) at (5.0, -2.1) {Output gate\\$o_t=\sigma(W_o[\cdot]+b_o)$};
+
+\draw (1.3, 2.5) -- (1.3,-2.5);
+\draw[->] (inp.east) -- (1.3,0);
+\draw[->] (1.3, 2.1) -- (f.west);
+\draw[->] (1.3, 0.7) -- (ig.west);
+\draw[->] (1.3,-0.7) -- (ct.west);
+\draw[->] (1.3,-2.1) -- (og.west);
+
+\node[gate, fill=gray!12] (cell) at (10.5, 1.4) {$c_t=f_t\odot c_{t-1}+i_t\odot\tilde{c}_t$};
+\node[gate, fill=gray!12] (hid)  at (10.5,-1.4) {$h_t=o_t\odot\tanh(c_t)$};
+
+\draw[->] (f.east)  -- ++(0.4,0) |- (cell.west);
+\draw[->] (ig.east) -- ++(0.4,0) |- (cell.west);
+\draw[->] (ct.east) -- ++(0.4,0) |- (cell.west);
+\draw[->] (og.east) -- ++(0.4,0) |- (hid.west);
+\draw[->] (cell) -- (hid) node[midway, right, font=\scriptsize]{$c_t$};
+
+\draw[->] (10.5,2.6) node[above, font=\scriptsize]{$c_{t-1}$} -- (cell.north);
+\end{tikzpicture}
+\caption{Kiến trúc ô LSTM: đầu vào $[h_{t-1},x_t]$ được đưa qua bốn phép biến đổi song song (forget gate, input gate, candidate, output gate) để cập nhật cell state $c_t$ và trạng thái ẩn $h_t$.}
+\label{fig:lstm_cell}
+\end{figure}
+
+\textbf{Ứng dụng trong đề tài.} Trong môi trường game hành động, bộ nhớ có thể hữu ích khi quyết định hiện tại phụ thuộc vào lịch sử gần đây: hướng di chuyển của đạn (để dự đoán va chạm), thời điểm hồi chiêu (để chọn thời điểm tấn công), hoặc trạng thái kẻ địch vừa rời khỏi vùng quan sát. Với cấu hình của đề tài, LSTM được tích hợp vào policy network với kích thước bộ nhớ 256 và chuỗi quan sát dài 64 bước. Đây là cấu hình chuẩn trong Unity ML-Agents. Các kết quả định lượng ở Chương~4 cho thấy LSTM có xu hướng học chậm hơn MLP thuần nhưng cải thiện dần về cuối; tuy nhiên không tạo ra bước ngoặt độc lập trong các run đã thực hiện.
 
 \subsection{PCGNN và sinh bản đồ bằng neuroevolution}
 
 Procedural Content Generation (PCG) là hướng tạo nội dung game bằng thuật toán thay vì thiết kế hoàn toàn thủ công. Trong phạm vi đề tài, nội dung cần sinh là bản đồ dạng lưới gồm tường, sàn, vị trí sinh người chơi và vị trí sinh kẻ địch. Cách biểu diễn này phù hợp với game Roguelike vì mỗi episode có thể dùng một cấu hình phòng khác nhau nhưng vẫn giữ được luật chơi và cấu trúc quan sát ổn định.
 
-PCGNN (Procedural Content Generation using NEAT and novelty search) là một phương pháp sinh màn chơi bằng cách tiến hóa mạng nơ-ron thay vì tối ưu trực tiếp từng bản đồ riêng lẻ \cite{Beukman2022}. Ý tưởng chính là dùng NEAT để tiến hóa một mạng sinh cấp độ: tại mỗi ô của bản đồ, mạng nhận thông tin ngữ cảnh cục bộ xung quanh ô đó cùng một số đầu vào ngẫu nhiên, sau đó dự đoán loại tile cần đặt. Sau giai đoạn tiến hóa offline, mạng tốt nhất có thể sinh nhiều bản đồ mới rất nhanh và có thể áp dụng cho các kích thước khác nhau mà không cần huấn luyện lại từ đầu.
+\textbf{Neuroevolution với NEAT.} NEAT (NeuroEvolution of Augmenting Topologies) là thuật toán tiến hóa mạng nơ-ron đồng thời ở cả trọng số lẫn cấu trúc liên kết. Một quần thể genome $\{g_1, g_2, \ldots, g_N\}$ được duy trì qua nhiều thế hệ; mỗi genome mã hóa một mạng nơ-ron. Ở mỗi thế hệ, genome được đánh giá bằng hàm thích nghi $F(g)$, sau đó tuyển chọn, lai ghép và đột biến để tạo thế hệ tiếp theo. NEAT có hai điểm đặc trưng so với neuroevolution truyền thống: (1) sử dụng \textit{speciation} để bảo vệ các cấu trúc mới xuất hiện trong quần thể khỏi bị loại bỏ sớm, và (2) theo dõi \textit{innovation number} cho từng liên kết để phép lai ghép giữa các cấu trúc khác nhau vẫn có nghĩa.
+
+\textbf{Cơ chế sinh tile của PCGNN.} PCGNN (Procedural Content Generation using NEAT and novelty search) áp dụng NEAT để tiến hóa một mạng sinh bản đồ~\cite{Beukman2022}. Bản đồ kích thước $W \times H$ được sinh tuần tự: với mỗi ô $(i,j)$, mạng nơ-ron $f_\theta$ nhận đầu vào gồm ngữ cảnh cục bộ $C(i,j)$ và vectơ ngẫu nhiên $\mathbf{z}$:
+
+\begin{equation}
+    t_{i,j} = \arg\max\, f_\theta\!\left(C(i,j),\, \mathbf{z}\right),
+    \label{eq:pcgnn_tile}
+\end{equation}
+
+trong đó $C(i,j)$ là trạng thái của các ô lân cận $3\times 3$ xung quanh $(i,j)$ và $\mathbf{z} \in \mathbb{R}^k$ là nhiễu ngẫu nhiên được lấy mẫu độc lập mỗi lần sinh bản đồ. Đầu ra $t_{i,j} \in \{\text{wall},\, \text{floor}\}$ quyết định loại tile tại ô đó. Nhờ vectơ $\mathbf{z}$, cùng một genome $\theta$ có thể sinh ra nhiều bản đồ khác nhau mà không cần thay đổi trọng số mạng.
+
+\textbf{Novelty search thay cho fitness trực tiếp.} Thay vì tối ưu trực tiếp chất lượng của từng bản đồ, PCGNN dùng \textit{novelty search}: hàm thích nghi của genome được đo bằng mức độ khác biệt của tập bản đồ mà genome đó sinh ra so với các genome khác trong quần thể. Điều này khuyến khích quần thể khám phá nhiều phong cách bản đồ thay vì hội tụ về một mẫu tối ưu duy nhất, tạo ra bộ sinh bản đồ đa dạng hơn cho curriculum.
+
+\textbf{Các chỉ số đánh giá bản đồ.} Sau khi sinh, bản đồ được đánh giá bằng bốn chỉ số định lượng được báo cáo trong paper gốc~\cite{Beukman2022}:
+
+\begin{itemize}
+    \item \textbf{Leniency} $L$: tỷ lệ ô sàn trong bản đồ, đo mức độ ``dễ thở'' của không gian. $L$ cao tương ứng bản đồ thoáng, ít tường.
+    \item \textbf{A* Difficulty} $D$: số node A* phải mở rộng thêm ngoài đường đi tối ưu, chuẩn hóa về $[0,1]$. $D$ cao nghĩa là đường đi có nhiều nhánh và cấu trúc phức tạp.
+    \item \textbf{Compression Distance} $\Delta_c$: khoảng cách nén giữa hai bản đồ $m_1$ và $m_2$, đo bằng:
+        \begin{equation}
+            \Delta_c(m_1, m_2) = \frac{C(m_1 \| m_2) - \min(C(m_1),\, C(m_2))}{\max(C(m_1),\, C(m_2))},
+            \label{eq:ncd}
+        \end{equation}
+        trong đó $C(\cdot)$ là kích thước sau nén và $\|$ là phép nối chuỗi. $\Delta_c$ gần 1 nghĩa là hai bản đồ khác nhau về cấu trúc.
+    \item \textbf{A* Diversity} $\sigma_D$: độ lệch chuẩn của A* Difficulty trên tập bản đồ sinh ra bởi cùng một genome. Chỉ số này đo khả năng tạo ra bản đồ ở nhiều mức độ khó khác nhau.
+\end{itemize}
+
+Trong đề tài, ngoài bốn chỉ số trên, ba chỉ số bổ sung được tính để phục vụ tuyển chọn bản đồ cho curriculum: \texttt{dead\_end\_ratio} (tỷ lệ ngõ cụt), \texttt{reachable\_ratio} (tỷ lệ vùng sàn liên thông) và \texttt{difficulty\_score} (điểm tổng hợp để xếp hạng tương đối). Chi tiết công thức và quy trình tính được trình bày ở Chương~2.
+
+\textbf{Ưu điểm so với PCG truyền thống.} So với các phương pháp PCG dựa trên quy tắc (grammar-based) hoặc tìm kiếm trực tiếp (search-based), PCGNN có hai lợi thế chính: (1) sau giai đoạn tiến hóa offline, việc sinh bản đồ mới rất nhanh vì chỉ cần một forward pass của mạng; (2) genome có thể áp dụng cho các kích thước bản đồ khác nhau mà không cần tiến hóa lại. Hạn chế là bước tiến hóa ban đầu tốn tính toán và kết quả phụ thuộc vào genome được chọn.
 
 Đối với đề tài này, PCGNN không được dùng trực tiếp trong vòng lặp huấn luyện Unity theo thời gian thực. Thay vào đó, PCGNN được dùng như một bước tiền xử lý offline: sinh một số lượng lớn bản đồ, chuyển sang định dạng text map của trò chơi, kiểm tra khả năng đi tới bằng BFS và tính các chỉ số hình học để phân loại độ khó. Cách làm này giảm rủi ro tích hợp giữa Python và Unity, đồng thời vẫn giữ được lợi ích chính của PCGNN là tạo tập bản đồ đa dạng hơn thiết kế thủ công.
 
 \subsection{Curriculum learning}
 
-Curriculum learning là phương pháp tổ chức quá trình học từ dễ đến khó \cite{Bengio2009}. Thay vì huấn luyện ngay trên phân phối khó nhất, tác nhân được bắt đầu từ các bản đồ dễ, sau đó chuyển dần sang Medium và Hard khi đạt ngưỡng hiệu quả nhất định.
+Curriculum learning là phương pháp tổ chức quá trình học từ dễ đến khó \cite{Bengio2009}. Thay vì huấn luyện ngay trên phân phối khó nhất, tác nhân được bắt đầu từ các bản đồ dễ, sau đó chuyển dần sang Medium và Hard khi đạt ngưỡng hiệu quả nhất định. Cách tiếp cận này dựa trên quan sát rằng con người và động vật học hiệu quả hơn khi nhiệm vụ được sắp xếp từ đơn giản đến phức tạp, cho phép tích lũy kỹ năng nền trước khi đối mặt với thách thức cao hơn.
 
-Trong đề tài, curriculum learning là kỹ thuật gắn trực tiếp với hệ thống PCGNN--TilemapGenerator: PCGNN tạo tập bản đồ ứng viên, bộ đánh giá chia bản đồ thành các nhóm Easy, Medium và Hard, còn TilemapGenerator chọn map tương ứng với lesson hiện tại. Cách tiếp cận này phù hợp với môi trường procedural combat vì nó giảm độ khó khám phá ở giai đoạn đầu nhưng vẫn giữ mục tiêu cuối là học chính sách hoạt động được trên phân phối Hard. Đây cũng là yếu tố được đánh giá là có ảnh hưởng lớn nhất trong Chương~4.
+\textbf{Cơ chế chuyển bài học.} Trong Unity ML-Agents, điều kiện chuyển lesson được dựa trên phần thưởng trung bình trượt (exponential moving average). Tại mỗi bước $t$, phần thưởng được làm mượt bằng:
+
+\begin{equation}
+    \bar{r}_t = (1 - \alpha)\,\bar{r}_{t-1} + \alpha\, r_t,
+    \label{eq:curriculum_ema}
+\end{equation}
+
+trong đó $\alpha \in (0,1)$ là hệ số làm mượt (thường đặt nhỏ để tránh nhảy lesson do nhiễu ngắn hạn). Khi $\bar{r}_t \geq \theta_\ell$ với $\theta_\ell$ là ngưỡng của lesson hiện tại $\ell$, trainer tự động tăng tham số môi trường \texttt{difficulty} lên, kích hoạt TilemapGenerator chuyển sang nhóm bản đồ khó hơn.
+
+\textbf{Tại sao curriculum hiệu quả trong môi trường thưa thưởng?} Khi agent bắt đầu từ phân phối Hard với phần thưởng thưa, xác suất nhận được episode thành công (dọn phòng, tiêu diệt địch) rất thấp trong giai đoạn đầu. Gradient PPO lúc này gần như nhiễu ngẫu nhiên, khiến chính sách khó hội tụ. Curriculum giải quyết vấn đề này bằng cách tạo ra một ``giàn giáo gradient'': ở Easy, agent gặp thành công đủ thường xuyên để gradient có tín hiệu, từ đó học được chuỗi hành vi cơ bản trước khi vào môi trường khó hơn.
+
+Trong đề tài, curriculum learning gắn trực tiếp với hệ thống PCGNN--TilemapGenerator: PCGNN tạo tập bản đồ ứng viên, bộ đánh giá chia bản đồ thành các nhóm Easy, Medium và Hard theo percentile, còn TilemapGenerator chọn map tương ứng với lesson hiện tại thông qua tham số \texttt{difficulty}. Đây cũng là yếu tố được đánh giá là có ảnh hưởng lớn nhất trong Chương~4, với mức cải thiện +85\% phần thưởng so với PPO baseline.
 
 \section{Tóm tắt chương}
 

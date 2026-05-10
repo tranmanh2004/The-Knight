@@ -42,6 +42,32 @@ Pipeline bản đồ được tách thành hai giai đoạn. Giai đoạn offlin
 
 Ở giai đoạn PCGNN, đề tài sử dụng genome đã huấn luyện \texttt{inctyseed0.pkl} và logic sinh từ notebook \texttt{improve-v2.ipynb}. Mỗi ô bản đồ được sinh theo thứ tự quét từ trái sang phải, từ trên xuống dưới; mạng nhận ngữ cảnh cục bộ $3 \times 3$ xung quanh ô hiện tại cùng bốn đầu vào ngẫu nhiên, sau đó quyết định ô đó là tường hay sàn. Kết quả sau đó được adapter chuyển sang text map của game.
 
+\subsection{Các điều chỉnh so với PCGNN gốc}
+
+Paper gốc của Beukman và cộng sự dùng PCGNN như một bộ sinh level độc lập và đánh giá chất lượng bằng các chỉ số như leniency, A* difficulty, compression distance và A* diversity~\cite{Beukman2022}. Trong khóa luận này, PCGNN được giữ lại ở vai trò bộ sinh ma trận nền, nhưng được mở rộng thành một pipeline phục vụ trực tiếp cho huấn luyện tác nhân trong Unity. Các điểm điều chỉnh chính được tóm tắt trong Bảng~\ref{tab:pcgnn_improvements}.
+
+\begin{table}[H]
+    \centering
+    \small
+    \caption{Các điều chỉnh của khóa luận so với cách dùng PCGNN gốc}
+    \label{tab:pcgnn_improvements}
+    \begin{tabular}{p{4.0cm} p{5.0cm} p{5.0cm}}
+        \toprule
+        \textbf{Thành phần} & \textbf{PCGNN gốc} & \textbf{Điều chỉnh trong khóa luận} \\
+        \midrule
+        Vai trò của generator & Sinh level để đánh giá chất lượng và độ đa dạng của nội dung. & Sinh tập bản đồ ứng viên offline để đưa vào curriculum learning trong Unity. \\
+        Biểu diễn đầu ra & Ma trận tile của miền Maze/Mario trong thí nghiệm gốc. & Chuyển sang text map của game với ký hiệu \texttt{\#}, \texttt{.}, \texttt{P}, \texttt{E}. \\
+        Xử lý vị trí người chơi và kẻ địch & Phụ thuộc vào biểu diễn của miền gốc. & Adapter đặt \texttt{P}/\texttt{E} trên cùng thành phần liên thông lớn nhất và chọn hai vị trí cách xa nhau. \\
+        Kiểm tra hợp lệ & Đánh giá bằng các metric offline. & BFS xác nhận đường đi từ \texttt{P} tới \texttt{E}; TilemapGenerator kiểm tra lại vùng đi được khi nạp map. \\
+        Chỉ số bổ sung & Paper báo cáo leniency, A* difficulty, compression distance và A* diversity. & Bổ sung \texttt{reachable\_ratio}, \texttt{dead\_end\_ratio}, \texttt{difficulty\_score} để phục vụ chọn map cho curriculum. \\
+        Tổ chức dữ liệu & Không gắn với lesson của môi trường Unity. & Chia map thành Easy/Medium/Hard theo percentile để điều khiển độ khó huấn luyện. \\
+        Tích hợp runtime & Không hướng tới gọi trực tiếp trong Unity. & Tách offline generator và online TilemapGenerator để giảm latency, tăng khả năng tái lập và cho phép kiểm tra map trước. \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Do đó, phần ``cải tiến'' trong khóa luận không nằm ở việc thay đổi hoàn toàn thuật toán NEAT của PCGNN, mà nằm ở lớp hậu xử lý, kiểm định, đo reachability và tích hợp bản đồ vào curriculum. Cách làm này phù hợp với mục tiêu của đề tài: tạo một tập bản đồ procedural đủ đa dạng nhưng vẫn kiểm soát được tính hợp lệ trước khi dùng để huấn luyện CombatAgent.
+
 \subsection{Adapter và kiểm tra hợp lệ}
 
 Adapter thực hiện ba việc. Thứ nhất, ma trận tile của PCGNN được chuyển sang ký tự \texttt{\#} và \texttt{.}. Thứ hai, hệ thống tìm thành phần liên thông lớn nhất của vùng sàn và đặt \texttt{P}/\texttt{E} ở hai ô cách xa nhau trong thành phần đó. Thứ ba, BFS được chạy lại để xác nhận đường đi từ \texttt{P} tới \texttt{E} tồn tại. Nhờ vậy, các map đưa vào Unity tránh được lỗi phổ biến của PCG như player bị nhốt, enemy nằm ở vùng không thể tiếp cận hoặc bản đồ không có đủ ô sàn hợp lệ.
@@ -56,6 +82,8 @@ Mỗi bản đồ hợp lệ được ghi ra file \texttt{.txt}, đồng thời 
     \item \texttt{astar\_difficulty}: mức độ A* phải mở rộng thêm node ngoài đường đi tối ưu.
     \item \texttt{difficulty\_score}: điểm tổng hợp dùng để xếp hạng tương đối.
 \end{itemize}
+
+Các đại lượng trên được dùng để đánh giá \emph{chất lượng hình học của ma trận bản đồ}, không phải hiệu năng cuối cùng của tác nhân. \texttt{wall\_ratio} kiểm soát mật độ vật cản; nếu quá thấp thì phòng gần như trống, nếu quá cao thì dễ tạo vùng bị chia cắt. \texttt{shortest\_path\_length} đo khoảng cách di chuyển tối thiểu giữa người chơi và kẻ địch, nên liên quan trực tiếp đến thời gian tiếp cận mục tiêu. \texttt{dead\_end\_ratio} phản ánh mức độ xuất hiện các nhánh cụt có thể khiến agent bị kẹt hoặc phải quay đầu. \texttt{reachable\_ratio} là chỉ số quan trọng nhất với bài toán combat, vì nó đo phần vùng sàn thực sự có thể khai thác để di chuyển và né tránh. \texttt{astar\_difficulty} mô tả độ phức tạp của cấu trúc đường đi theo thuật toán tìm đường, nhưng không đồng nghĩa hoàn toàn với độ khó chiến đấu. Cuối cùng, \texttt{difficulty\_score} là điểm xếp hạng tương đối, kết hợp các tín hiệu hình học để chia map thành Easy, Medium và Hard; điểm này chỉ có ý nghĩa so sánh trong cùng một batch sinh bản đồ.
 
 \subsection{Chia tier cho curriculum}
 
@@ -91,6 +119,78 @@ Với cấu hình 14x14 dùng cho thử nghiệm tích hợp, pipeline đã sinh
     \end{tabular}
 \end{table}
 
+\subsection{Đối chiếu chỉ số PCGNN với paper gốc}
+
+Để kiểm tra chất lượng bộ sinh bản đồ trước khi đưa sang Unity, đề tài chạy lại pipeline PCGNN trên năm seed độc lập (seed 0--4, mỗi seed sinh 100 bản đồ) và tính các chỉ số thường dùng trong paper gốc của Beukman và cộng sự~\cite{Beukman2022}. Bảng~\ref{tab:pcgnn_four_seed_metrics} trình bày kết quả theo từng seed. Trong đó, \textbf{seed 0} chính là genome production \texttt{inctyseed0.pkl} được dùng để sinh bộ map huấn luyện chính cho Unity. Chỉ số \texttt{reachable\_ratio} được bổ sung trong khóa luận để đo tỷ lệ vùng đi được thuộc thành phần liên thông lớn nhất; chỉ số này không được báo cáo trực tiếp trong paper gốc, nhưng hữu ích khi tuyển chọn map cho môi trường game.
+
+\begin{table}[H]
+    \centering
+    \scriptsize
+    \setlength{\tabcolsep}{4pt}
+    \renewcommand{\arraystretch}{1.15}
+    \caption{Kết quả PCGNN trên năm seed độc lập (100 bản đồ mỗi seed)}
+    \label{tab:pcgnn_four_seed_metrics}
+    \begin{tabular}{c c c c c c c}
+        \toprule
+        \textbf{Seed} & \textbf{Solv.} & \textbf{Reach.} & \textbf{Leniency} & \textbf{A* Diff.} & \textbf{Comp. Dist.} & \textbf{A* Div.} \\
+        \midrule
+        0 (production) & 79.0\% & 0.9216 & 0.5802 & 0.3987 & 0.4945 & 0.2051 \\
+        1 & 92.0\% & 0.8720 & 0.6622 & 0.3138 & 0.4899 & 0.1240 \\
+        2 & 78.0\% & 0.9480 & 0.5876 & 0.3026 & 0.4837 & 0.1993 \\
+        3 & 74.0\% & 0.9740 & 0.6902 & 0.3582 & 0.4550 & 0.2180 \\
+        4 & 94.0\% & 0.8940 & 0.8722 & 0.3244 & 0.4063 & 0.1014 \\
+        \midrule
+        Trung bình $\pm$ độ lệch chuẩn & 83.4\% $\pm$ 8.0\% & 0.9220 $\pm$ 0.047 & 0.6785 $\pm$ 0.1057 & 0.3396 $\pm$ 0.0349 & 0.4659 $\pm$ 0.0328 & 0.1696 $\pm$ 0.0474 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Bảng~\ref{tab:pcgnn_paper_comparison} so sánh các chỉ số trùng với paper gốc trên miền Maze. Kết quả cho thấy độ dễ của bản đồ và A* diversity nằm gần vùng báo cáo của PCGNN gốc, trong khi A* difficulty cao hơn đáng kể. Điều này phù hợp với mục tiêu của bản cải tiến trong khóa luận: ưu tiên tạo bản đồ có cấu trúc liên thông và đủ đa dạng để phục vụ curriculum, sau đó dùng adapter/BFS để đảm bảo bản đồ đưa vào Unity có đường đi hợp lệ.
+
+\begin{table}[H]
+    \centering
+    \small
+    \caption{So sánh kết quả PCGNN với paper gốc trên miền Maze (trung bình $\pm$ độ lệch chuẩn trên 5 seeds)}
+    \label{tab:pcgnn_paper_comparison}
+    \begin{tabular}{l c c p{5.8cm}}
+        \toprule
+        \textbf{Chỉ số} & \textbf{Kết quả khóa luận} & \textbf{PCGNN gốc} & \textbf{Nhận xét} \\
+        \midrule
+        Leniency & 0.6785 $\pm$ 0.1057 & 0.70 $\pm$ 0.08 & Gần với paper gốc. \\
+        A* Difficulty & 0.3396 $\pm$ 0.0349 & 0.06 $\pm$ 0.08 & Cao hơn paper, cho thấy đường đi và cấu trúc map phức tạp hơn. \\
+        Compression Distance & 0.4659 $\pm$ 0.0328 & 0.488 $\pm$ 0.002 & Thấp hơn nhẹ về trung bình và dao động lớn hơn. \\
+        A* Diversity & 0.1696 $\pm$ 0.0474 & 0.13 $\pm$ 0.17 & Nằm trong vùng kết quả của paper gốc. \\
+        Reachability & 0.9220 $\pm$ 0.047 & -- & Chỉ số bổ sung của khóa luận sau bước hậu xử lý adapter/BFS; mục tiêu tuyển chọn map cho Unity là khoảng 0.90 $\pm$ 0.10. \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Một điểm cần làm rõ là quy ước spawn và chỉ số solvability của paper gốc \textbf{không phải mục tiêu cần đạt} cho khóa luận này, do hai bài toán có tính chất khác nhau. Paper gốc đặt PCGNN trong miền Maze: bài toán là tìm đường từ một điểm xuất phát \emph{cố định} ở góc trên trái tới một điểm đích \emph{cố định} ở góc dưới phải, nên solvability 100\% là điều kiện đủ và là chỉ số đánh giá tự nhiên. Trong các kết quả tái lập baseline, nhiều bản đồ thỏa điều kiện này bằng cấu trúc đường đi kiểu chữ L hoặc corridor bám theo biên (Hình~\ref{fig:pcgnn_l_pattern_reference}): có đường nối hai góc nhưng phần còn lại của bản đồ có thể là vùng tường đặc hoặc các ngõ cụt rời rạc.
+
+Bài toán của khóa luận là một game hành động combat trong phòng sinh theo thủ tục, không phải maze pathfinding. Tác nhân không di chuyển từ một góc cố định đến một góc cố định, mà phải \emph{di chuyển linh hoạt, né đạn, tiếp cận và tiêu diệt nhiều kẻ địch} trên toàn bộ vùng sàn. Do đó, ba hệ quả sau làm cho quy ước của paper gốc không còn phù hợp:
+
+\begin{itemize}
+    \item \textbf{Vị trí spawn không cố định ở góc.} Người chơi và kẻ địch có thể được đặt ở nhiều ô sàn khác nhau theo lesson (fixed spawn ở các ô sàn trung tâm hoặc random spawn trong toàn vùng đi được). Vì vậy, kiểm tra đường đi giữa hai góc cụ thể của bản đồ không phản ánh đúng yêu cầu thực tế.
+    \item \textbf{Solvability 100\% không phải mục tiêu.} Đề tài không yêu cầu mọi bản đồ đầu ra của PCGNN đều hợp lệ -- bản đồ không đạt sẽ bị loại ở bước hậu xử lý. Cái cần kiểm tra là \emph{vùng đi được liên thông đủ rộng} để chứa nhiều cặp \texttt{P}/\texttt{E} hợp lệ và đủ không gian chiến đấu.
+    \item \textbf{Cần chỉ số đo chất lượng vùng sàn, không phải đường đi.} Vì vậy khóa luận thay solvability bằng \texttt{reachable\_ratio} (tỷ lệ vùng sàn thuộc thành phần liên thông lớn nhất) -- đây là chỉ số phù hợp hơn với combat game vì nó đo khả năng \emph{di chuyển tự do} chứ không chỉ đo \emph{có đường đi không}.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{pcgnn_l_pattern_reference.png}
+    \caption{Ví dụ các bản đồ PCGNN kiểu Maze có đường đi hợp lệ từ góc trên trái tới góc dưới phải nhưng dễ hình thành L-pattern/corner-path}
+    \label{fig:pcgnn_l_pattern_reference}
+\end{figure}
+
+Vì vậy, mục tiêu của khóa luận không phải chỉ là sinh ra một ma trận có đường đi hợp lệ theo định nghĩa Maze, mà là tạo các bản đồ có thể được đưa vào Unity để agent thực sự chơi được: có vùng sàn đủ liên thông, vị trí \texttt{P}/\texttt{E} hợp lệ, có không gian di chuyển và có độ khó phù hợp cho curriculum. Hình~\ref{fig:pcgnn_inctyseed0_maps} minh họa một nhóm bản đồ được sinh từ genome \texttt{inctyseed0.pkl} sau bước chuyển sang định dạng của game. Các map này vẫn giữ ký hiệu \texttt{P} và \texttt{E}, nhưng được đánh giá thêm bằng BFS, reachability và difficulty score trước khi đưa vào các folder Easy/Medium/Hard.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{pcgnn_inctyseed0_maps.png}
+    \caption{Một số bản đồ 14x14 sinh từ \texttt{inctyseed0.pkl} và được chuyển sang định dạng \texttt{\#}, \texttt{.}, \texttt{P}, \texttt{E} của game}
+    \label{fig:pcgnn_inctyseed0_maps}
+\end{figure}
+
 \subsection{Nạp bản đồ vào Unity}
 
 Tập tin TilemapGenerator.cs chịu trách nhiệm chuyển bản đồ văn bản thành tilemap, chọn bản đồ theo bài học, chọn vị trí sinh và sinh kẻ địch. Các bản đồ sau khi tuyển chọn được đặt trong ba thư mục Easy, Medium và Hard. Các bài học trong curriculum không sinh bản đồ mới từ đầu, mà lấy mẫu từ nhóm bản đồ tương ứng để vừa có đa dạng, vừa giữ khả năng tái lập.
@@ -104,10 +204,18 @@ int diff = Mathf.RoundToInt(
 
 switch (Mathf.Clamp(diff, 0, 3))
 {
-    case 0: pool = easyMaps;   // Easy + Fixed spawn
-    case 1: pool = mediumMaps; // Medium + Fixed spawn
-    case 2: pool = hardMaps;   // Hard + Fixed spawn
-    default: pool = hardMaps;  // Hard + Random spawn
+    case 0:
+        pool = easyMaps;   // Easy + Fixed spawn
+        break;
+    case 1:
+        pool = mediumMaps; // Medium + Fixed spawn
+        break;
+    case 2:
+        pool = hardMaps;   // Hard + Fixed spawn
+        break;
+    default:
+        pool = hardMaps;   // Hard + Random spawn
+        break;
 }
 \end{lstlisting}
 
@@ -167,7 +275,7 @@ Ngoài các scalar mặc định của ML-Agents như tổng phần thưởng, e
     \item Tỷ lệ dash hữu ích.
 \end{itemize}
 
-Các chỉ số này quan trọng vì reward tổng hợp không đủ để giải thích hành vi. Hai run có reward gần nhau có thể khác nhau ở tỷ lệ clear, damage taken hoặc mức stochastic của policy.
+Các chỉ số này quan trọng vì reward tổng hợp không đủ để giải thích hành vi. \textit{Cumulative reward} đo hiệu quả tổng hợp của chính sách theo đúng hàm thưởng đã thiết kế, nhưng có thể tăng nhờ nhiều nguyên nhân khác nhau. Vì vậy, \textit{clear rate} được dùng để đo trực tiếp tỷ lệ episode mà agent hoàn thành phòng; số kẻ địch bị tiêu diệt và sát thương gây ra phản ánh năng lực tấn công; sát thương nhận vào phản ánh mức độ né tránh và sống sót; tỷ lệ tấn công đúng hướng cho biết agent có học được quan hệ giữa vị trí địch và hướng ngắm hay không; tỷ lệ dash hữu ích cho biết agent có dùng dash như một hành động chiến thuật thay vì kích hoạt ngẫu nhiên hay không. Entropy của policy được đọc kèm các chỉ số này để đánh giá mức độ ổn định của chính sách: entropy cao nhưng reward và clear rate thấp thường cho thấy agent còn hành động quá ngẫu nhiên, trong khi entropy giảm cùng với reward/clear rate tăng là dấu hiệu chính sách đang hội tụ.
 
 \section{Cấu hình huấn luyện PPO}
 

@@ -47,6 +47,35 @@ Hệ thống sử dụng quan sát dạng vector thay vì ảnh pixel. Lựa ch�
     \end{tabular}
 \end{table}
 
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[font=\small]
+\def\h{0.75}
+% Widths xấp xỉ tỷ lệ với số chiều (scale ≈ 14/207 cm/dim)
+% Player(13)=0.88→1.1, Global(4)=0.27→0.5, Enemies(54)=3.65, Bullets(120)=8.1, Walls(16)=1.09→0.65 (tổng=14.0)
+\fill[blue!30]   (0,0)    rectangle (1.1,\h);
+\fill[yellow!50] (1.1,0)  rectangle (1.6,\h);
+\fill[red!25]    (1.6,0)  rectangle (5.25,\h);
+\fill[orange!25] (5.25,0) rectangle (13.35,\h);
+\fill[green!30]  (13.35,0) rectangle (14.0,\h);
+
+\draw[black!60] (0,0) rectangle (14.0,\h);
+\draw[black!30] (1.1,0)  -- (1.1,\h);
+\draw[black!30] (1.6,0)  -- (1.6,\h);
+\draw[black!30] (5.25,0) -- (5.25,\h);
+\draw[black!30] (13.35,0) -- (13.35,\h);
+
+% Labels alternating above / below để tránh chồng chữ
+\node[above, align=center, font=\scriptsize] at (0.55,\h)    {Người chơi\\(13 chiều)};
+\node[below, align=center, font=\scriptsize] at (1.35,0)     {Toàn cục\\(4)};
+\node[above, align=center, font=\scriptsize] at (3.42,\h)    {Kẻ địch gần nhất\\(54 chiều)};
+\node[below, align=center, font=\scriptsize] at (9.3,0)      {Đạn trong vùng nhìn (120 chiều)};
+\node[above, align=center, font=\scriptsize] at (13.67,\h)   {Tường\\(16)};
+\end{tikzpicture}
+\caption{Cấu trúc vector quan sát 207 chiều của CombatAgent, phân theo nhóm thông tin. Chiều rộng mỗi đoạn xấp xỉ tỷ lệ với số chiều; nhóm Đạn (120) chiếm hơn nửa vector, tiếp theo là Kẻ địch (54).}
+\label{fig:obs_breakdown}
+\end{figure}
+
 Thiết kế này cố ý tách rõ thông tin người chơi, kẻ địch, đạn và tường. Agent không cần suy luận vị trí đạn từ ảnh thô, nhưng vẫn phải học cách kết hợp nhiều nguồn nguy cơ: vừa tiếp cận kẻ địch để gây sát thương, vừa tránh đạn và không mắc vào tường. Vì số lượng kẻ địch và đạn trong scene có thể thay đổi, các block được giới hạn bởi MaxEnemies=3 và MaxBullets=10; nếu thiếu đối tượng thì hệ thống thêm giá trị 0 để vector luôn có kích thước cố định.
 
 \section{Không gian hành động}
@@ -72,6 +101,49 @@ CombatAgent sử dụng không gian hành động rời rạc nhiều nhánh g�
         \hline
     \end{tabular}
 \end{table}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  every node/.style={font=\small},
+  rootnode/.style={draw, rounded corners=4pt, fill=orange!25, minimum width=4.0cm, minimum height=0.85cm, align=center},
+  branchnode/.style={draw, rounded corners=3pt, minimum width=2.4cm, minimum height=0.85cm, align=center},
+  leafbox/.style={draw=gray!55, rounded corners=2pt, minimum width=2.4cm, minimum height=1.55cm, align=center, font=\scriptsize, fill=gray!8},
+  totalbox/.style={draw, rounded corners=3pt, fill=yellow!18, minimum width=8.5cm, minimum height=0.7cm, align=center, font=\small},
+  >=stealth
+]
+% Root
+\node[rootnode] (root) at (0,0) {Hành động $a_t$\\(multi-discrete, 4 nhánh độc lập)};
+
+% 4 branches
+\node[branchnode, fill=blue!15]  (mX) at (-6.0,-1.7) {moveX\\(3)};
+\node[branchnode, fill=cyan!18]  (mY) at (-2.0,-1.7) {moveY\\(3)};
+\node[branchnode, fill=red!15]   (cb) at ( 2.0,-1.7) {combat\\(3)};
+\node[branchnode, fill=green!18] (am) at ( 6.0,-1.7) {aim\\(9)};
+
+\draw[->] (root.south) -- (mX.north);
+\draw[->] (root.south) -- (mY.north);
+\draw[->] (root.south) -- (cb.north);
+\draw[->] (root.south) -- (am.north);
+
+% Leaves
+\node[leafbox] (lX) at (-6.0,-3.6) {none\\left\\right};
+\node[leafbox] (lY) at (-2.0,-3.6) {none\\down\\up};
+\node[leafbox] (lC) at ( 2.0,-3.6) {none\\attack\\dash};
+\node[leafbox] (lA) at ( 6.0,-3.6) {hold + 8 hướng:\\N, NE, E, SE,\\S, SW, W, NW};
+
+\draw[->, gray!70] (mX) -- (lX);
+\draw[->, gray!70] (mY) -- (lY);
+\draw[->, gray!70] (cb) -- (lC);
+\draw[->, gray!70] (am) -- (lA);
+
+% Total annotation
+\node[totalbox] at (0,-5.0)
+  {Tổng tổ hợp: $3 \times 3 \times 3 \times 9 = 243$\quad(81 tổ hợp \emph{di chuyển $\times$ ngắm} nếu bỏ qua combat)};
+\end{tikzpicture}
+\caption{Cấu trúc cây của không gian hành động $(3,3,3,9)$ của CombatAgent. Bốn nhánh được chọn độc lập tại mỗi bước, tạo 243 tổ hợp tổng cộng trước khi áp dụng action mask. Riêng tổ hợp di chuyển (9 hướng) $\times$ ngắm (9 hướng) đã đạt 81 trạng thái điều khiển.}
+\label{fig:action_space_tree}
+\end{figure}
 
 Tổ hợp hai nhánh moveX và moveY tạo ra 9 hướng di chuyển (bao gồm đứng yên), trong khi nhánh aim điều khiển hướng tấn công. Entropy cực đại lý thuyết của không gian hành động, nếu mọi lựa chọn đều hợp lệ và phân phối đều, là:
 
@@ -139,6 +211,26 @@ Mỗi bản đồ sau khi sinh được chuẩn hóa về định dạng văn b�
 
 Độ khó bản đồ được đánh giá bằng các chỉ số hình học gồm tỷ lệ tường, độ dài đường đi ngắn nhất giữa \texttt{P} và \texttt{E}, tỷ lệ ngõ cụt, tỷ lệ vùng có thể đi tới và độ khó A*. Thay vì đặt ngưỡng tuyệt đối cứng cho mọi generator, hệ thống có thể chia bản đồ theo thứ hạng tương đối: 5\% dễ nhất được đưa vào Easy, 5\% tiếp theo vào Medium và phần còn lại vào Hard. Cách chia này phù hợp với giai đoạn tuyển chọn thủ công vì người thiết kế vẫn có thể xem lại từng folder và chọn những bản đồ tốt nhất trước khi đưa sang Unity.
 
+\textbf{Lý do chọn tỷ lệ 5/5/90.} Cụ thể với batch chính dùng trong đề tài (1000 bản đồ, kích thước $14\times14$), tỷ lệ trên tương ứng 50 Easy, 50 Medium và 900 Hard. Tỷ lệ này được lựa chọn dựa trên ba nhận xét. \textit{Thứ nhất, phân phối độ khó của PCGNN bị lệch về phía khó}: novelty search khuyến khích đa dạng cấu trúc thay vì sự đơn giản, nên đa số bản đồ được sinh ra có nhiều ngõ cụt, đường đi dài và A* difficulty cao -- nếu chia đều 33/33/33 thì nhóm Easy sẽ phải kéo cả những bản đồ vốn không thực sự dễ. \textit{Thứ hai, Easy và Medium chỉ đóng vai trò ``giàn giáo''}: theo log của run46, agent chỉ ở Easy khoảng 70 nghìn bước và Medium khoảng 70 nghìn bước trong tổng 3 triệu bước, tức chưa tới 5\% thời gian huấn luyện -- một tập 50 bản đồ là đủ đa dạng cho giai đoạn ngắn này mà không bị overfit lên một bản đồ đơn lẻ. \textit{Thứ ba, Hard là phân phối mục tiêu}: hơn 95\% thời gian huấn luyện diễn ra trên Hard nên cần lượng bản đồ lớn (900) để policy không học thuộc một vài bố cục cố định, đồng thời để TilemapGenerator có dư địa xáo trộn map giữa các episode.
+
+\begin{table}[H]
+    \centering
+    \small
+    \caption{Phân bố bản đồ PCGNN theo tier độ khó (batch 1000 map kích thước $14\times14$)}
+    \label{tab:map_split}
+    \begin{tabular}{|p{2.5cm}|c|c|p{7.5cm}|}
+        \hline
+        \textbf{Tier} & \textbf{Số bản đồ} & \textbf{Tỷ lệ} & \textbf{Vai trò trong huấn luyện} \\
+        \hline
+        Easy   & 50  & 5\%  & Giàn giáo gradient cho giai đoạn $\sim$0--70k bước; cần ít nhưng đảm bảo agent gặp success thường xuyên. \\
+        \hline
+        Medium & 50  & 5\%  & Bước trung gian từ Easy sang Hard, dùng khoảng $\sim$70k--140k bước. \\
+        \hline
+        Hard   & 900 & 90\% & Phân phối mục tiêu, chiếm hơn 95\% thời gian huấn luyện; cần đa dạng để chống overfitting. \\
+        \hline
+    \end{tabular}
+\end{table}
+
 Trong Unity, TilemapGenerator không cần biết bản đồ được vẽ tay hay sinh bằng PCGNN. Thành phần này chỉ đọc text asset theo tier hiện tại, dựng tilemap và kiểm tra lại vùng có thể đi tới. Với các lesson dùng fixed spawn, TilemapGenerator ưu tiên ô sàn có độ phủ BFS tốt để tránh trường hợp player hoặc enemy bị cô lập. Với lesson dùng random spawn, player và enemy được chọn từ các ô sàn hợp lệ nhằm tăng phương sai môi trường.
 
 \section{Khung curriculum learning}
@@ -164,6 +256,8 @@ Học theo chương trình được dùng để giảm độ khó khám phá ban
 
 Trong run46, curriculum gồm 3 lesson: Easy, Medium và Hard. Trong run54, curriculum được mở rộng thành 4 lesson: Easy Fixed, Medium Fixed, Hard Fixed và Hard Random. Biến thể 4-tier kiểm tra giả thuyết rằng việc giảm phương sai spawn ở giai đoạn đầu có thể giúp PPO ổn định hơn trước khi chuyển sang phân phối khó hơn.
 
+Cần phân biệt hai lớp tổ chức độ khó. Lớp thứ nhất là chia tập bản đồ PCGNN thành các folder Easy, Medium và Hard dựa trên chỉ số hình học. Lớp thứ hai là lịch chuyển lesson trong ML-Agents: trainer thay đổi tham số \texttt{difficulty} khi reward làm mượt vượt ngưỡng, từ đó TilemapGenerator chọn folder bản đồ và chế độ spawn tương ứng.
+
 \section{Kiến trúc mạng nơ-ron}
 
 Chính sách được huấn luyện bằng PPO trong Unity ML-Agents \cite{Juliani2018}. Cấu hình baseline dùng mạng MLP actor-critic với hidden\_units=256, num\_layers=2, normalize=true. Actor head sinh phân phối xác suất cho bốn branch hành động, còn critic head ước lượng $V(s)$ để tính advantage theo GAE.
@@ -186,3 +280,53 @@ Chính sách được huấn luyện bằng PPO trong Unity ML-Agents \cite{Juli
 \end{figure}
 
 Một số run ablation bổ sung bộ nhớ LSTM với memory\_size=256 và sequence\_length=64 để kiểm tra giả thuyết rằng thông tin lịch sử có thể giúp agent xử lý đạn, hồi chiêu và tình huống khuất tầm nhìn. Kết quả định lượng của các lựa chọn kiến trúc này được trình bày ở Chương~4.
+
+\section{Cấu hình hyperparameter PPO}
+
+Bảng~\ref{tab:ppo_hyperparams} trình bày các hyperparameter chính được sử dụng cho trainer PPO trong Unity ML-Agents \cite{Juliani2018}. Cấu hình này được giữ thống nhất giữa các run ablation từ run34 đến run54 (trừ các phần được thay đổi rõ ràng như intrinsic reward, LSTM hoặc curriculum); run55 chỉ thay đổi reward landscape chứ không thay đổi hyperparameter trainer.
+
+\begin{table}[H]
+    \centering
+    \small
+    \caption{Cấu hình hyperparameter chính của trainer PPO}
+    \label{tab:ppo_hyperparams}
+    \begin{tabular}{|p{4.0cm}|c|p{7.2cm}|}
+        \hline
+        \textbf{Hyperparameter} & \textbf{Giá trị} & \textbf{Ý nghĩa} \\
+        \hline
+        \texttt{learning\_rate}      & $3{\times}10^{-4}$ & Tốc độ học của Adam optimizer; là giá trị mặc định khuyến nghị của ML-Agents cho PPO. \\
+        \hline
+        \texttt{learning\_rate\_schedule} & linear & Giảm tuyến tính learning rate xuống 0 ở cuối quá trình huấn luyện để ổn định cập nhật giai đoạn cuối. \\
+        \hline
+        \texttt{batch\_size}         & 1024  & Kích thước minibatch khi cập nhật policy. \\
+        \hline
+        \texttt{buffer\_size}        & 10240 & Số bước trải nghiệm thu thập trước mỗi lần cập nhật PPO. \\
+        \hline
+        \texttt{num\_epoch}          & 3     & Số lần lặp qua buffer trong một lần cập nhật. \\
+        \hline
+        $\gamma$ (\texttt{gamma})    & 0.99  & Hệ số chiết khấu cho phần thưởng tương lai. \\
+        \hline
+        $\lambda$ (\texttt{lambd})   & 0.95  & Tham số GAE cân bằng độ lệch và phương sai (Phương trình~\ref{eq:gae_formula}). \\
+        \hline
+        $\epsilon$ (\texttt{epsilon})& 0.2   & Biên độ cắt PPO của tỷ lệ xác suất $r_t(\theta)$ (Phương trình~\ref{eq:ppo_clip}). \\
+        \hline
+        $\beta$ (\texttt{beta})      & $5{\times}10^{-3}$ & Hệ số entropy bonus, được giảm tuyến tính để khuyến khích khám phá ban đầu. \\
+        \hline
+        \texttt{time\_horizon}       & 64    & Số bước trước khi bootstrap value estimate khi episode chưa kết thúc. \\
+        \hline
+        \texttt{hidden\_units}       & 256   & Số neuron của mỗi lớp ẩn trong shared MLP backbone. \\
+        \hline
+        \texttt{num\_layers}         & 2     & Số lớp ẩn của shared MLP backbone. \\
+        \hline
+        \texttt{normalize}           & true  & Chuẩn hóa observation theo running mean/std để ổn định gradient. \\
+        \hline
+        \texttt{memory\_size}        & 256   & Kích thước trạng thái ẩn LSTM (chỉ áp dụng cho run42, run47). \\
+        \hline
+        \texttt{sequence\_length}    & 64    & Độ dài chuỗi quan sát đưa vào LSTM (chỉ áp dụng cho run42, run47). \\
+        \hline
+        \texttt{max\_steps}          & 1M / 3M & Tổng bước huấn luyện: 1M cho các run baseline (run34--42), 3M cho các run curriculum (run46+). \\
+        \hline
+    \end{tabular}
+\end{table}
+
+Bảng tham số cho thấy phần lớn cấu hình giữ giá trị mặc định khuyến nghị của Unity ML-Agents cho PPO. Lý do là đề tài tập trung kiểm tra ảnh hưởng của \emph{thiết kế môi trường} (curriculum, sinh map, reward, intrinsic motivation) thay vì tinh chỉnh hyperparameter; giữ trainer config ổn định giúp các so sánh ablation ở Chương~4 phản ánh đúng đóng góp của các yếu tố nghiên cứu, không bị nhiễu bởi tuning trainer.

@@ -210,6 +210,8 @@ Kết quả này là bằng chứng mạnh nhất của khóa luận: curriculum
 
 Run47 thêm LSTM vào curriculum. Hard mean đạt 3.765, thấp hơn nhẹ so với 3.843 của run46. Chênh lệch này nhỏ và chưa đủ để kết luận LSTM làm xấu chính sách, nhưng đủ cho thấy memory không tạo thêm cải thiện rõ ràng khi curriculum đã cung cấp scaffold khám phá.
 
+Có hai giả thuyết giải thích kết quả này. Thứ nhất, \textit{LSTM làm chậm tốc độ hội tụ của PPO}: policy loss của run47 là 0.079, cao hơn gần 5 lần so với run46 là 0.017. Điều này gợi ý rằng các trọng số hồi tiếp của LSTM cần nhiều mẫu hơn để ổn định, khiến policy update kém hiệu quả hơn trong cùng 3M bước. Thứ hai, \textit{curriculum đã giải quyết phần lớn nhu cầu về bộ nhớ}: trong môi trường thưa thưởng, lợi ích chính của LSTM là giúp agent nhớ chuỗi hành vi thành công trong episode dài. Tuy nhiên, khi curriculum đã thu hẹp phân phối bản đồ về Easy/Medium ở giai đoạn đầu, độ dài hiệu quả của chuỗi quyết định ngắn lại, làm giảm lợi thế tương đối của LSTM so với MLP thuần.
+
 Run50 thêm ICM vào curriculum và đã được chạy đủ 3.00M bước. Reward mean trên vùng Hard đạt 4.369, cao hơn run46 là 3.843; tail-50 cuối run đạt 4.707. Các chỉ số hành vi cũng tăng nhẹ: kills đạt 1.016, cleared tail-50 đạt 0.273 và useful dash rate đạt 0.334. Tuy nhiên inverse loss vẫn quanh 4.337, chỉ giảm nhẹ so với run35 và vẫn gần vùng cao so với entropy ngẫu nhiên lý thuyết. Vì vậy, kết quả mới cho thấy ICM có cộng hưởng dương khi đặt sau curriculum, nhưng chưa giải quyết triệt để vấn đề representation của action space nhiều nhánh.
 
 \begin{table}[H]
@@ -261,7 +263,7 @@ Run54 mở rộng curriculum thành 4 lesson: Easy Fixed, Medium Fixed, Hard Fix
     \label{fig:run54_four_tier}
 \end{figure}
 
-Fixed spawn giúp giảm phương sai ở giai đoạn đầu, nhưng khi chuyển sang Hard Random thì agent vẫn phải xử lý cùng phân phối khó. Vì vậy, run54 chỉ cải thiện nhẹ ở hành vi combat và không thay đổi kết luận tổng quát: curriculum là yếu tố chính, còn fixed-to-random là tinh chỉnh môi trường.
+Fixed spawn giúp giảm phương sai ở giai đoạn đầu, nhưng khi chuyển sang Hard Random thì agent vẫn phải xử lý cùng phân phối khó. Vì vậy, run54 chỉ cải thiện nhẹ ở hành vi combat và không thay đổi kết luận tổng quát: curriculum là yếu tố chính, còn fixed-to-random chỉ là một biến thể của thiết kế môi trường, đóng góp không đáng kể so với chính curriculum.
 
 \section{Reward v2: tăng outcome reward nhưng đổi thang đo}
 
@@ -293,24 +295,31 @@ Một hiện tượng nhất quán xuyên suốt các run là entropy của poli
 
 \begin{figure}[H]
     \centering
-    \begin{tikzpicture}[x=0.75cm,y=1.35cm, every node/.style={font=\scriptsize}]
+    \begin{tikzpicture}[x=1.0cm, y=3.5cm, every node/.style={font=\scriptsize}]
+        % Grid lines (vẽ trước để bars nằm trên)
+        \foreach \y/\lbl in {4.2/4.2, 4.4/4.4, 4.6/4.6, 4.8/4.8, 5.0/5.0, 5.2/5.2, 5.4/5.4}
+            \draw[gray!30] (0,\y) node[left, black]{\lbl} -- (9.8,\y);
+        % Axes
         \draw[->] (0,4.0) -- (10.2,4.0) node[right]{run};
-        \draw[->] (0,4.0) -- (0,5.75) node[above]{entropy};
-        \draw[dashed, red] (0,5.49) -- (9.8,5.49);
-        \node[red, anchor=west] at (9.85,5.49){5.49};
-        \foreach \y/\label in {4.2/4.2,4.4/4.4,4.6/4.6,4.8/4.8,5.0/5.0,5.2/5.2}
-            \draw[gray!20] (0,\y) -- (9.8,\y) node[left, black]{\label};
-        \fill[blue!55] (0.7,4.0) rectangle (1.2,4.408); \node[below] at (0.95,4.0){34};
-        \fill[blue!55] (1.7,4.0) rectangle (2.2,4.407); \node[below] at (1.95,4.0){35};
-        \fill[blue!55] (2.7,4.0) rectangle (3.2,4.406); \node[below] at (2.95,4.0){36};
-        \fill[blue!55] (3.7,4.0) rectangle (4.2,4.405); \node[below] at (3.95,4.0){42};
-        \fill[blue!55] (4.7,4.0) rectangle (5.2,4.409); \node[below] at (4.95,4.0){46};
-        \fill[blue!55] (5.7,4.0) rectangle (6.2,4.405); \node[below] at (5.95,4.0){47};
-        \fill[blue!55] (6.7,4.0) rectangle (7.2,4.412); \node[below] at (6.95,4.0){50};
-        \fill[blue!55] (7.7,4.0) rectangle (8.2,4.407); \node[below] at (7.95,4.0){54};
-        \fill[blue!55] (8.7,4.0) rectangle (9.2,4.408); \node[below] at (8.95,4.0){55};
+        \draw[->] (0,4.0) -- (0,5.80) node[above]{entropy (nat)};
+        % Đường tham chiếu entropy cực đại lý thuyết
+        \draw[dashed, red, thick] (0,5.49) -- (9.8,5.49);
+        \node[red, anchor=west] at (9.85,5.49){$H_{\max}=5.49$};
+        % Đường tham chiếu vùng bão hòa
+        \draw[dashed, orange!80!black] (0,4.40) -- (9.8,4.40);
+        \node[orange!80!black, anchor=west] at (9.85,4.40){${\approx}4.40$};
+        % Bars (fill + border + run label)
+        \fill[blue!65] (0.7,4.0) rectangle (1.3,4.408); \draw[black!45, thin] (0.7,4.0) rectangle (1.3,4.408); \node[below] at (1.0,4.0){34};
+        \fill[blue!65] (1.7,4.0) rectangle (2.3,4.407); \draw[black!45, thin] (1.7,4.0) rectangle (2.3,4.407); \node[below] at (2.0,4.0){35};
+        \fill[blue!65] (2.7,4.0) rectangle (3.3,4.406); \draw[black!45, thin] (2.7,4.0) rectangle (3.3,4.406); \node[below] at (3.0,4.0){36};
+        \fill[blue!65] (3.7,4.0) rectangle (4.3,4.405); \draw[black!45, thin] (3.7,4.0) rectangle (4.3,4.405); \node[below] at (4.0,4.0){42};
+        \fill[blue!65] (4.7,4.0) rectangle (5.3,4.409); \draw[black!45, thin] (4.7,4.0) rectangle (5.3,4.409); \node[below] at (5.0,4.0){46};
+        \fill[blue!65] (5.7,4.0) rectangle (6.3,4.405); \draw[black!45, thin] (5.7,4.0) rectangle (6.3,4.405); \node[below] at (6.0,4.0){47};
+        \fill[blue!65] (6.7,4.0) rectangle (7.3,4.412); \draw[black!45, thin] (6.7,4.0) rectangle (7.3,4.412); \node[below] at (7.0,4.0){50};
+        \fill[blue!65] (7.7,4.0) rectangle (8.3,4.407); \draw[black!45, thin] (7.7,4.0) rectangle (8.3,4.407); \node[below] at (8.0,4.0){54};
+        \fill[blue!65] (8.7,4.0) rectangle (9.3,4.408); \draw[black!45, thin] (8.7,4.0) rectangle (9.3,4.408); \node[below] at (9.0,4.0){55};
     \end{tikzpicture}
-    \caption{Entropy tail-50 của các run chính đều nằm quanh 4.40 nat}
+    \caption{Entropy tail-50 của các run chính đều nằm quanh 4.40 nat (${\approx}80\%$ của $H_{\max}$)}
     \label{fig:entropy_plateau}
 \end{figure}
 
@@ -349,5 +358,34 @@ Trong phạm vi các ablation đã thử, plateau này không được giải qu
         \hline
     \end{tabular}
 \end{table}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=1.3cm, y=1.1cm, every node/.style={font=\scriptsize}]
+  % Axes
+  \draw[->] (0,0) -- (9.5,0) node[right]{Run};
+  \draw[->] (0,0) -- (0,5.3) node[above]{Reward mean};
+  % Grid
+  \foreach \y/\lbl in {1/1.0, 2/2.0, 3/3.0, 4/4.0, 5/5.0}
+    \draw[gray!30] (0,\y) node[left,black]{\lbl} -- (9.2,\y);
+  % Baseline dashed line
+  \draw[dashed, gray!70] (0,2.073) -- (9.2,2.073);
+  \node[gray!70, anchor=west, font=\tiny] at (9.2,2.073){baseline};
+  % Bars (no-curriculum: blue; curriculum-based: green)
+  \fill[blue!45]          (0.55,0) rectangle (1.05,2.073); \draw[black!35,thin] (0.55,0) rectangle (1.05,2.073); \node[below] at (0.80,0){34}; \node[above,font=\tiny] at (0.80,2.073){2.07};
+  \fill[blue!45]          (1.55,0) rectangle (2.05,2.416); \draw[black!35,thin] (1.55,0) rectangle (2.05,2.416); \node[below] at (1.80,0){35}; \node[above,font=\tiny] at (1.80,2.416){2.42};
+  \fill[blue!45]          (2.55,0) rectangle (3.05,2.487); \draw[black!35,thin] (2.55,0) rectangle (3.05,2.487); \node[below] at (2.80,0){36}; \node[above,font=\tiny] at (2.80,2.487){2.49};
+  \fill[blue!45]          (3.55,0) rectangle (4.05,2.411); \draw[black!35,thin] (3.55,0) rectangle (4.05,2.411); \node[below] at (3.80,0){42}; \node[above,font=\tiny] at (3.80,2.411){2.41};
+  \fill[green!55!black!70](4.55,0) rectangle (5.05,3.843); \draw[black!35,thin] (4.55,0) rectangle (5.05,3.843); \node[below] at (4.80,0){46}; \node[above,font=\tiny] at (4.80,3.843){3.84};
+  \fill[green!55!black!55](5.55,0) rectangle (6.05,3.765); \draw[black!35,thin] (5.55,0) rectangle (6.05,3.765); \node[below] at (5.80,0){47}; \node[above,font=\tiny] at (5.80,3.765){3.77};
+  \fill[green!55!black!90](6.55,0) rectangle (7.05,4.369); \draw[black!35,thin] (6.55,0) rectangle (7.05,4.369); \node[below] at (6.80,0){50}; \node[above,font=\tiny] at (6.80,4.369){4.37};
+  \fill[green!55!black!65](7.55,0) rectangle (8.05,3.925); \draw[black!35,thin] (7.55,0) rectangle (8.05,3.925); \node[below] at (7.80,0){54}; \node[above,font=\tiny] at (7.80,3.925){3.93};
+  % Legend
+  \fill[blue!45]          (0.4,4.5) rectangle (0.7,4.8); \node[right] at (0.72,4.65){Không curriculum (1M)};
+  \fill[green!55!black!70](3.2,4.5) rectangle (3.5,4.8); \node[right] at (3.52,4.65){Curriculum-based (3M)};
+\end{tikzpicture}
+\caption{So sánh reward mean giữa các run dùng reward v1. Đường đứt khoảng ở 2.07 là mức baseline. Run55 (reward v2, mean 9.337) có thang reward khác nên không đưa vào biểu đồ.}
+\label{fig:reward_comparison_all}
+\end{figure}
 
 Từ bảng tổng hợp, bốn kết luận chính được rút ra. Thứ nhất, PPO baseline đạt hành vi hợp lý nhưng bị giới hạn ở mức reward khoảng 2.1--2.5. Thứ hai, intrinsic motivation và LSTM không tạo cải thiện lớn khi chạy độc lập. Thứ ba, curriculum learning là yếu tố quyết định; khi kết hợp thêm ICM, reward Hard tăng lên 4.369 nhưng inverse loss vẫn cao. Thứ tư, entropy plateau vẫn tồn tại trong hầu hết cấu hình, cho thấy cần nghiên cứu thêm về action space và cấu trúc policy.

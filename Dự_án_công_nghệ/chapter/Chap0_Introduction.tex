@@ -12,7 +12,27 @@ Trong phát triển game truyền thống, hành vi của nhân vật không do 
 
 Đề tài lựa chọn bài toán huấn luyện tác nhân trong một game hành động Roguelike góc nhìn từ trên xuống, được xây dựng bằng Unity và TopDown Engine. Mục tiêu của tác nhân không chỉ là đi tới một điểm cố định, mà là hoàn thành chuỗi hành vi phức tạp: quan sát môi trường, tiếp cận mục tiêu, căn hướng tấn công, sử dụng dash khi cần và tiêu diệt kẻ địch trên nhiều bản đồ khác nhau. Đây là một bài toán phù hợp để nghiên cứu PPO và các kỹ thuật hỗ trợ quá trình học như phần thưởng nội tại, bộ nhớ LSTM và học theo chương trình.
 
+\vspace{0.3cm}
+\noindent{\Large \textbf{Mục tiêu của khóa luận}}
+
+Mục tiêu chính của khóa luận là xây dựng và đánh giá một quy trình huấn luyện tác nhân học tăng cường sâu có khả năng chiến đấu trong môi trường Roguelike có bản đồ thay đổi theo thủ tục. Nói cách khác, khóa luận không chỉ hướng tới việc sinh ra bản đồ hợp lệ theo nghĩa có đường đi, mà hướng tới một hệ thống hoàn chỉnh trong đó bản đồ sinh ra phải đủ phù hợp để CombatAgent có thể di chuyển, né tránh, tiếp cận và tiêu diệt kẻ địch. Vì vậy, PCGNN, bộ kiểm tra tính hợp lệ của bản đồ, curriculum learning, các kỹ thuật phần thưởng nội tại và LSTM đều được xem là các thành phần hỗ trợ cho mục tiêu chung: cải thiện khả năng học và khả năng thích nghi của agent trong môi trường chiến đấu có phương sai cao.
+
+Tuy nhiên, bài toán này đặt ra ba thách thức đồng thời mà mỗi thách thức đã đủ khó nếu xét riêng lẻ. Thứ nhất, \textit{phân phối bản đồ thay đổi theo từng tập}: tác nhân không thể ghi nhớ bố cục cố định mà phải khái quát hóa chính sách qua nhiều cấu hình không gian khác nhau — một dạng distribution shift liên tục. Thứ hai, \textit{không gian hành động đa nhánh $(3,3,3,9)$}: tác nhân phải phối hợp đồng thời hướng di chuyển, quyết định chiến đấu và góc ngắm, khiến không gian kết hợp lên tới 81 khả năng mỗi bước. Thứ ba, \textit{phần thưởng thưa và bị trì hoãn}: tín hiệu có giá trị cao (tiêu diệt kẻ địch, dọn phòng) chỉ xuất hiện khi tác nhân đã thành thạo cả chuỗi hành vi, tạo ra vấn đề gà–trứng cho giai đoạn khám phá ban đầu. Chính sự kết hợp của ba thách thức này khiến các giải pháp đơn lẻ như phần thưởng nội tại (ICM, RND) hay bộ nhớ (LSTM) không tạo được bước ngoặt rõ ràng, và đặt ra câu hỏi liệu học theo chương trình có thể đóng vai trò giàn giáo để phá vỡ vòng lặp này hay không.
+
 Trong quá trình thực nghiệm, phiên bản tác nhân chính của đề tài là CombatAgent. Tác nhân này sử dụng quan sát dạng vector 207 chiều và không gian hành động rời rạc nhiều nhánh $(3,3,3,9)$. Môi trường huấn luyện sử dụng các bản đồ dạng văn bản được sinh bằng PCGNN (Procedural Content Generation using NEAT and novelty search), sau đó được kiểm tra tính hợp lệ và chia thành ba mức Easy, Medium và Hard để phục vụ học theo chương trình. Điểm nhấn của khóa luận là đánh giá vai trò của học theo chương trình trong việc giúp tác nhân vượt qua giai đoạn khám phá ban đầu, từ đó cải thiện rõ rệt hiệu quả học trong môi trường chiến đấu có bản đồ được sinh theo thủ tục.
+
+\vspace{0.5cm}
+\noindent{\Large \textbf{Câu hỏi nghiên cứu}}
+
+Từ phân tích trên, đề tài xác định hai câu hỏi nghiên cứu chính:
+
+\renewcommand{\labelitemi}{$-$}
+\begin{itemize}
+    \item \textbf{Q1}: Trong số các kỹ thuật phần thưởng nội tại (ICM, RND), bộ nhớ tuần tự (LSTM) và học theo chương trình, kỹ thuật nào tạo ra cải thiện lớn nhất khi huấn luyện tác nhân chiến đấu trong môi trường Roguelike có bản đồ sinh theo thủ tục?
+    \item \textbf{Q2}: Khi kết hợp các kỹ thuật trên với học theo chương trình, liệu có xuất hiện hiệu ứng cộng hưởng rõ rệt (hiệu suất kết hợp cao hơn từng kỹ thuật đơn lẻ) hay không, và nếu có thì ở kỹ thuật nào?
+\end{itemize}
+
+Để trả lời hai câu hỏi này, đề tài triển khai ma trận thí nghiệm loại trừ gồm chín lượt chạy chính, trong đó mỗi lượt thay đổi đúng một biến so với cấu hình tham chiếu, cho phép quy kết nhân quả ở mức định lượng.
 
 \vspace{0.5cm}
 
@@ -20,7 +40,7 @@ Trong quá trình thực nghiệm, phiên bản tác nhân chính của đề t�
 
 Để thực hiện đề tài, khóa luận kết hợp nghiên cứu lý thuyết, thiết kế hệ thống và thực nghiệm định lượng. Về lý thuyết, đề tài tìm hiểu mô hình Quy trình quyết định Markov (MDP), thuật toán Proximal Policy Optimization (PPO), kiến trúc Actor-Critic, hàm lợi thế GAE, kỹ thuật định hình phần thưởng và các hướng mở rộng như ICM, RND, LSTM và học theo chương trình. Các nội dung này tạo nền tảng để mô hình hóa bài toán điều khiển nhân vật trong game dưới dạng một bài toán học tăng cường.
 
-Về thiết kế hệ thống, đề tài xây dựng CombatAgent trong Unity ML-Agents. Tác nhân sử dụng quan sát có cấu trúc thay vì ảnh pixel để tăng hiệu quả mẫu, đồng thời giữ lại các thông tin quan trọng của môi trường như trạng thái người chơi, kẻ địch, đạn và tường. Không gian hành động được thiết kế theo dạng rời rạc nhiều nhánh để tác nhân có thể đồng thời điều khiển hướng di chuyển, ý định chiến đấu và hướng ngắm.
+Về thiết kế hệ thống, đề tài xây dựng CombatAgent trong Unity ML-Agents. Tác nhân sử dụng quan sát có cấu trúc thay vì ảnh pixel để tăng hiệu quả mẫu, đồng thời giữ lại các thông tin quan trọng của môi trường như trạng thái người chơi, kẻ địch, đạn và tường. Lựa chọn vector quan sát thay cho ảnh pixel xuất phát từ ràng buộc phần cứng (GPU RTX 3050 6GB) và mục tiêu đảm bảo đủ số lượng môi trường song song để PPO có gradient ổn định. Không gian hành động được thiết kế theo dạng rời rạc nhiều nhánh để tác nhân có thể đồng thời điều khiển hướng di chuyển, ý định chiến đấu và hướng ngắm.
 
 Về môi trường, đề tài kết hợp PCGNN và TilemapGenerator để xây dựng pipeline sinh bản đồ. PCGNN được dùng ở bước tiền xử lý để tạo nhiều ma trận bản đồ, sau đó adapter chuyển kết quả sinh sang định dạng văn bản của trò chơi với các ký hiệu tường, sàn, vị trí sinh người chơi và vị trí sinh kẻ địch. Các bản đồ này được đánh giá bằng các chỉ số như tỷ lệ tường, độ dài đường đi ngắn nhất, tỷ lệ ngõ cụt và khả năng đi tới giữa các điểm chính. TilemapGenerator trong Unity đọc các bản đồ đã được phân loại Easy, Medium và Hard, dùng BFS để kiểm tra vùng có thể di chuyển, lựa chọn vị trí sinh hợp lệ và đưa bản đồ vào các bài học huấn luyện tương ứng.
 
@@ -66,10 +86,10 @@ Thông qua quá trình nghiên cứu, triển khai và thực nghiệm, đề t�
     \item Xây dựng được một quy trình huấn luyện DRL cho game hành động Roguelike trong Unity, kết hợp Unity ML-Agents, TopDown Engine và TensorBoard.
     \item Thiết kế CombatAgent với không gian quan sát 207 chiều và không gian hành động rời rạc nhiều nhánh $(3,3,3,9)$, phù hợp cho bài toán vừa di chuyển, vừa ngắm, vừa chiến đấu.
     \item Xây dựng hệ thống sinh và tuyển chọn bản đồ bằng PCGNN, trong đó bản đồ được chuyển sang định dạng văn bản, kiểm tra khả năng đi tới, đánh giá độ khó và chia thành Easy, Medium và Hard để dùng trong curriculum.
-    \item Thiết kế và đánh giá học theo chương trình cho môi trường chiến đấu sinh theo thủ tục. Kết quả cho thấy cách huấn luyện này là yếu tố tạo cải thiện lớn nhất, tăng khoảng 85\% phần thưởng ở mức Hard so với PPO cơ sở.
-    \item Thực hiện ma trận thí nghiệm loại trừ với các cấu hình PPO cơ sở, ICM, RND, LSTM, học theo chương trình, thí nghiệm kết hợp và thiết kế lại phần thưởng để phân tích vai trò của từng kỹ thuật.
-    \item Ghi nhận các kết quả ablation có giá trị: ICM, RND và LSTM không tạo cải thiện đột phá rõ rệt khi chạy độc lập; ICM chỉ tạo cộng hưởng đáng kể khi được ghép sau học theo chương trình.
-    \item Phát hiện hiện tượng entropy bão hòa quanh 4.40 nat trong nhiều cấu hình, gợi ý rằng không gian hành động và cấu trúc chính sách là hướng cần nghiên cứu tiếp.
+    \item Thiết kế và đánh giá học theo chương trình cho môi trường chiến đấu sinh theo thủ tục. Kết quả cho thấy cách huấn luyện này là yếu tố tạo cải thiện lớn nhất: phần thưởng trung bình tăng từ 2.073 (PPO cơ sở) lên 3.843 ở vùng Hard, tương đương \textbf{+85\%}, trong khi các kỹ thuật đơn lẻ ICM, RND, LSTM chỉ đạt +16\%--20\%.
+    \item Thực hiện ma trận thí nghiệm loại trừ với chín lượt chạy chính (run34--run55), bao gồm PPO cơ sở, ICM, RND, LSTM, học theo chương trình, các thí nghiệm kết hợp và thiết kế lại phần thưởng, để phân tích định lượng vai trò của từng kỹ thuật.
+    \item Ghi nhận hiệu ứng cộng hưởng có chọn lọc: kết hợp Curriculum + ICM nâng phần thưởng lên 4.369 (\textbf{+14\%} so với Curriculum đơn thuần), trong khi Curriculum + LSTM không tạo thêm lợi ích (+2\% không đáng kể). Kết quả này trả lời trực tiếp cho Q2 ở phần Câu hỏi nghiên cứu.
+    \item Phát hiện và ghi nhận hiện tượng entropy bão hòa quanh \textbf{4.40 nat} xuất hiện nhất quán trong tất cả chín cấu hình thí nghiệm (entropy tối đa lý thuyết: 5.49 nat), gợi ý rằng thiết kế không gian hành động $(3,3,3,9)$ và cơ chế che hành động là nguồn gốc cần nghiên cứu tiếp.
 \end{itemize}
 
 \vspace{0.3cm}
