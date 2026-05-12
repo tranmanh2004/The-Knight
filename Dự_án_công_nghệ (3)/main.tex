@@ -1,0 +1,254 @@
+\documentclass[a4paper,12pt,oneside]{book}
+
+% Font và tiếng Việt
+\usepackage{times}
+\usepackage[utf8]{vietnam}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{longtable}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{gray!10},
+  frame=single,
+  keywordstyle=\color{blue},
+  commentstyle=\color{green!50!black},
+  stringstyle=\color{orange},
+  showstringspaces=false
+}
+
+% Toán học
+\usepackage{amsmath,amssymb,amsthm,amsfonts,mathtools}
+
+% Căn lề
+\usepackage[left=3cm,right=2cm,top=2.5cm,bottom=3cm,footskip=40pt]{geometry}
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0.6em}
+\usepackage{indentfirst}
+
+% Hình ảnh
+\usepackage{graphicx}
+\graphicspath{{figures/}} % thư mục chứa ảnh
+\usepackage{caption}
+\usepackage{subfigure} % nếu cần chèn nhiều ảnh nhỏ
+
+% Vẽ
+\usepackage{tikz}
+\usetikzlibrary{calc,arrows,positioning,shapes}
+
+% Bảng
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}m{#1}}
+
+% Danh mục mục lục, hình, bảng
+\usepackage[subfigure]{tocloft}
+\usepackage{float}
+\renewcommand{\cftfigfont}{Hình~}
+\renewcommand{\cfttabfont}{Bảng~ }
+
+% Chương, tiêu đề
+\usepackage{titlesec}
+\titleformat{\chapter}[display] 
+  {\fontsize{14}{16}\selectfont\bfseries\centering}
+  {\MakeUppercase{\chaptertitlename}\ \thechapter}{0pt}{\fontsize{14}{16}\selectfont\MakeUppercase}
+\titlespacing{\chapter}{0pt}{0pt}{40pt} 
+\titleformat*{\section}{\fontsize{14}{14}\selectfont\bfseries}
+
+\titleformat*{\subsection}{\fontsize{14}{14}\selectfont\bfseries}
+
+\titleformat*{\subsubsection}{\fontsize{14}{14}\selectfont\bfseries}
+
+% Trích dẫn
+\usepackage[square,comma,numbers,sort&compress]{natbib}
+
+% Liên kết
+\usepackage[hidelinks,unicode]{hyperref}
+
+% Dãn dòng
+\renewcommand{\baselinestretch}{1.4}
+\emergencystretch=2em
+\pretolerance=1000
+\tolerance=2000
+
+% Định nghĩa, định lý
+\newtheorem{definition}{\bf Định nghĩa}[chapter]
+\newtheorem{theorem}{\bf Định lý}[chapter]
+\newtheorem{lemma}{\bf Bổ đề}[chapter]
+
+\begin{document}
+\fontsize{13}{15.5}\selectfont
+
+% ========================
+% Các phần cover
+% ========================
+\pagestyle{empty}
+\input{cover/Biangoai}
+\newpage
+\input{cover/Biatrong}
+\newpage
+\pagenumbering{roman}
+\input{cover/loicamdoan}
+\newpage
+\input{cover/loicamon} 
+\newpage
+\input{cover/tomtat}
+\newpage
+
+% ========================
+% Mục lục
+% ========================
+\renewcommand{\contentsname}{\vspace{-70pt}\centerline{\fontsize{14}{16}\selectfont\MakeUppercase{Mục lục}}}
+\tableofcontents
+\newpage
+\addcontentsline{toc}{chapter}{Danh mục hình vẽ}
+\listoffigures
+\newpage
+\addcontentsline{toc}{chapter}{Danh mục bảng biểu}
+\listoftables
+\newpage
+\input{cover/vietat}
+\newpage
+
+% ========================
+% Nội dung chính
+% ========================
+\pagenumbering{arabic}
+\pagestyle{plain}
+\input{chapter/Chap0_Introduction}
+\newpage
+\input{chapter/Chap1_Background}
+\newpage
+\input{chapter/Chap2_Design}
+\newpage
+\input{chapter/Chap3_Implement}
+\newpage
+\input{chapter/Chap4_Results}
+\newpage
+\input{chapter/Chap5_Conclusion}
+\newpage
+
+% ========================
+% Phụ lục và tài liệu tham khảo
+% ========================
+
+\appendix
+\input{cover/phuluc}
+\def\baselinestretch{1}
+\vspace{-2cm}
+\renewcommand{\bibname}{Tài liệu tham khảo}
+\clearpage
+\phantomsection
+\addcontentsline{toc}{chapter}{{TÀI LIỆU THAM KHẢO}}
+\renewcommand{\refname}{Literary works}
+\begin{thebibliography}{xx}
+	% \section*{Tiếng Việt}
+	% \vspace{0.3cm}
+	% \harvarditem{Quỳnh}{2015}{Quynh2015}
+	% Tên tác giả, {\em {Tên tài liệu tham khảo}}, Kiểu tài liệu tham khảo, 2015, tr.~19--23.
+	% \vspace{0.5cm}	
+	% \section*{Tiếng Anh}	
+	
+	% \harvarditem{Feickert}{2005}{Feickert2005}
+	% Andrew Feickert, ``{The Joint Tactical
+	% 	Radio System (JTRS) and the Army{\'{s}} Future Combat System (FCS): Issues
+	% 	for Congress}'', {\em Congressional Research Service: Report}, 2005, pp.~1.
+	
+	% \harvarditem[Bloessl et~al.]{Bloessl, Segata, Sommer \harvardand\
+	% 	Dressler}{2013}{Bloessl2013}
+	% B. Bloessl, M. Segata, C. Sommer \harvardand\ F. Dressler, ``An IEEE802.11a/g/p OFDM receiver for GNU radio'',
+	% {\em SRIF 2013 - Proceedings of the 2nd, 2013 ACM SIGCOMM Workshop on
+	% Software Radio Implementation Forum}, 2013, pp.~9--15.
+	% [1] Sutton & Barto (RL textbook)
+	\bibitem{Sutton2018}
+	R. S. Sutton and A. G. Barto, {\em Reinforcement Learning: An Introduction}, 2nd ed.,
+	MIT Press, Cambridge, MA, 2018.
+
+	% [2] Mnih et al. (DQN)
+	\bibitem{Mnih2015}
+	V. Mnih, K. Kavukcuoglu, D. Silver, A. A. Rusu, J. Veness, M. G. Bellemare, A. Graves,
+	M. Riedmiller, A. K. Fidjeland, G. Ostrovski, S. Petersen, C. Beattie, A. Sadik,
+	I. Antonoglou, H. King, D. Kumaran, D. Wierstra, S. Legg and D. Hassabis,
+	``Human-level control through deep reinforcement learning'',
+	{\em Nature}, vol. 518, no. 7540, pp.~529--533, 2015.
+
+	% [3] Stanley & Miikkulainen (NEAT)
+	\bibitem{Stanley2002}
+	K. O. Stanley and R. Miikkulainen, ``Evolving neural networks through augmenting topologies'',
+	{\em Evolutionary Computation}, vol. 10, no. 2, pp.~99--127, 2002.
+
+	% [4] Schulman et al. (PPO)
+	\bibitem{Schulman2017}
+	J. Schulman, F. Wolski, P. Dhariwal, A. Radford and O. Klimov, ``Proximal Policy Optimization Algorithms'',
+	{\em arXiv preprint arXiv:1707.06347}, 2017.
+
+	% [5] Kulkarni et al. (h-DQN)
+	\bibitem{Kulkarni2016}
+	T. D. Kulkarni, K. R. Narasimhan, A. Saeedi and J. B. Tenenbaum, ``Hierarchical Deep Reinforcement Learning: Integrating Temporal Abstraction and Intrinsic Motivation'',
+	{\em Advances in Neural Information Processing Systems}, vol. 29, 2016.
+
+	% [3] Pathak et al. (ICM)
+	\bibitem{Pathak2017}
+	D. Pathak, P. Agrawal, A. A. Efros and T. Darrell, ``Curiosity-driven Exploration by Self-supervised Prediction'',
+	{\em Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition Workshops}, 2017.
+
+	% [4] Burda et al. (RND)
+	\bibitem{Burda2018}
+	Y. Burda, H. Edwards, A. Storkey and O. Klimov, ``Exploration by Random Network Distillation'',
+	{\em arXiv preprint arXiv:1810.12894}, 2018.
+
+	% [6] Hochreiter and Schmidhuber (LSTM)
+	\bibitem{Hochreiter1997}
+	S. Hochreiter and J. Schmidhuber, ``Long Short-Term Memory'',
+	{\em Neural Computation}, vol. 9, no. 8, pp.~1735--1780, 1997.
+
+	% [7] Schulman et al. (GAE)
+	\bibitem{Schulman2015}
+	J. Schulman, P. Moritz, S. Levine, M. Jordan and P. Abbeel,
+	``High-Dimensional Continuous Control Using Generalized Advantage Estimation'',
+	{\em arXiv preprint arXiv:1506.02438}, 2015.
+
+	% [8] Bengio et al. (Curriculum Learning)
+	\bibitem{Bengio2009}
+	Y. Bengio, J. Louradour, R. Collobert and J. Weston, ``Curriculum Learning'',
+	{\em Proceedings of the 26th International Conference on Machine Learning}, 2009.
+
+	% [9] Florensa et al. (Reverse Curriculum)
+	\bibitem{Florensa2017}
+	C. Florensa, D. Held, M. Wulfmeier, M. Zhang and P. Abbeel,
+	``Reverse Curriculum Generation for Reinforcement Learning'',
+	{\em Proceedings of the 1st Annual Conference on Robot Learning}, 2017.
+
+	% [10] Togelius et al. (PCG survey)
+	\bibitem{Togelius2011}
+	J. Togelius, G. N. Yannakakis, K. O. Stanley and C. Browne,
+	``Search-based procedural content generation: A taxonomy and survey'',
+	{\em IEEE Transactions on Computational Intelligence and AI in Games}, vol. 3, no. 3, pp.~172--186, 2011.
+
+	% [11] Ibrahim et al. (Reward Engineering)
+	\bibitem{Ibrahim2024}
+	S. Ibrahim, M. Mostafa, A. Jnadi, H. Salloum and P. Osinenko, ``Comprehensive Overview of Reward Engineering and Shaping in Advancing Reinforcement Learning Applications'',
+	{\em IEEE Access}, 2024.
+
+	% [8] Juliani et al. (Unity ML-Agents)
+	\bibitem{Juliani2018}
+	A. Juliani, V. Berges, E. Vckay, Y. Gao, H. Henry, M. Mattar and D. Lange, ``Unity: A General Platform for Intelligent Agents'',
+	{\em arXiv preprint arXiv:1809.02627}, 2018.
+
+	% [9] Beukman et al. (PCGNN)
+	\bibitem{Beukman2022}
+	M. Beukman, C. W. Cleghorn and S. James, ``Procedural Content Generation using Neuroevolution and Novelty Search for Diverse Video Game Levels'',
+	{\em Proceedings of the Genetic and Evolutionary Computation Conference}, pp.~1028--1037, 2022.
+
+	% [10] More Mountains (TopDown Engine)
+	\bibitem{MoreMountains2025}
+	More Mountains, ``TopDown Engine Documentation'',
+	{\em Online Documentation}, available at: \url{https://topdown-engine-docs.moremountains.com} [Accessed: Dec. 2025].
+    % [11] Unity Technologies (GitHub Repo)
+	\bibitem{UnityMLAgentsRepo}
+	Unity Technologies, ``Unity ML-Agents Toolkit Source Code'',
+	{\em GitHub Repository}, available at: \url{https://github.com/Unity-Technologies/ml-agents} [Accessed: Dec. 2025].
+	
+\end{thebibliography}
+\end{document}

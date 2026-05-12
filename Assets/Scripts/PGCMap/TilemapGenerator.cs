@@ -73,7 +73,7 @@ public class TilemapGenerator : MonoBehaviour
     public bool limitRandomEnemySpawnCount = true;
     [Min(1)]
     [Tooltip("Số enemy random spawn khi limitRandomEnemySpawnCount bật.")]
-    public int randomEnemySpawnCount = 3;
+    public int randomEnemySpawnCount = 2;
     [Min(0)]
     [Tooltip("Số ô sàn trống cần có quanh điểm spawn player khi randomizePlayerSpawnFromFloor bật. 0 chỉ yêu cầu tâm player nằm trên ô sàn.")]
     public int playerSpawnWallClearanceCells = 1;
