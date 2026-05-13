@@ -1,0 +1,116 @@
+{
+    "difficulty": {
+        "lesson_num": 0
+    },
+    "aggressive_seek": {
+        "lesson_num": 0
+    },
+    "CombatAgentConfig": {
+        "checkpoints": [
+            {
+                "steps": 199981,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run58_aggressive_kill_finetune\\CombatAgentConfig\\CombatAgentConfig-199981.onnx",
+                "reward": 13.112606858749958,
+                "creation_time": 1778656608.6548507,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run58_aggressive_kill_finetune\\CombatAgentConfig\\CombatAgentConfig-199981.pt"
+                ]
+            },
+            {
+                "steps": 299966,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run58_aggressive_kill_finetune\\CombatAgentConfig\\CombatAgentConfig-299966.onnx",
+                "reward": 14.286817779862567,
+                "creation_time": 1778656747.9659357,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run58_aggressive_kill_finetune\\CombatAgentConfig\\CombatAgentConfig-299966.pt"
+                ]
+            },
+            {
+                "steps": 399975,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run58_aggressive_kill_finetune\\CombatAgentConfig\\CombatAgentConfig-399975.onnx",
+                "reward": 13.223720978697141,
+                "creation_time": 1778656887.3207371,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run58_aggressive_kill_finetune\\CombatAgentConfig\\CombatAgentConfig-399975.pt"
+                ]
+            },
+            {
+                "steps": 499956,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run58_aggressive_kill_finetune\\CombatAgentConfig\\CombatAgentConfig-499956.onnx",
+                "reward": 14.443880638639842,
+                "creation_time": 1778657025.6768973,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run58_aggressive_kill_finetune\\CombatAgentConfig\\CombatAgentConfig-499956.pt"
+                ]
+            },
+            {
+                "steps": 599972,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run58_aggressive_kill_finetune\\CombatAgentConfig\\CombatAgentConfig-599972.onnx",
+                "reward": 12.337304736798009,
+                "creation_time": 1778657167.2982295,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run58_aggressive_kill_finetune\\CombatAgentConfig\\CombatAgentConfig-599972.pt"
+                ]
+            },
+            {
+                "steps": 699997,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run58_aggressive_kill_finetune\\CombatAgentConfig\\CombatAgentConfig-699997.onnx",
+                "reward": 10.47495904774405,
+                "creation_time": 1778657307.8832662,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run58_aggressive_kill_finetune\\CombatAgentConfig\\CombatAgentConfig-699997.pt"
+                ]
+            },
+            {
+                "steps": 799984,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run58_aggressive_kill_finetune\\CombatAgentConfig\\CombatAgentConfig-799984.onnx",
+                "reward": null,
+                "creation_time": 1778657446.0489216,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run58_aggressive_kill_finetune\\CombatAgentConfig\\CombatAgentConfig-799984.pt"
+                ]
+            },
+            {
+                "steps": 899971,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run58_aggressive_kill_finetune\\CombatAgentConfig\\CombatAgentConfig-899971.onnx",
+                "reward": 13.280669290410435,
+                "creation_time": 1778657582.4076288,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run58_aggressive_kill_finetune\\CombatAgentConfig\\CombatAgentConfig-899971.pt"
+                ]
+            },
+            {
+                "steps": 999945,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run58_aggressive_kill_finetune\\CombatAgentConfig\\CombatAgentConfig-999945.onnx",
+                "reward": 13.459153217219171,
+                "creation_time": 1778657721.5186143,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run58_aggressive_kill_finetune\\CombatAgentConfig\\CombatAgentConfig-999945.pt"
+                ]
+            },
+            {
+                "steps": 1000009,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run58_aggressive_kill_finetune\\CombatAgentConfig\\CombatAgentConfig-1000009.onnx",
+                "reward": 13.459153217219171,
+                "creation_time": 1778657721.5749898,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run58_aggressive_kill_finetune\\CombatAgentConfig\\CombatAgentConfig-1000009.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 1000009,
+            "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run58_aggressive_kill_finetune\\CombatAgentConfig.onnx",
+            "reward": 13.459153217219171,
+            "creation_time": 1778657721.5749898,
+            "auxillary_file_paths": [
+                "C:\\Riot Games\\The-Knight\\Assets\\results\\run58_aggressive_kill_finetune\\CombatAgentConfig\\CombatAgentConfig-1000009.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.2.2+cpu"
+    }
+}

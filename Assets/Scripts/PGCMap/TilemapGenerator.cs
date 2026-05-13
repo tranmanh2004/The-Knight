@@ -183,6 +183,84 @@ public class TilemapGenerator : MonoBehaviour
         SpawnEnemiesFromTextIfNeeded();
     }
 
+    public bool TryGetShortestPathInfo(Vector3 fromWorld, Vector3 toWorld, out int distance, out Vector2 nextStepDirection)
+    {
+        distance = -1;
+        nextStepDirection = Vector2.zero;
+
+        if (_lastRoomGrid == null || tilemap == null)
+        {
+            return false;
+        }
+
+        Vector3Int fromCellWorld = tilemap.WorldToCell(fromWorld);
+        Vector3Int toCellWorld = tilemap.WorldToCell(toWorld);
+        Vector2Int fromCell = new Vector2Int(fromCellWorld.x - startPosition.x, fromCellWorld.y - startPosition.y);
+        Vector2Int toCell = new Vector2Int(toCellWorld.x - startPosition.x, toCellWorld.y - startPosition.y);
+
+        if (!IsFloorCell(_lastRoomGrid, fromCell.x, fromCell.y) || !IsFloorCell(_lastRoomGrid, toCell.x, toCell.y))
+        {
+            return false;
+        }
+
+        int width = _lastRoomGrid.GetLength(0);
+        int height = _lastRoomGrid.GetLength(1);
+        int[,] distances = new int[width, height];
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                distances[x, y] = -1;
+            }
+        }
+
+        Queue<Vector2Int> queue = new Queue<Vector2Int>();
+        queue.Enqueue(toCell);
+        distances[toCell.x, toCell.y] = 0;
+
+        while (queue.Count > 0)
+        {
+            Vector2Int current = queue.Dequeue();
+            if (current == fromCell)
+            {
+                break;
+            }
+
+            EnqueuePathDistanceCell(queue, distances, current.x + 1, current.y, distances[current.x, current.y] + 1);
+            EnqueuePathDistanceCell(queue, distances, current.x - 1, current.y, distances[current.x, current.y] + 1);
+            EnqueuePathDistanceCell(queue, distances, current.x, current.y + 1, distances[current.x, current.y] + 1);
+            EnqueuePathDistanceCell(queue, distances, current.x, current.y - 1, distances[current.x, current.y] + 1);
+        }
+
+        distance = distances[fromCell.x, fromCell.y];
+        if (distance < 0)
+        {
+            return false;
+        }
+
+        if (distance == 0)
+        {
+            return true;
+        }
+
+        Vector2Int bestNeighbor = fromCell;
+        int bestDistance = distance;
+        TrySelectLowerDistanceNeighbor(distances, fromCell.x + 1, fromCell.y, ref bestNeighbor, ref bestDistance);
+        TrySelectLowerDistanceNeighbor(distances, fromCell.x - 1, fromCell.y, ref bestNeighbor, ref bestDistance);
+        TrySelectLowerDistanceNeighbor(distances, fromCell.x, fromCell.y + 1, ref bestNeighbor, ref bestDistance);
+        TrySelectLowerDistanceNeighbor(distances, fromCell.x, fromCell.y - 1, ref bestNeighbor, ref bestDistance);
+
+        if (bestNeighbor != fromCell)
+        {
+            Vector3 fromCenter = tilemap.GetCellCenterWorld(new Vector3Int(startPosition.x + fromCell.x, startPosition.y + fromCell.y, 0));
+            Vector3 nextCenter = tilemap.GetCellCenterWorld(new Vector3Int(startPosition.x + bestNeighbor.x, startPosition.y + bestNeighbor.y, 0));
+            Vector2 direction = (Vector2)(nextCenter - fromCenter);
+            nextStepDirection = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector2.zero;
+        }
+
+        return true;
+    }
+
     // -------------------------------------------------------------------------
     //  Pool
     // -------------------------------------------------------------------------
@@ -1021,6 +1099,32 @@ public class TilemapGenerator : MonoBehaviour
 
         reachable[x, y] = true;
         queue.Enqueue(new Vector2Int(x, y));
+    }
+
+    private void EnqueuePathDistanceCell(Queue<Vector2Int> queue, int[,] distances, int x, int y, int nextDistance)
+    {
+        if (!IsFloorCell(_lastRoomGrid, x, y) || distances[x, y] >= 0)
+        {
+            return;
+        }
+
+        distances[x, y] = nextDistance;
+        queue.Enqueue(new Vector2Int(x, y));
+    }
+
+    private void TrySelectLowerDistanceNeighbor(int[,] distances, int x, int y, ref Vector2Int bestNeighbor, ref int bestDistance)
+    {
+        if (x < 0 || y < 0 || x >= distances.GetLength(0) || y >= distances.GetLength(1))
+        {
+            return;
+        }
+
+        int candidateDistance = distances[x, y];
+        if (candidateDistance >= 0 && candidateDistance < bestDistance)
+        {
+            bestDistance = candidateDistance;
+            bestNeighbor = new Vector2Int(x, y);
+        }
     }
 
     private bool IsReachableFromPlayerSpawn(int[,] grid, int x, int y)

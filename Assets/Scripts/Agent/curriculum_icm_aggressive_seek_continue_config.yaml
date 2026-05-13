@@ -1,0 +1,52 @@
+behaviors:
+  CombatAgentConfig:
+    trainer_type: ppo
+    hyperparameters:
+      batch_size: 2048
+      buffer_size: 20480
+      learning_rate: 5.0e-5
+      beta: 0.001
+      epsilon: 0.1
+      lambd: 0.95
+      num_epoch: 2
+      learning_rate_schedule: linear
+    network_settings:
+      hidden_units: 256
+      num_layers: 2
+      normalize: true
+    reward_signals:
+      extrinsic:
+        gamma: 0.99
+        strength: 1.0
+      curiosity:
+        strength: 0.005
+        gamma: 0.99
+        encoding_size: 256
+        learning_rate: 5.0e-4
+    # Continue from run50_curr_icm, but bias the policy toward proactive hunting.
+    #
+    # Code-side env parameter:
+    #   aggressive_seek=1 enables extra shaping in CombatAgent:
+    #     - reward moving toward the nearest living enemy, even without LOS target
+    #     - penalty for idling or moving away while enemies are alive
+    #     - small bonus when an enemy becomes a valid target
+    #
+    # Trainer-side changes vs run50:
+    #   beta 0.004 -> 0.001 to reduce entropy plateau and make actions decisive.
+    #   ICM strength 0.01 -> 0.005 to keep curiosity but avoid competing with combat.
+    #   Hard-only lesson because run50 already passed Easy/Medium curriculum.
+    max_steps: 3000000
+    time_horizon: 64
+    summary_freq: 10000
+    keep_checkpoints: 10
+    checkpoint_interval: 500000
+
+environment_parameters:
+  difficulty:
+    curriculum:
+      - name: Hard
+        value: 3
+  aggressive_seek:
+    curriculum:
+      - name: Enabled
+        value: 1

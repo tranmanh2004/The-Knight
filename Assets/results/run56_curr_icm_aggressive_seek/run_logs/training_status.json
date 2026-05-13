@@ -1,0 +1,116 @@
+{
+    "difficulty": {
+        "lesson_num": 0
+    },
+    "aggressive_seek": {
+        "lesson_num": 0
+    },
+    "CombatAgentConfig": {
+        "checkpoints": [
+            {
+                "steps": 199954,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run56_curr_icm_aggressive_seek\\CombatAgentConfig\\CombatAgentConfig-199954.onnx",
+                "reward": 11.078917742951921,
+                "creation_time": 1778646313.6800873,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run56_curr_icm_aggressive_seek\\CombatAgentConfig\\CombatAgentConfig-199954.pt"
+                ]
+            },
+            {
+                "steps": 299982,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run56_curr_icm_aggressive_seek\\CombatAgentConfig\\CombatAgentConfig-299982.onnx",
+                "reward": 9.237114704897007,
+                "creation_time": 1778646454.2924283,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run56_curr_icm_aggressive_seek\\CombatAgentConfig\\CombatAgentConfig-299982.pt"
+                ]
+            },
+            {
+                "steps": 399969,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run56_curr_icm_aggressive_seek\\CombatAgentConfig\\CombatAgentConfig-399969.onnx",
+                "reward": 13.622777358007928,
+                "creation_time": 1778646591.9566329,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run56_curr_icm_aggressive_seek\\CombatAgentConfig\\CombatAgentConfig-399969.pt"
+                ]
+            },
+            {
+                "steps": 499993,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run56_curr_icm_aggressive_seek\\CombatAgentConfig\\CombatAgentConfig-499993.onnx",
+                "reward": 8.134816360588257,
+                "creation_time": 1778646735.005739,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run56_curr_icm_aggressive_seek\\CombatAgentConfig\\CombatAgentConfig-499993.pt"
+                ]
+            },
+            {
+                "steps": 599992,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run56_curr_icm_aggressive_seek\\CombatAgentConfig\\CombatAgentConfig-599992.onnx",
+                "reward": 12.707839811220765,
+                "creation_time": 1778646876.9683743,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run56_curr_icm_aggressive_seek\\CombatAgentConfig\\CombatAgentConfig-599992.pt"
+                ]
+            },
+            {
+                "steps": 699984,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run56_curr_icm_aggressive_seek\\CombatAgentConfig\\CombatAgentConfig-699984.onnx",
+                "reward": 2.6436019241809845,
+                "creation_time": 1778647017.1192071,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run56_curr_icm_aggressive_seek\\CombatAgentConfig\\CombatAgentConfig-699984.pt"
+                ]
+            },
+            {
+                "steps": 799999,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run56_curr_icm_aggressive_seek\\CombatAgentConfig\\CombatAgentConfig-799999.onnx",
+                "reward": 11.158366764033282,
+                "creation_time": 1778647152.9566433,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run56_curr_icm_aggressive_seek\\CombatAgentConfig\\CombatAgentConfig-799999.pt"
+                ]
+            },
+            {
+                "steps": 899965,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run56_curr_icm_aggressive_seek\\CombatAgentConfig\\CombatAgentConfig-899965.onnx",
+                "reward": 8.752364947906006,
+                "creation_time": 1778647294.7480373,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run56_curr_icm_aggressive_seek\\CombatAgentConfig\\CombatAgentConfig-899965.pt"
+                ]
+            },
+            {
+                "steps": 999952,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run56_curr_icm_aggressive_seek\\CombatAgentConfig\\CombatAgentConfig-999952.onnx",
+                "reward": 8.049724146331611,
+                "creation_time": 1778647433.6879432,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run56_curr_icm_aggressive_seek\\CombatAgentConfig\\CombatAgentConfig-999952.pt"
+                ]
+            },
+            {
+                "steps": 1000016,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run56_curr_icm_aggressive_seek\\CombatAgentConfig\\CombatAgentConfig-1000016.onnx",
+                "reward": 8.049724146331611,
+                "creation_time": 1778647433.7400386,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run56_curr_icm_aggressive_seek\\CombatAgentConfig\\CombatAgentConfig-1000016.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 1000016,
+            "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run56_curr_icm_aggressive_seek\\CombatAgentConfig.onnx",
+            "reward": 8.049724146331611,
+            "creation_time": 1778647433.7400386,
+            "auxillary_file_paths": [
+                "C:\\Riot Games\\The-Knight\\Assets\\results\\run56_curr_icm_aggressive_seek\\CombatAgentConfig\\CombatAgentConfig-1000016.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.2.2+cpu"
+    }
+}

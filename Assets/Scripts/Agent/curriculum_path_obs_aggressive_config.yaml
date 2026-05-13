@@ -1,0 +1,70 @@
+behaviors:
+  CombatAgentConfig:
+    trainer_type: ppo
+    hyperparameters:
+      batch_size: 2048
+      buffer_size: 20480
+      learning_rate: 5.0e-5
+      beta: 0.002
+      epsilon: 0.1
+      lambd: 0.95
+      num_epoch: 2
+      learning_rate_schedule: linear
+    network_settings:
+      hidden_units: 256
+      num_layers: 2
+      normalize: true
+    reward_signals:
+      extrinsic:
+        gamma: 0.99
+        strength: 1.0
+      curiosity:
+        strength: 0.001
+        gamma: 0.99
+        encoding_size: 256
+        learning_rate: 2.0e-4
+    # New 210-dim observation run:
+    #   Adds BFS next-step direction and shortest-path distance to the nearest
+    #   living enemy, so the policy can see the route instead of only being
+    #   rewarded after guessing it from wall rays.
+    #
+    # Do not initialize this run from older 207-dim checkpoints.
+    max_steps: 5000000
+    time_horizon: 64
+    summary_freq: 10000
+    keep_checkpoints: 15
+    checkpoint_interval: 250000
+
+environment_parameters:
+  difficulty:
+    curriculum:
+      - name: EasyFixed
+        completion_criteria:
+          measure: reward
+          behavior: CombatAgentConfig
+          signal_smoothing: true
+          min_lesson_length: 100
+          threshold: 8.0
+        value: 0
+      - name: MediumFixed
+        completion_criteria:
+          measure: reward
+          behavior: CombatAgentConfig
+          signal_smoothing: true
+          min_lesson_length: 100
+          threshold: 7.0
+        value: 1
+      - name: HardFixed
+        completion_criteria:
+          measure: reward
+          behavior: CombatAgentConfig
+          signal_smoothing: true
+          min_lesson_length: 100
+          threshold: 8.0
+        value: 2
+      - name: HardRandom
+        value: 3
+  aggressive_seek:
+    curriculum:
+      - name: Enabled
+        value: 1

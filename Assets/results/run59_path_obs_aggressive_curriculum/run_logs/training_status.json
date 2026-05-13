@@ -1,0 +1,161 @@
+{
+    "difficulty": {
+        "lesson_num": 3
+    },
+    "aggressive_seek": {
+        "lesson_num": 0
+    },
+    "CombatAgentConfig": {
+        "checkpoints": [
+            {
+                "steps": 1999996,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig\\CombatAgentConfig-1999996.onnx",
+                "reward": 13.518884074687957,
+                "creation_time": 1778661715.5296586,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig\\CombatAgentConfig-1999996.pt"
+                ]
+            },
+            {
+                "steps": 2249938,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig\\CombatAgentConfig-2249938.onnx",
+                "reward": 13.391376353347221,
+                "creation_time": 1778662058.8561714,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig\\CombatAgentConfig-2249938.pt"
+                ]
+            },
+            {
+                "steps": 2499979,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig\\CombatAgentConfig-2499979.onnx",
+                "reward": 16.49550044421966,
+                "creation_time": 1778662395.0015545,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig\\CombatAgentConfig-2499979.pt"
+                ]
+            },
+            {
+                "steps": 2749960,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig\\CombatAgentConfig-2749960.onnx",
+                "reward": 21.56351202726364,
+                "creation_time": 1778662738.1237915,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig\\CombatAgentConfig-2749960.pt"
+                ]
+            },
+            {
+                "steps": 2999948,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig\\CombatAgentConfig-2999948.onnx",
+                "reward": 14.426665312051773,
+                "creation_time": 1778663080.6702878,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig\\CombatAgentConfig-2999948.pt"
+                ]
+            },
+            {
+                "steps": 3000012,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig\\CombatAgentConfig-3000012.onnx",
+                "reward": 14.426665312051773,
+                "creation_time": 1778663080.724827,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig\\CombatAgentConfig-3000012.pt"
+                ]
+            },
+            {
+                "steps": 3249978,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig\\CombatAgentConfig-3249978.onnx",
+                "reward": 14.444247328318083,
+                "creation_time": 1778663760.4627736,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig\\CombatAgentConfig-3249978.pt"
+                ]
+            },
+            {
+                "steps": 3499995,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig\\CombatAgentConfig-3499995.onnx",
+                "reward": 17.308977879894275,
+                "creation_time": 1778664121.7419531,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig\\CombatAgentConfig-3499995.pt"
+                ]
+            },
+            {
+                "steps": 3749994,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig\\CombatAgentConfig-3749994.onnx",
+                "reward": 16.014037063016612,
+                "creation_time": 1778664479.6419358,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig\\CombatAgentConfig-3749994.pt"
+                ]
+            },
+            {
+                "steps": 3999960,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig\\CombatAgentConfig-3999960.onnx",
+                "reward": 16.233859315980226,
+                "creation_time": 1778664851.1417758,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig\\CombatAgentConfig-3999960.pt"
+                ]
+            },
+            {
+                "steps": 4249963,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig\\CombatAgentConfig-4249963.onnx",
+                "reward": 16.193905080066006,
+                "creation_time": 1778665240.2292247,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig\\CombatAgentConfig-4249963.pt"
+                ]
+            },
+            {
+                "steps": 4499966,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig\\CombatAgentConfig-4499966.onnx",
+                "reward": 16.272044867277145,
+                "creation_time": 1778666175.192079,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig\\CombatAgentConfig-4499966.pt"
+                ]
+            },
+            {
+                "steps": 4749993,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig\\CombatAgentConfig-4749993.onnx",
+                "reward": 16.8519302555605,
+                "creation_time": 1778666546.5899577,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig\\CombatAgentConfig-4749993.pt"
+                ]
+            },
+            {
+                "steps": 4999943,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig\\CombatAgentConfig-4999943.onnx",
+                "reward": 16.66144448699373,
+                "creation_time": 1778666901.471758,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig\\CombatAgentConfig-4999943.pt"
+                ]
+            },
+            {
+                "steps": 5000007,
+                "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig\\CombatAgentConfig-5000007.onnx",
+                "reward": 16.66144448699373,
+                "creation_time": 1778666901.5254114,
+                "auxillary_file_paths": [
+                    "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig\\CombatAgentConfig-5000007.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 5000007,
+            "file_path": "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig.onnx",
+            "reward": 16.66144448699373,
+            "creation_time": 1778666901.5254114,
+            "auxillary_file_paths": [
+                "C:\\Riot Games\\The-Knight\\Assets\\results\\run59_path_obs_aggressive_curriculum\\CombatAgentConfig\\CombatAgentConfig-5000007.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.2.2+cpu"
+    }
+}

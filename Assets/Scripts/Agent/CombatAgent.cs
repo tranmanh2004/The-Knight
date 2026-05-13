@@ -11,7 +11,7 @@ using System.Collections.Generic;
 /// 
 /// OBSERVATION SPECIFICATION:
 /// ===========================
-/// Total observation size: 207 dimensions
+/// Total observation size: 210 dimensions
 ///
 /// Player Features (13 dims):
 ///   - Health (1), Ammo (1), Cooldown (1), WeaponReady (1), Speed (1)
@@ -31,7 +31,10 @@ using System.Collections.Generic;
 /// Wall Features (16 dims = WALL_RAY_COUNT rays × 1):
 ///   - 16 rays every 22.5°: normalized distance to nearest wall (0=touching, 1=nothing in range)
 ///
-/// Total = 13 + 4 + 54 + 120 + 16 = 207 dims
+/// Path-to-Enemy Features (3 dims):
+///   - BFS next-step direction X,Y (2), normalized shortest-path distance to nearest living enemy (1)
+///
+/// Total = 13 + 4 + 3 + 54 + 120 + 16 = 210 dims
 ///
 /// CRITICAL: If changing MaxEnemies, MaxBullets, or WALL_RAY_COUNT,
 /// update BehaviorParameters.VectorObservationSize in the Unity Inspector to match!
@@ -60,13 +63,23 @@ public class CombatAgent : Agent
     private const float ApproachTargetReward = 0.008f;
     private const float MoveAwayFromTargetPenalty = -0.001f;
     private const float AimAtTargetReward = 0.001f;
-    private const float ReadyAttackIntentWithTargetReward = 0.003f;
+    private const float ReadyAttackIntentWithTargetReward = 0.01f;
     private const float CooldownPatienceReward = 0.0001f;
-    private const float AttackAlignedReward = 0.05f;
+    private const float AttackAlignedReward = 0.12f;
     private const float InvalidAttackPenalty = -0.003f;
+    private const float MissedAttackPenalty = -0.05f;
+    private const int MissedAttackGraceDecisions = 4;
     private const float UsefulDashReward = 0.04f;
     private const float WastefulDashPenalty = -0.002f;
     private const float IdleNearEnemyPenalty = -0.0005f;
+    private const float AggressiveSeekProgressReward = 0.04f;
+    private const float AggressiveSeekProgressRewardCap = 0.06f;
+    private const float AggressiveSeekDirectionReward = 0.01f;
+    private const float AggressiveSeekMoveAwayPenalty = -0.008f;
+    private const float AggressiveSeekIdlePenalty = -0.004f;
+    private const float AggressiveSeekTargetAcquiredReward = 0.05f;
+    private const float CloseTargetNoAttackPenalty = -0.008f;
+    private const int AggressiveSeekClosePathDistance = 2;
     private const float EpisodicCoverageReward = 0f;
     private const float CoverageGridCellSize = 1f;
     private const bool AutoAimAttackAtCurrentTarget = true;
@@ -172,8 +185,13 @@ public class CombatAgent : Agent
     [Tooltip("Max world-space movement between logged decisions that counts as standing still.")]
     public float DebugStuckDistanceEpsilon = 0.05f;
 
+    [Header("Aggressive Seek Training")]
+    [Tooltip("Adds extra reward for moving toward the nearest living enemy even before it is a valid line-of-sight target. Can also be enabled by trainer env parameter 'aggressive_seek'=1.")]
+    public bool UseAggressiveSeekReward = false;
+
     // --- Hằng số định danh hành động ---
-    public const int VectorObservationSize = 207;
+    public const int VectorObservationSize = 210;
+    private const float MaxPathObservationDistance = 64f;
     private const int WALL_RAY_COUNT = 16;   // 16 rays × 22.5° — adds 16 dims to observation
     private const int BRANCH_MOVE_X = 0;
     private const int BRANCH_MOVE_Y = 1;
@@ -222,6 +240,10 @@ public class CombatAgent : Agent
     private int _consecutiveInvalidAttacks = 0;
     private int _groundedStuckRecoveries = 0;
     private int _agentStuckRecoveries = 0;
+    private float _previousSeekEnemyDistance = -1f;
+    private bool _hadTargetLastDecision = false;
+    private int _pendingAttackDecision = -1;
+    private float _pendingAttackEnemyHealth = -1f;
 
     // --- Object Lists (cached to avoid GC allocation) ---
     private List<GameObject> _enemies = new List<GameObject>();
@@ -418,6 +440,9 @@ public class CombatAgent : Agent
         _previousTotalEnemyHealth = GetTotalEnemyHealth();
         _previousEnemyCount = GetLivingEnemyCount();
         _previousTargetDistance = GetCurrentTargetDistance();
+        _previousSeekEnemyDistance = -1f;
+        _hadTargetLastDecision = IsTargetValid(_currentTarget);
+        ClearPendingAttack();
     }
 
     /// <summary>
@@ -678,6 +703,9 @@ public class CombatAgent : Agent
         // === GLOBAL FEATURES (4 dims) ===
         CollectGlobalFeatures(sensor);
 
+        // === PATH-TO-ENEMY FEATURES (3 dims) ===
+        CollectPathToEnemyFeatures(sensor);
+
         // === VARIABLE-LENGTH OBJECT LISTS ===
         CollectEnemyFeatures(sensor);
         CollectBulletFeatures(sensor);
@@ -828,6 +856,34 @@ public class CombatAgent : Agent
 
         // Recent deaths nearby (placeholder)
         sensor.AddObservation(0.0f);
+    }
+
+    private void CollectPathToEnemyFeatures(VectorSensor sensor)
+    {
+        if (!TryGetNearestLivingEnemy(out Transform nearestEnemy))
+        {
+            sensor.AddObservation(0.0f);
+            sensor.AddObservation(0.0f);
+            sensor.AddObservation(1.0f);
+            return;
+        }
+
+        if (TryGetPathDistanceToEnemy(nearestEnemy, out int pathDistance, out Vector2 nextStepDirection))
+        {
+            sensor.AddObservation(Mathf.Clamp(nextStepDirection.x, -1f, 1f));
+            sensor.AddObservation(Mathf.Clamp(nextStepDirection.y, -1f, 1f));
+            sensor.AddObservation(Mathf.Clamp01(pathDistance / MaxPathObservationDistance));
+            return;
+        }
+
+        Vector2 fallbackToEnemy = nearestEnemy.position - transform.position;
+        Vector2 fallbackDirection = fallbackToEnemy.sqrMagnitude > 0.0001f
+            ? fallbackToEnemy.normalized
+            : Vector2.zero;
+
+        sensor.AddObservation(fallbackDirection.x);
+        sensor.AddObservation(fallbackDirection.y);
+        sensor.AddObservation(Mathf.Clamp01(fallbackToEnemy.magnitude / Mathf.Max(1f, VisionRadius)));
     }
 
     /// <summary>
@@ -1079,7 +1135,12 @@ public class CombatAgent : Agent
         if (enemyDamageDealt > 0f)
         {
             _episodeDamageDealt += enemyDamageDealt;
+            ClearPendingAttack();
             AddReward(Mathf.Min(DealDamageReward, enemyDamageDealt * DamageRewardPerPoint));
+        }
+        else
+        {
+            PenalizeMissedAttackIfExpired(currHealth);
         }
 
         int killed = prevCount - currCount;
@@ -1178,6 +1239,7 @@ public class CombatAgent : Agent
         if (!hasTarget)
         {
             _previousTargetDistance = -1f;
+            AddAggressiveSeekReward(movement, hasTarget, isAttacking);
             if (isAttacking)
             {
                 _consecutiveInvalidAttacks++;
@@ -1187,6 +1249,8 @@ public class CombatAgent : Agent
             }
             return;
         }
+
+        AddAggressiveSeekReward(movement, hasTarget, isAttacking);
 
         float currentDistance = GetCurrentTargetDistance();
         if (_previousTargetDistance >= 0f)
@@ -1236,6 +1300,7 @@ public class CombatAgent : Agent
             {
                 _consecutiveInvalidAttacks = 0;
                 _episodeAlignedAttacks++;
+                RegisterPendingAttack();
                 AddReward(AttackAlignedReward * aimDot);
             }
             else
@@ -1245,6 +1310,158 @@ public class CombatAgent : Agent
                 AddReward(InvalidAttackPenalty * 0.5f);
             }
         }
+    }
+
+    private void AddAggressiveSeekReward(Vector2 movement, bool hasTarget, bool isAttacking)
+    {
+        if (!IsAggressiveSeekRewardEnabled())
+        {
+            _previousSeekEnemyDistance = -1f;
+            _hadTargetLastDecision = hasTarget;
+            return;
+        }
+
+        Transform nearestEnemy;
+        if (!TryGetNearestLivingEnemy(out nearestEnemy))
+        {
+            _previousSeekEnemyDistance = -1f;
+            _hadTargetLastDecision = false;
+            return;
+        }
+
+        Vector2 toEnemy = (Vector2)nearestEnemy.position - (Vector2)transform.position;
+        float distance = toEnemy.magnitude;
+        float seekDistance = distance;
+        Vector2 seekDirection = toEnemy.sqrMagnitude > 0.0001f ? toEnemy.normalized : Vector2.zero;
+        int pathDistance;
+        Vector2 pathDirection;
+        bool hasPathDistance = TryGetPathDistanceToEnemy(nearestEnemy, out pathDistance, out pathDirection);
+        if (hasPathDistance)
+        {
+            seekDistance = pathDistance;
+            if (pathDirection.sqrMagnitude > 0.0001f)
+            {
+                seekDirection = pathDirection;
+            }
+        }
+
+        if (distance <= 0.0001f)
+        {
+            _previousSeekEnemyDistance = seekDistance;
+            _hadTargetLastDecision = hasTarget;
+            return;
+        }
+
+        if (hasTarget && !_hadTargetLastDecision)
+        {
+            AddReward(AggressiveSeekTargetAcquiredReward);
+        }
+
+        bool madeProgress = false;
+        if (_previousSeekEnemyDistance >= 0f)
+        {
+            float progress = _previousSeekEnemyDistance - seekDistance;
+            if (progress > 0.01f)
+            {
+                madeProgress = true;
+                AddReward(Mathf.Min(AggressiveSeekProgressRewardCap, progress * AggressiveSeekProgressReward));
+            }
+            else if (progress < -0.01f)
+            {
+                AddReward(Mathf.Max(-0.02f, progress * Mathf.Abs(AggressiveSeekMoveAwayPenalty)));
+            }
+        }
+
+        bool closeEnoughToFight = hasPathDistance
+            ? pathDistance <= AggressiveSeekClosePathDistance
+            : distance <= 2.5f;
+        bool weaponReady = IsWeaponReady();
+        if (hasTarget && closeEnoughToFight && weaponReady && !isAttacking)
+        {
+            AddReward(CloseTargetNoAttackPenalty);
+            _previousSeekEnemyDistance = seekDistance;
+            _hadTargetLastDecision = hasTarget;
+            return;
+        }
+
+        if (movement.sqrMagnitude <= 0.0001f)
+        {
+            AddReward(AggressiveSeekIdlePenalty);
+        }
+        else if (madeProgress || (hasPathDistance && !closeEnoughToFight))
+        {
+            float moveDot = seekDirection.sqrMagnitude > 0.0001f
+                ? Vector2.Dot(movement.normalized, seekDirection.normalized)
+                : 0f;
+            if (moveDot > 0.25f)
+            {
+                float directionScale = madeProgress ? 1f : 0.5f;
+                AddReward(AggressiveSeekDirectionReward * directionScale * moveDot);
+            }
+            else if (moveDot < -0.25f)
+            {
+                AddReward(AggressiveSeekMoveAwayPenalty * -moveDot);
+            }
+        }
+
+        _previousSeekEnemyDistance = seekDistance;
+        _hadTargetLastDecision = hasTarget;
+    }
+
+    private bool IsAggressiveSeekRewardEnabled()
+    {
+        if (UseAggressiveSeekReward)
+        {
+            return true;
+        }
+
+        return Academy.Instance != null
+            && Academy.Instance.EnvironmentParameters.GetWithDefault("aggressive_seek", 0f) >= 0.5f;
+    }
+
+    private bool TryGetPathDistanceToEnemy(Transform enemy, out int pathDistance, out Vector2 nextStepDirection)
+    {
+        pathDistance = -1;
+        nextStepDirection = Vector2.zero;
+
+        return enemy != null
+            && EpisodeRoomGenerator != null
+            && EpisodeRoomGenerator.TryGetShortestPathInfo(transform.position, enemy.position, out pathDistance, out nextStepDirection);
+    }
+
+    private void RegisterPendingAttack()
+    {
+        _pendingAttackDecision = _episodeDecisionCount;
+        _pendingAttackEnemyHealth = _previousTotalEnemyHealth;
+    }
+
+    private void ClearPendingAttack()
+    {
+        _pendingAttackDecision = -1;
+        _pendingAttackEnemyHealth = -1f;
+    }
+
+    private void PenalizeMissedAttackIfExpired(float currentEnemyHealth)
+    {
+        if (_pendingAttackDecision < 0)
+        {
+            return;
+        }
+
+        if (_pendingAttackEnemyHealth >= 0f && currentEnemyHealth < _pendingAttackEnemyHealth - 0.001f)
+        {
+            ClearPendingAttack();
+            return;
+        }
+
+        if (_episodeDecisionCount - _pendingAttackDecision < MissedAttackGraceDecisions)
+        {
+            return;
+        }
+
+        _episodeInvalidAttacks++;
+        AddReward(MissedAttackPenalty);
+        ClearPendingAttack();
     }
 
     private bool TryEndBrokenEpisodeIfNeeded()
@@ -2067,6 +2284,30 @@ public class CombatAgent : Agent
         }
 
         return count;
+    }
+
+    private bool TryGetNearestLivingEnemy(out Transform nearestEnemy)
+    {
+        nearestEnemy = null;
+        float nearestDistance = float.MaxValue;
+
+        for (int i = 0; i < _trackedEnemies.Count; i++)
+        {
+            GameObject enemy = _trackedEnemies[i];
+            if (!IsLivingEnemy(enemy))
+            {
+                continue;
+            }
+
+            float distance = Vector2.Distance(transform.position, enemy.transform.position);
+            if (distance < nearestDistance)
+            {
+                nearestDistance = distance;
+                nearestEnemy = enemy.transform;
+            }
+        }
+
+        return nearestEnemy != null;
     }
 
     private void RefreshTrackedEnemies()
