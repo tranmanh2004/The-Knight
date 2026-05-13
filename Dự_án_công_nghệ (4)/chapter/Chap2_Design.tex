@@ -2,13 +2,13 @@
 \setcounter{secnumdepth}{3}
 
 \setcounter{chapter}{1}
-\chapter[{PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG AGENT}]{Phân tích và Thiết kế Hệ thống Agent}
+\chapter[{PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG TÁC NHÂN}]{Phân tích và Thiết kế Hệ thống Tác nhân}
 
 Chương này trình bày thiết kế hệ thống tác nhân cho bài toán điều khiển nhân vật trong môi trường game hành động Roguelike sinh bản đồ theo thủ tục. So với phiên bản thử nghiệm ban đầu chỉ điều khiển tác nhân cận chiến, hệ thống cuối cùng sử dụng CombatAgent: một tác nhân nhận quan sát dạng vector có cấu trúc, điều khiển di chuyển -- ngắm -- chiến đấu bằng không gian hành động rời rạc nhiều nhánh, và được huấn luyện trên nhiều mức độ khó thông qua curriculum learning. Thiết kế này nhằm trả lời câu hỏi chính của khóa luận: làm thế nào để một chính sách PPO học được hành vi chiến đấu ổn định trong môi trường vừa có bản đồ thay đổi, vừa có tín hiệu thưởng thưa.
 
 \section{Mô hình hóa bài toán dưới dạng MDP}
 
-Theo mô hình học tăng cường đã trình bày ở Chương~1, bài toán được mô tả dưới dạng một Quy trình Quyết định Markov (Markov Decision Process -- MDP) với bộ thành phần $(S,A,P,R,\gamma)$ \cite{Schulman2017}. Tại mỗi bước quyết định, agent quan sát trạng thái hiện tại $s_t$, chọn hành động $a_t$, nhận phần thưởng $r_t$, sau đó môi trường Unity cập nhật sang trạng thái $s_{t+1}$ theo logic gameplay, vật lý 2D và cách sinh bản đồ.
+Theo mô hình học tăng cường đã trình bày ở Chương~1, bài toán được mô tả dưới dạng một Quy trình Quyết định Markov (Markov Decision Process -- MDP) với bộ thành phần $(S,A,P,R,\gamma)$ \cite{Schulman2017}. Tại mỗi bước quyết định, tác nhân quan sát trạng thái hiện tại $s_t$, chọn hành động $a_t$, nhận phần thưởng $r_t$, sau đó môi trường Unity cập nhật sang trạng thái $s_{t+1}$ theo logic gameplay, vật lý 2D và cách sinh bản đồ.
 
 Trong phạm vi khóa luận, $S$ là không gian quan sát vector của CombatAgent; $A$ là không gian hành động rời rạc nhiều nhánh gồm bốn nhánh; $R$ là hàm thưởng kết hợp giữa tín hiệu kết quả như tiêu diệt kẻ địch và tín hiệu định hình như tiếp cận mục tiêu; $\gamma=0.99$ là hệ số chiết khấu trong cấu hình PPO. Mục tiêu huấn luyện là tìm chính sách $\pi_{\theta}(a|s)$ tối đa hóa kỳ vọng tổng thưởng:
 
@@ -17,7 +17,7 @@ Trong phạm vi khóa luận, $S$ là không gian quan sát vector của CombatA
     \left[\sum_{t=0}^{T}\gamma^t r_t\right].
 \end{equation}
 
-Điểm khó của bài toán nằm ở chỗ phân phối trạng thái thay đổi theo từng episode. Bản đồ được chọn từ nhiều text map khác nhau, vị trí spawn có thể cố định hoặc ngẫu nhiên theo lesson, kẻ địch và đạn di chuyển liên tục, còn phần thưởng hoàn thành phòng chỉ xuất hiện khi agent tiêu diệt đủ mục tiêu. Vì vậy, hệ thống cần một biểu diễn trạng thái đủ giàu để mô tả chiến đấu, nhưng vẫn đủ gọn để học hiệu quả bằng PPO.
+Điểm khó của bài toán nằm ở chỗ phân phối trạng thái thay đổi theo từng episode. Bản đồ được chọn từ nhiều text map khác nhau, vị trí sinh có thể cố định hoặc ngẫu nhiên theo lesson, kẻ địch và đạn di chuyển liên tục, còn phần thưởng hoàn thành phòng chỉ xuất hiện khi tác nhân tiêu diệt đủ mục tiêu. Vì vậy, hệ thống cần một biểu diễn trạng thái đủ giàu để mô tả chiến đấu, nhưng vẫn đủ gọn để học hiệu quả bằng PPO.
 
 \section{Không gian quan sát}
 
@@ -32,15 +32,15 @@ Hệ thống sử dụng quan sát dạng vector thay vì ảnh pixel. Lựa ch�
         \hline
         \textbf{Nhóm quan sát} & \textbf{Số chiều} & \textbf{Nội dung chính} \\
         \hline
-        Trạng thái người chơi & 13 & Máu, đạn, hồi chiêu, trạng thái sẵn sàng của vũ khí, tốc độ, sát thương gần đây, hướng vận tốc và padding để giữ kích thước cố định. \\
+        Trạng thái người chơi & 13 & Máu, đạn, hồi chiêu, trạng thái sẵn sàng của vũ khí, tốc độ, sát thương gần đây, hướng vận tốc và giá trị đệm để giữ kích thước cố định. \\
         \hline
         Thông tin toàn cục & 4 & Tỷ lệ kẻ địch nhìn thấy, tỷ lệ đạn nhìn thấy, thời gian episode đã chuẩn hóa và tín hiệu chết gần đây. \\
         \hline
-        Kẻ địch gần nhất & 54 & 3 kẻ địch $\times$ 18 đặc trưng: vị trí tương đối, vận tốc tương đối, khoảng cách, máu, mức đe dọa, trạng thái tấn công, hồi chiêu và padding. \\
+        Kẻ địch gần nhất & 54 & 3 kẻ địch $\times$ 18 đặc trưng: vị trí tương đối, vận tốc tương đối, khoảng cách, máu, mức đe dọa, trạng thái tấn công, hồi chiêu và giá trị đệm. \\
         \hline
-        Đạn trong vùng nhìn & 120 & 10 viên đạn $\times$ 12 đặc trưng: vị trí tương đối, vận tốc, khoảng cách, thời gian ước lượng tới va chạm, loại chủ sở hữu và padding. \\
+        Đạn trong vùng nhìn & 120 & 10 viên đạn $\times$ 12 đặc trưng: vị trí tương đối, vận tốc, khoảng cách, thời gian ước lượng tới va chạm, loại chủ sở hữu và giá trị đệm. \\
         \hline
-        Tường/vật cản & 16 & 16 tia ray đều quanh agent, mỗi tia trả về khoảng cách chuẩn hóa tới tường gần nhất. \\
+        Tường/vật cản & 16 & 16 tia ray đều quanh tác nhân, mỗi tia trả về khoảng cách chuẩn hóa tới tường gần nhất. \\
         \hline
         \textbf{Tổng} & \textbf{207} & $13 + 4 + 54 + 120 + 16 = 207$. \\
         \hline
@@ -76,7 +76,7 @@ Hệ thống sử dụng quan sát dạng vector thay vì ảnh pixel. Lựa ch�
 \label{fig:obs_breakdown}
 \end{figure}
 
-Thiết kế này cố ý tách rõ thông tin người chơi, kẻ địch, đạn và tường. Agent không cần suy luận vị trí đạn từ ảnh thô, nhưng vẫn phải học cách kết hợp nhiều nguồn nguy cơ: vừa tiếp cận kẻ địch để gây sát thương, vừa tránh đạn và không mắc vào tường. Vì số lượng kẻ địch và đạn trong scene có thể thay đổi, các block được giới hạn bởi MaxEnemies=3 và MaxBullets=10; nếu thiếu đối tượng thì hệ thống thêm giá trị 0 để vector luôn có kích thước cố định.
+Thiết kế này cố ý tách rõ thông tin người chơi, kẻ địch, đạn và tường. Tác nhân không cần suy luận vị trí đạn từ ảnh thô, nhưng vẫn phải học cách kết hợp nhiều nguồn nguy cơ: vừa tiếp cận kẻ địch để gây sát thương, vừa tránh đạn và không mắc vào tường. Vì số lượng kẻ địch và đạn trong cảnh chơi có thể thay đổi, các nhóm đặc trưng được giới hạn bởi MaxEnemies=3 và MaxBullets=10; nếu thiếu đối tượng thì hệ thống thêm giá trị 0 để vector luôn có kích thước cố định.
 
 \section{Không gian hành động}
 
@@ -156,7 +156,7 @@ Giá trị này được dùng lại trong Chương~4 khi phân tích hiện tư
 
 \section{Thiết kế hàm phần thưởng}
 
-Hàm thưởng được thiết kế theo hướng kết hợp sparse outcome reward và dense shaping reward \cite{Ibrahim2024}. Nhóm sparse reward phản ánh mục tiêu thật của phòng chơi, còn shaping reward cung cấp gradient trung gian để PPO không bị kẹt trong giai đoạn chưa từng hoàn thành phòng.
+Hàm thưởng được thiết kế theo hướng kết hợp phần thưởng kết quả thưa và phần thưởng định hình dày \cite{Ibrahim2024}. Nhóm phần thưởng kết quả thưa phản ánh mục tiêu thật của phòng chơi, còn phần thưởng định hình cung cấp tín hiệu học trung gian để PPO không bị kẹt trong giai đoạn chưa từng hoàn thành phòng.
 
 \begin{table}[H]
     \centering
@@ -167,28 +167,28 @@ Hàm thưởng được thiết kế theo hướng kết hợp sparse outcome re
         \hline
         \textbf{Sự kiện} & \textbf{v1} & \textbf{v2} & \textbf{Vai trò} \\
         \hline
-        Gây sát thương & $+1.0$ & $+1.5$ & Khuyến khích tạo damage thay vì chỉ né tránh. \\
+        Gây sát thương & $+1.0$ & $+1.5$ & Khuyến khích gây sát thương thay vì chỉ né tránh. \\
         \hline
         Hạ một kẻ địch & $+3.0$ & $+5.0$ & Tín hiệu kết quả thưa nhưng có ý nghĩa chiến thuật cao. \\
         \hline
         Dọn sạch toàn bộ phòng & $+5.0$ & $+10.0$ & Mục tiêu cuối của episode; reward v2 tăng mạnh tín hiệu hoàn thành. \\
         \hline
-        Tiếp cận mục tiêu & $+0.008 \times \Delta d$ & $+0.003 \times \Delta d$ & Shaping khoảng cách, giảm ở v2 để tránh agent chỉ tối ưu tiếp cận. \\
+        Tiếp cận mục tiêu & $+0.008 \times \Delta d$ & $+0.003 \times \Delta d$ & Định hình theo khoảng cách, giảm ở v2 để tránh tác nhân chỉ tối ưu hành vi tiếp cận. \\
         \hline
-        Tấn công đúng hướng & $+0.05$ & $+0.15$ & Tăng reward cho ý định tấn công có căn chỉnh tốt. \\
+        Tấn công đúng hướng & $+0.05$ & $+0.15$ & Tăng phần thưởng cho ý định tấn công có căn chỉnh tốt. \\
         \hline
         Đứng gần địch không hành động & $-0.0005$ & $-0.002$ & Phạt hành vi chần chừ trong vùng nguy hiểm. \\
         \hline
-        Agent chết & $-2.0$ & $-2.0$ & Tín hiệu terminal âm. \\
+        Tác nhân chết & $-2.0$ & $-2.0$ & Tín hiệu kết thúc âm. \\
         \hline
     \end{tabular}
 \end{table}
 
-Bảng~\ref{tab:reward_components} chỉ liệt kê các thành phần chính. Trong hiện thực, code còn có các tín hiệu nhỏ hơn như time penalty, phạt nhận sát thương, thưởng dash hữu ích, phạt tấn công không hợp lệ và reward căn chỉnh hướng ngắm. Cấu hình v1 được dùng cho các run chính từ run34 đến run54. Cấu hình v2 được dùng trong run55 như một thí nghiệm thay đổi thang reward, vì vậy các giá trị mean reward của run55 không được so trực tiếp với các run v1.
+Bảng~\ref{tab:reward_components} chỉ liệt kê các thành phần chính. Trong hiện thực, mã nguồn còn có các tín hiệu nhỏ hơn như phạt theo thời gian, phạt nhận sát thương, thưởng dash hữu ích, phạt tấn công không hợp lệ và phần thưởng căn chỉnh hướng ngắm. Cấu hình v1 được dùng cho các run chính từ run34 đến run54. Cấu hình v2 được dùng trong run55 như một thí nghiệm thay đổi thang thưởng, vì vậy các giá trị phần thưởng trung bình của run55 không được so trực tiếp với các run v1.
 
 \section{Sinh bản đồ bằng PCGNN và TilemapGenerator}
 
-Môi trường huấn luyện dùng pipeline hai tầng. Tầng thứ nhất là PCGNN chạy offline ở phía Python để sinh nhiều bản đồ ứng viên từ một genome đã huấn luyện. Tầng thứ hai là TilemapGenerator trong Unity, có nhiệm vụ đọc các bản đồ văn bản đã được tuyển chọn, chuyển thành tilemap, chọn vị trí sinh và đưa phòng vào episode huấn luyện. Thiết kế này giữ được tính đa dạng của PCGNN nhưng tránh việc gọi Python trực tiếp trong mỗi episode Unity, nhờ đó giảm rủi ro latency và lỗi tích hợp trong quá trình train.
+Môi trường huấn luyện dùng pipeline hai tầng. Tầng thứ nhất là PCGNN chạy ngoại tuyến ở phía Python để sinh nhiều bản đồ ứng viên từ một genome đã huấn luyện. Tầng thứ hai là TilemapGenerator trong Unity, có nhiệm vụ đọc các bản đồ văn bản đã được tuyển chọn, chuyển thành tilemap, chọn vị trí sinh và đưa phòng vào episode huấn luyện. Thiết kế này giữ được tính đa dạng của PCGNN nhưng tránh việc gọi Python trực tiếp trong mỗi episode Unity, nhờ đó giảm rủi ro độ trễ và lỗi tích hợp trong quá trình huấn luyện.
 
 \textbf{Huấn luyện generator bằng NEAT, novelty search và MAP-Elites.} Trong giai đoạn sinh bản đồ, mỗi genome trong quần thể NEAT được xem như một generator. Genome này mã hóa một mạng nơ-ron dùng để quyết định tile tại từng vị trí của bản đồ dựa trên ngữ cảnh cục bộ và đầu vào ngẫu nhiên. Ở mỗi thế hệ, mỗi generator sinh ra một tập bản đồ ứng viên, sau đó được đánh giá bằng hàm fitness kết hợp giữa khả năng sinh bản đồ hợp lệ, novelty nội bộ, novelty so với archive, độ phủ MAP-Elites và một số ràng buộc hình học như mật độ tường hoặc mức độ rẽ nhánh.
 
@@ -197,15 +197,15 @@ Các generator có fitness cao có xác suất lớn hơn được chọn làm b
 MAP-Elites được bổ sung để duy trì tính đa dạng có kiểm soát. Không gian đặc trưng của bản đồ được chia thành nhiều ô dựa trên các chỉ số hình học như độ dài đường đi và mật độ tường. Với mỗi ô, hệ thống lưu lại generator tốt nhất đã tìm được. Generator nào sinh ra tập bản đồ phủ được nhiều ô đặc trưng hơn sẽ nhận thêm điểm độ phủ MAP-Elites trong fitness. Cơ chế này giúp hạn chế hiện tượng generator hội tụ vào một kiểu bản đồ duy nhất, đồng thời tạo ra nguồn bản đồ ứng viên đa dạng hơn cho bước kiểm tra, phân loại và chọn lọc trước khi đưa vào Unity.
 
 
-Mỗi bản đồ sau khi sinh được chuẩn hóa về định dạng văn bản của trò chơi: ký tự \# biểu diễn tường, . biểu diễn sàn, P là vị trí sinh người chơi và E là vị trí sinh kẻ địch. Vì output gốc của PCGNN chủ yếu là ma trận tile, đề tài bổ sung một adapter để đặt P/E trên cùng một thành phần liên thông của vùng sàn. Sau đó hệ thống chạy BFS để kiểm tra người chơi có thể đi tới kẻ địch hay không trước khi bản đồ được đưa vào tập huấn luyện.
+Mỗi bản đồ sau khi sinh được chuẩn hóa về định dạng văn bản của trò chơi: ký tự \# biểu diễn tường, . biểu diễn sàn, P là vị trí sinh người chơi và E là vị trí sinh kẻ địch. Vì output gốc của PCGNN chủ yếu là ma trận tile, đề tài bổ sung một bộ chuyển đổi để đặt P/E trên cùng một thành phần liên thông của vùng sàn. Sau đó hệ thống chạy BFS để kiểm tra người chơi có thể đi tới kẻ địch hay không trước khi bản đồ được đưa vào tập huấn luyện.
 
 \begin{figure}[H]
     \centering
     \begin{tikzpicture}[node distance=1.7cm, >=stealth, every node/.style={font=\small}]
         \node[draw, rounded corners, align=center, minimum width=2.7cm, minimum height=0.9cm] (pcgnn) {PCGNN\\genome};
-        \node[draw, rounded corners, align=center, right of=pcgnn, xshift=2.0cm, minimum width=2.9cm, minimum height=0.9cm] (adapter) {Adapter\\text map};
+        \node[draw, rounded corners, align=center, right of=pcgnn, xshift=2.0cm, minimum width=2.9cm, minimum height=0.9cm] (adapter) {Bộ chuyển đổi\\text map};
         \node[draw, rounded corners, align=center, right of=adapter, xshift=2.0cm, minimum width=3.0cm, minimum height=0.9cm] (metric) {BFS + metrics\\difficulty};
-        \node[draw, rounded corners, align=center, below of=adapter, yshift=-0.4cm, minimum width=3.2cm, minimum height=0.9cm] (tiers) {Easy/Medium/Hard\\folders};
+        \node[draw, rounded corners, align=center, below of=adapter, yshift=-0.4cm, minimum width=3.2cm, minimum height=0.9cm] (tiers) {Easy/Medium/Hard\\thư mục};
         \node[draw, rounded corners, align=center, right of=tiers, xshift=2.0cm, minimum width=3.0cm, minimum height=0.9cm] (unity) {TilemapGenerator\\Unity episode};
         \draw[->] (pcgnn) -- (adapter);
         \draw[->] (adapter) -- (metric);
@@ -234,29 +234,29 @@ Mỗi bản đồ sau khi sinh được chuẩn hóa về định dạng văn b�
     \label{eq:map_difficulty_score}
 \end{equation}
 
-Trong công thức~\ref{eq:map_difficulty_score}, \emph{wall\_ratio} được gán trọng số cao nhất vì mật độ tường ảnh hưởng trực tiếp đến không gian di chuyển và mức độ phức tạp của bản đồ. Các thành phần còn lại như độ dài đường đi, tỷ lệ ngõ cụt và độ khó A* đóng vai trò bổ trợ, giúp tinh chỉnh thứ hạng độ khó thay vì chi phối hoàn toàn kết quả phân loại. Thay vì đặt ngưỡng tuyệt đối cứng cho mọi generator, hệ thống có thể chia bản đồ theo thứ hạng tương đối: 5\% dễ nhất được đưa vào Easy, 5\% tiếp theo vào Medium và phần còn lại vào Hard. Cách chia này phù hợp với giai đoạn tuyển chọn thủ công vì người thiết kế vẫn có thể xem lại từng folder và chọn những bản đồ tốt nhất trước khi đưa sang Unity.
+Trong công thức~\ref{eq:map_difficulty_score}, \emph{wall\_ratio} được gán trọng số cao nhất vì mật độ tường ảnh hưởng trực tiếp đến không gian di chuyển và mức độ phức tạp của bản đồ. Các thành phần còn lại như độ dài đường đi, tỷ lệ ngõ cụt và độ khó A* đóng vai trò bổ trợ, giúp tinh chỉnh thứ hạng độ khó thay vì chi phối hoàn toàn kết quả phân loại. Thay vì đặt ngưỡng tuyệt đối cứng cho mọi generator, hệ thống có thể chia bản đồ theo thứ hạng tương đối: 5\% dễ nhất được đưa vào Easy, 5\% tiếp theo vào Medium và phần còn lại vào Hard. Cách chia này phù hợp với giai đoạn tuyển chọn thủ công vì người thiết kế vẫn có thể xem lại từng thư mục và chọn những bản đồ tốt nhất trước khi đưa sang Unity.
 
-\textbf{Tập bản đồ đưa vào Unity.} Ở giai đoạn sinh ứng viên, batch PCGNN chính có 1000 bản đồ kích thước $14\times14$ và có thể được chia theo tỷ lệ 5/5/90 để tạo tập ứng viên Easy, Medium và Hard. Tuy nhiên, khóa luận không sử dụng toàn bộ 1000 bản đồ này trong Unity. Thay vào đó, các bản đồ được xem xét và chọn lọc theo từng mức độ khó, sau đó chỉ một tập con đại diện được gán trực tiếp cho các thí nghiệm hiện tại, gồm 5 Easy, 5 Medium và 50 Hard. Cách dùng tập con này giúp kiểm soát chất lượng bản đồ trước khi mở rộng phân loại đầy đủ: Easy và Medium đóng vai trò ``giàn giáo'' trong giai đoạn đầu, còn Hard là phân phối mục tiêu chiếm phần lớn thời gian huấn luyện.
+\textbf{Tập bản đồ đưa vào Unity.} Ở giai đoạn sinh ứng viên, tập bản đồ PCGNN chính có 1000 bản đồ kích thước $14\times14$ và có thể được chia theo tỷ lệ 5/5/90 để tạo tập ứng viên Easy, Medium và Hard. Tuy nhiên, khóa luận không sử dụng toàn bộ 1000 bản đồ này trong Unity. Thay vào đó, các bản đồ được xem xét và chọn lọc theo từng mức độ khó, sau đó chỉ một tập con đại diện được gán trực tiếp cho các thí nghiệm hiện tại, gồm 5 Easy, 5 Medium và 50 Hard. Cách dùng tập con này giúp kiểm soát chất lượng bản đồ trước khi mở rộng phân loại đầy đủ: Easy và Medium đóng vai trò tạo tín hiệu học ban đầu trong giai đoạn đầu, còn Hard là phân phối mục tiêu chiếm phần lớn thời gian huấn luyện.
 
 \begin{table}[H]
     \centering
     \small
-    \caption{Phân bố bản đồ đang gán trong Unity theo tier độ khó}
+    \caption{Phân bố bản đồ đang gán trong Unity theo nhóm độ khó}
     \label{tab:map_split}
     \begin{tabular}{|p{2.5cm}|c|c|p{7.5cm}|}
         \hline
-        \textbf{Tier} & \textbf{Số bản đồ} & \textbf{Tỷ lệ} & \textbf{Vai trò trong huấn luyện} \\
+        \textbf{Nhóm} & \textbf{Số bản đồ} & \textbf{Tỷ lệ} & \textbf{Vai trò trong huấn luyện} \\
         \hline
-        Easy   & 5  & 8.33\%  & Giàn giáo gradient cho giai đoạn $\sim$0--70k bước; tập nhỏ đã được chọn để agent gặp success thường xuyên. \\
+        Easy   & 5  & 8.33\%  & Tạo tín hiệu học ban đầu cho giai đoạn $\sim$0--70k bước; tập nhỏ đã được chọn để tác nhân có cơ hội hoàn thành phòng thường xuyên hơn. \\
         \hline
         Medium & 5  & 8.33\%  & Bước trung gian từ Easy sang Hard, dùng khoảng $\sim$70k--140k bước. \\
         \hline
-        Hard   & 50 & 83.33\% & Phân phối mục tiêu, chiếm hơn 95\% thời gian huấn luyện; số lượng lớn hơn hai tier đầu để tăng đa dạng bố cục. \\
+        Hard   & 50 & 83.33\% & Phân phối mục tiêu, chiếm hơn 95\% thời gian huấn luyện; số lượng lớn hơn hai nhóm đầu để tăng đa dạng bố cục. \\
         \hline
     \end{tabular}
 \end{table}
 
-Trong Unity, TilemapGenerator không cần biết bản đồ được vẽ tay hay sinh bằng PCGNN. Thành phần này chỉ đọc text asset theo tier hiện tại, dựng tilemap và kiểm tra lại vùng có thể đi tới. Với các lesson dùng fixed spawn, TilemapGenerator ưu tiên ô sàn có độ phủ BFS tốt để tránh trường hợp player hoặc enemy bị cô lập. Với lesson dùng random spawn, player và enemy được chọn từ các ô sàn hợp lệ nhằm tăng phương sai môi trường. Hình~\ref{fig:unity_tilemap_generator_inspector} minh họa cấu hình TilemapGenerator trong Inspector, trong đó Unity đang dùng chế độ Curriculum với 5 Easy maps, 5 Medium maps và 50 Hard maps.
+Trong Unity, TilemapGenerator không cần biết bản đồ được vẽ tay hay sinh bằng PCGNN. Thành phần này chỉ đọc text asset theo nhóm hiện tại, dựng tilemap và kiểm tra lại vùng có thể đi tới. Với các lesson dùng fixed spawn, TilemapGenerator ưu tiên ô sàn có độ phủ BFS tốt để tránh trường hợp người chơi hoặc kẻ địch bị cô lập. Với lesson dùng random spawn, người chơi và kẻ địch được chọn từ các ô sàn hợp lệ nhằm tăng phương sai môi trường. Hình~\ref{fig:unity_tilemap_generator_inspector} minh họa cấu hình TilemapGenerator trong Inspector, trong đó Unity đang dùng chế độ Curriculum với 5 bản đồ Easy, 5 bản đồ Medium và 50 bản đồ Hard.
 
 \begin{figure}[H]
     \centering
@@ -265,35 +265,35 @@ Trong Unity, TilemapGenerator không cần biết bản đồ được vẽ tay 
     \label{fig:unity_tilemap_generator_inspector}
 \end{figure}
 
-Bảng~\ref{tab:difficulty_spawn_policy} tóm tắt cách chọn bản đồ và vị trí sinh trong từng mức độ khó. Trong các run curriculum chính, tham số môi trường \emph{difficulty} do ML-Agents truyền vào quyết định cả folder bản đồ lẫn chế độ spawn. Với \emph{difficulty}=0, 1 và 2, hệ thống dùng fixed spawn: trên mỗi bản đồ, vị trí người chơi được chọn theo một quy tắc xác định và được cache lại, còn các vị trí enemy được chọn từ các ô sàn có thể đi tới từ người chơi, trải theo các mức khoảng cách trung bình để tránh việc quái luôn xuất hiện quá gần hoặc quá xa. Với \emph{difficulty}=3, hệ thống vẫn dùng tập Hard nhưng chuyển sang random spawn: người chơi và enemy được lấy ngẫu nhiên từ các ô sàn hợp lệ sau mỗi episode. Trong cấu hình huấn luyện chính, số enemy sinh ra mỗi episode được giới hạn bởi \emph{randomEnemySpawnCount}=2; nếu có nhiều prefab enemy, prefab cụ thể được lấy từ mảng \emph{enemyPrefabs}.
+Bảng~\ref{tab:difficulty_spawn_policy} tóm tắt cách chọn bản đồ và vị trí sinh trong từng mức độ khó. Trong các run curriculum chính, tham số môi trường \emph{difficulty} do ML-Agents truyền vào quyết định cả thư mục bản đồ lẫn chế độ spawn. Với \emph{difficulty}=0, 1 và 2, hệ thống dùng fixed spawn: trên mỗi bản đồ, vị trí người chơi được chọn theo một quy tắc xác định và được lưu tạm, còn các vị trí kẻ địch được chọn từ các ô sàn có thể đi tới từ người chơi, trải theo các mức khoảng cách trung bình để tránh việc kẻ địch luôn xuất hiện quá gần hoặc quá xa. Với \emph{difficulty}=3, hệ thống vẫn dùng tập Hard nhưng chuyển sang random spawn: người chơi và kẻ địch được lấy ngẫu nhiên từ các ô sàn hợp lệ sau mỗi episode. Trong cấu hình huấn luyện chính, số kẻ địch sinh ra mỗi episode được giới hạn bởi \emph{randomEnemySpawnCount}=2; nếu có nhiều prefab enemy, prefab cụ thể được lấy từ mảng \emph{enemyPrefabs}.
 
 \begin{table}[H]
     \centering
     \small
-    \caption{Chính sách chọn map và spawn theo tham số \emph{difficulty}}
+    \caption{Chính sách chọn bản đồ và vị trí sinh theo tham số \emph{difficulty}}
     \label{tab:difficulty_spawn_policy}
     \makebox[\textwidth][c]{%
     \begin{tabular}{|c|p{2.3cm}|p{2.5cm}|p{4.0cm}|p{4.0cm}|}
         \hline
-        \textbf{\emph{difficulty}} & \textbf{Tier bản đồ} & \textbf{Chế độ spawn} & \textbf{Player spawn} & \textbf{Enemy spawn} \\
+        \textbf{\emph{difficulty}} & \textbf{Nhóm bản đồ} & \textbf{Chế độ spawn} & \textbf{Player spawn} & \textbf{Enemy spawn} \\
         \hline
-        0 & Easy & Fixed & Một ô sàn hợp lệ được chọn xác định cho từng map, ưu tiên vùng có không gian di chuyển tốt. & Tối đa 2 enemy ở các ô sàn hợp lệ, có thể đi tới từ player và phân bố ở khoảng cách trung bình. \\
+        0 & Easy & Fixed & Một ô sàn hợp lệ được chọn xác định cho từng bản đồ, ưu tiên vùng có không gian di chuyển tốt. & Tối đa 2 kẻ địch ở các ô sàn hợp lệ, có thể đi tới từ người chơi và phân bố ở khoảng cách trung bình. \\
         \hline
-        1 & Medium & Fixed & Giữ quy tắc fixed spawn như Easy nhưng dùng tập map phức tạp hơn. & Giữ quy tắc fixed enemy spawn để giảm phương sai khi agent học bản đồ khó hơn. \\
+        1 & Medium & Fixed & Giữ quy tắc fixed spawn như Easy nhưng dùng tập bản đồ phức tạp hơn. & Giữ quy tắc fixed enemy spawn để giảm phương sai khi tác nhân học bản đồ khó hơn. \\
         \hline
-        2 & Hard & Fixed & Dùng tập Hard nhưng vẫn cố định spawn theo từng map. & Enemy vẫn được đặt xác định theo map để agent học kỹ năng combat trên cấu trúc khó trước. \\
+        2 & Hard & Fixed & Dùng tập Hard nhưng vẫn cố định vị trí sinh theo từng bản đồ. & Kẻ địch vẫn được đặt xác định theo bản đồ để tác nhân học kỹ năng chiến đấu trên cấu trúc khó trước. \\
         \hline
-        3 & Hard & Random & Chọn ngẫu nhiên một ô sàn hợp lệ ở mỗi episode. & Chọn ngẫu nhiên tối đa 2 ô sàn hợp lệ có thể đi tới từ player, nhằm tăng khả năng khái quát hóa với spawn mới. \\
+        3 & Hard & Random & Chọn ngẫu nhiên một ô sàn hợp lệ ở mỗi episode. & Chọn ngẫu nhiên tối đa 2 ô sàn hợp lệ có thể đi tới từ người chơi, nhằm tăng khả năng khái quát hóa với vị trí sinh mới. \\
         \hline
     \end{tabular}
     }
 \end{table}
 
-Như vậy, độ khó không chỉ tăng vì bản đồ chuyển từ Easy sang Medium và Hard, mà còn tăng vì phương sai vị trí sinh được mở rộng ở lesson Hard Random. Cách tách này giúp agent học trước các kỹ năng nền như tiếp cận, né đạn và căn hướng tấn công trong môi trường ít nhiễu hơn, sau đó mới phải thích nghi với vị trí sinh thay đổi mạnh.
+Như vậy, độ khó không chỉ tăng vì bản đồ chuyển từ Easy sang Medium và Hard, mà còn tăng vì phương sai vị trí sinh được mở rộng ở lesson Hard Random. Cách tách này giúp tác nhân học trước các kỹ năng nền như tiếp cận, né đạn và căn hướng tấn công trong môi trường ít nhiễu hơn, sau đó mới phải thích nghi với vị trí sinh thay đổi mạnh.
 
 \section{Khung curriculum learning}
 
-Curriculum learning được dùng để giảm độ khó khám phá ban đầu \cite{Bengio2009}. Thay vì đưa tác nhân ngay vào toàn bộ phân phối Hard, hệ thống bắt đầu từ bản đồ dễ hơn, chuyển sang Medium khi phần thưởng làm mượt vượt ngưỡng, rồi mới mở Hard. Tham số bài học được truyền qua Academy.Instance.EnvironmentParameters với tên difficulty.
+Curriculum learning được dùng để giảm độ khó khám phá ban đầu \cite{Bengio2009}. Thay vì đưa tác nhân ngay vào toàn bộ phân phối Hard, hệ thống bắt đầu từ bản đồ dễ hơn, chuyển sang Medium khi phần thưởng làm mượt vượt ngưỡng, rồi mới chuyển sang nhóm bản đồ Hard. Tham số bài học được truyền qua Academy.Instance.EnvironmentParameters với tên difficulty.
 
 \begin{figure}[H]
     \centering
@@ -312,13 +312,13 @@ Curriculum learning được dùng để giảm độ khó khám phá ban đầu
     \label{fig:curriculum_structure}
 \end{figure}
 
-Trong run46, curriculum gồm 3 lesson: Easy, Medium và Hard. Trong run54, curriculum được mở rộng thành 4 lesson: Easy Fixed, Medium Fixed, Hard Fixed và Hard Random. Biến thể 4-tier kiểm tra giả thuyết rằng việc giảm phương sai spawn ở giai đoạn đầu có thể giúp PPO ổn định hơn trước khi chuyển sang phân phối khó hơn.
+Trong run46, curriculum gồm 3 lesson: Easy, Medium và Hard. Trong run54, curriculum được mở rộng thành 4 lesson: Easy Fixed, Medium Fixed, Hard Fixed và Hard Random. Biến thể 4-tier kiểm tra giả thuyết rằng việc giảm phương sai vị trí sinh ở giai đoạn đầu có thể giúp PPO ổn định hơn trước khi chuyển sang phân phối khó hơn.
 
-Cần phân biệt hai lớp tổ chức độ khó. Lớp thứ nhất là chia tập bản đồ PCGNN thành các folder Easy, Medium và Hard dựa trên chỉ số hình học. Lớp thứ hai là lịch chuyển lesson trong ML-Agents: trainer thay đổi tham số \emph{difficulty} khi reward làm mượt vượt ngưỡng, từ đó TilemapGenerator chọn folder bản đồ và chế độ spawn tương ứng.
+Cần phân biệt hai lớp tổ chức độ khó. Lớp thứ nhất là chia tập bản đồ PCGNN thành các thư mục Easy, Medium và Hard dựa trên chỉ số hình học. Lớp thứ hai là lịch chuyển lesson trong ML-Agents: trainer thay đổi tham số \emph{difficulty} khi phần thưởng làm mượt vượt ngưỡng, từ đó TilemapGenerator chọn thư mục bản đồ và chế độ spawn tương ứng.
 
 \section{Kiến trúc mạng nơ-ron}
 
-Chính sách được huấn luyện bằng PPO trong Unity ML-Agents \cite{Juliani2018}. Cấu hình baseline dùng mạng MLP actor-critic với hidden\_units=256, num\_layers=2, normalize=true. Actor head sinh phân phối xác suất cho bốn branch hành động, còn critic head ước lượng $V(s)$ để tính advantage theo GAE.
+Chính sách được huấn luyện bằng PPO trong Unity ML-Agents \cite{Juliani2018}. Cấu hình nền dùng mạng MLP actor-critic với hidden\_units=256, num\_layers=2, normalize=true. Actor head sinh phân phối xác suất cho bốn nhánh hành động, còn critic head ước lượng $V(s)$ để tính lợi thế theo GAE.
 
 \begin{figure}[H]
     \centering
@@ -337,11 +337,11 @@ Chính sách được huấn luyện bằng PPO trong Unity ML-Agents \cite{Juli
     \label{fig:actor_critic_architecture}
 \end{figure}
 
-Một số run ablation bổ sung bộ nhớ LSTM với memory\_size=256 và sequence\_length=64 để kiểm tra giả thuyết rằng thông tin lịch sử có thể giúp agent xử lý đạn, hồi chiêu và tình huống khuất tầm nhìn. Kết quả định lượng của các lựa chọn kiến trúc này được trình bày ở Chương~4.
+Một số run ablation bổ sung bộ nhớ LSTM với memory\_size=256 và sequence\_length=64 để kiểm tra giả thuyết rằng thông tin lịch sử có thể giúp tác nhân xử lý đạn, hồi chiêu và tình huống khuất tầm nhìn. Kết quả định lượng của các lựa chọn kiến trúc này được trình bày ở Chương~4.
 
 \section{Cấu hình hyperparameter PPO}
 
-Bảng~\ref{tab:ppo_hyperparams} trình bày các hyperparameter chính được sử dụng cho trainer PPO trong Unity ML-Agents \cite{Juliani2018}. Cấu hình này được giữ thống nhất giữa các run ablation từ run34 đến run54 (trừ các phần được thay đổi rõ ràng như intrinsic reward, LSTM hoặc curriculum); run55 chỉ thay đổi reward landscape chứ không thay đổi hyperparameter trainer.
+Bảng~\ref{tab:ppo_hyperparams} trình bày các hyperparameter chính được sử dụng cho trainer PPO trong Unity ML-Agents \cite{Juliani2018}. Cấu hình này được giữ thống nhất giữa các run ablation từ run34 đến run54 (trừ các phần được thay đổi rõ ràng như intrinsic reward, LSTM hoặc curriculum); run55 chỉ thay đổi thang phần thưởng chứ không thay đổi hyperparameter của trainer.
 
 \begin{table}[H]
     \centering
@@ -387,4 +387,4 @@ Bảng~\ref{tab:ppo_hyperparams} trình bày các hyperparameter chính được
     \end{tabular}
 \end{table}
 
-Cấu hình PPO được giữ gần mặc định để tập trung đánh giá curriculum, reward và intrinsic motivation.
+Cấu hình PPO được giữ gần mặc định để tập trung đánh giá curriculum learning, phần thưởng và intrinsic motivation.

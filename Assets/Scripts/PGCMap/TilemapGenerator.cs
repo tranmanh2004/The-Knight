@@ -261,6 +261,23 @@ public class TilemapGenerator : MonoBehaviour
         return true;
     }
 
+    public bool TryGetWalkableAtCellOffset(Vector3 centerWorld, int offsetX, int offsetY, out bool walkable)
+    {
+        walkable = false;
+
+        if (_lastRoomGrid == null || tilemap == null)
+        {
+            return false;
+        }
+
+        Vector3Int centerCellWorld = tilemap.WorldToCell(centerWorld);
+        int gridX = centerCellWorld.x + offsetX - startPosition.x;
+        int gridY = centerCellWorld.y + offsetY - startPosition.y;
+
+        walkable = IsFloorCell(_lastRoomGrid, gridX, gridY);
+        return true;
+    }
+
     // -------------------------------------------------------------------------
     //  Pool
     // -------------------------------------------------------------------------

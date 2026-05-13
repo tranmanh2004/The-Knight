@@ -24,24 +24,24 @@ Do ngân sách huấn luyện không hoàn toàn đồng nhất giữa nhóm kh�
         \hline
         Bước huấn luyện & last\_step & Số bước môi trường cuối cùng được ghi nhận trong event file, dùng để kiểm tra độ dài run. \\
         \hline
-        Reward chính & reward\_tail50, reward\_hard\_from\_140k & Reward cuối run và reward trung bình sau khi curriculum đã vào Hard; dùng để so sánh hiệu năng thay vì chỉ nhìn peak. \\
+        Reward chính & reward\_tail50, reward\_hard\_from\_140k & Phần thưởng cuối run và phần thưởng trung bình sau khi curriculum đã vào Hard; dùng để so sánh hiệu năng thay vì chỉ nhìn peak. \\
         \hline
-        Hành vi combat & kills\_tail50, cleared\_tail50, damage\_dealt\_tail50, damage\_taken\_tail50 & Cho biết agent thật sự tiêu diệt địch, dọn phòng và trao đổi sát thương ra sao, tránh diễn giải reward tổng hợp một cách mơ hồ. \\
+        Hành vi combat & kills\_tail50, cleared\_tail50, damage\_dealt\_tail50, damage\_taken\_tail50 & Cho biết tác nhân thật sự tiêu diệt địch, dọn phòng và trao đổi sát thương ra sao, tránh diễn giải phần thưởng tổng hợp một cách mơ hồ. \\
         \hline
-        Dash & useful\_dash\_rate\_tail50, wasteful\_dash\_rate\_tail50, dash\_actions\_per\_decision\_tail50, blocked\_dash\_actions\_per\_decision\_tail50 & Đánh giá agent có dùng dash như một kỹ năng chiến đấu hay chỉ gần như không dùng/không bị mask. \\
+        Dash & useful\_dash\_rate\_tail50, wasteful\_dash\_rate\_tail50, dash\_actions\_per\_decision\_tail50, blocked\_dash\_actions\_per\_decision\_tail50 & Đánh giá tác nhân có dùng dash như một kỹ năng chiến đấu hay gần như không dùng/không bị mask. \\
         \hline
-        Policy & entropy\_tail50, extrinsic\_value\_estimate\_tail50 & Entropy đo mức stochastic của policy; value estimate cho biết critic đang đặt kỳ vọng extrinsic reward ở mức nào. \\
+        Policy & entropy\_tail50, extrinsic\_value\_estimate\_tail50 & Entropy đo mức ngẫu nhiên của policy; value estimate cho biết critic đang đặt kỳ vọng extrinsic reward ở mức nào. \\
         \hline
-        Loss & policy\_loss\_tail50, value\_loss\_tail50, icm\_inverse\_loss\_tail50 & Theo dõi độ ổn định cập nhật PPO và chất lượng representation của ICM. \\
+        Loss & policy\_loss\_tail50, value\_loss\_tail50, icm\_inverse\_loss\_tail50 & Theo dõi độ ổn định cập nhật PPO và chất lượng biểu diễn của ICM. \\
         \hline
         Intrinsic reward & curiosity\_reward\_tail50, rnd\_reward\_tail50 & Phần thưởng nội tại của ICM/RND, dùng để đọc riêng đóng góp của curiosity. \\
         \hline
-        Reward trung bình trượt & rolling reward 200k bước & Reward được làm mượt theo cửa sổ 200 nghìn bước, dùng để vẽ biểu đồ xu hướng học thay vì chỉ nhìn một điểm cuối. \\
+        Reward trung bình trượt & rolling reward 200k bước & Phần thưởng được làm mượt theo cửa sổ 200 nghìn bước, dùng để vẽ biểu đồ xu hướng học thay vì chỉ nhìn một điểm cuối. \\
         \hline
     \end{tabular}
 \end{table}
 
-Với các run curriculum, khóa luận ưu tiên reward mean trên vùng Hard từ sau bước 140 nghìn và các chỉ số hành vi ở tail-50 cuối run. Các cột peak, head/tail chi tiết hoặc mốc Hard phụ chỉ được dùng khi cần giải thích một hiện tượng cụ thể, vì bảng chính cần phản ánh năng lực combat và trạng thái học của policy hơn là ghi lại quá nhiều số log.
+Với các run curriculum, khóa luận ưu tiên reward mean trên vùng Hard từ sau bước 140 nghìn và các chỉ số hành vi ở tail-50 cuối run. Các cột peak, head/tail chi tiết hoặc mốc Hard phụ chỉ được dùng khi cần giải thích một hiện tượng cụ thể, vì bảng chính cần phản ánh năng lực chiến đấu và trạng thái học của policy hơn là ghi lại quá nhiều số log.
 
 \begin{table}[H]
     \centering
@@ -96,17 +96,17 @@ Trong Bảng~\ref{tab:run_metrics_main}, Reward là reward\_tail50 với các ru
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.98\textwidth]{figures/training/training_reward_curves.png}
-    \caption{Đường reward trong quá trình huấn luyện của các cấu hình chính}
+    \caption{Đường phần thưởng trong quá trình huấn luyện của các cấu hình chính}
     \label{fig:training_reward_curves}
 \end{figure}
 
-Các run không dùng curriculum kết thúc ở 1M bước nên được giữ phẳng sau mốc này để thuận tiện so sánh trực quan trên cùng một trục thời gian. Riêng run55 sử dụng reward v2, do đó giá trị reward tuyệt đối của run này không được so trực tiếp với các run dùng reward v1; hình chủ yếu dùng để đọc xu hướng học và vị trí tương đối giữa các nhóm thí nghiệm.
+Các run không dùng curriculum kết thúc ở 1M bước nên được giữ phẳng sau mốc này để thuận tiện so sánh trực quan trên cùng một trục thời gian. Riêng run55 sử dụng reward v2, do đó giá trị phần thưởng tuyệt đối của run này không được so trực tiếp với các run dùng reward v1; hình chủ yếu dùng để đọc xu hướng học và vị trí tương đối giữa các nhóm thí nghiệm.
 
-\section{PPO nền và các phần thưởng nội tại}
+\section{PPO baseline và các phần thưởng nội tại}
 
-Run34 là cấu hình PPO nền, chưa áp dụng curriculum learning. Sau 1 triệu bước huấn luyện, reward tích lũy trung bình trên 50 episode cuối đạt 2.073, tỷ lệ dọn phòng trung bình đạt 0.129 và tỷ lệ dọn phòng cao nhất đạt 0.50. Kết quả này cho thấy tác nhân đã học được một số hành vi cơ bản như tiếp cận và tấn công kẻ địch, nhưng chưa duy trì ổn định khả năng dọn phòng trên phân phối bản đồ khó.
+Run34 là cấu hình PPO baseline, chưa áp dụng curriculum learning. Sau 1 triệu bước huấn luyện, phần thưởng tích lũy trung bình trên 50 episode cuối đạt 2.073, tỷ lệ dọn phòng trung bình đạt 0.129 và tỷ lệ dọn phòng cao nhất đạt 0.50. Kết quả này cho thấy tác nhân đã học được một số hành vi cơ bản như tiếp cận và tấn công kẻ địch, nhưng chưa duy trì ổn định khả năng dọn phòng trên phân phối bản đồ khó.
 
-Hai biến thể phần thưởng nội tại được đánh giá là ICM ở run35 và RND ở run36. ICM đạt reward tail-50 là 2.416, trong khi RND đạt 2.487. Mặc dù cả hai đều cải thiện so với PPO nền, mức tăng còn tương đối nhỏ và chưa tạo ra thay đổi bản chất trong hành vi của tác nhân. Điều này gợi ý rằng khó khăn chính của môi trường không chỉ nằm ở việc thiếu tín hiệu khám phá, mà còn đến từ độ khó ban đầu của phân phối bản đồ và nhiệm vụ chiến đấu.
+Hai biến thể phần thưởng nội tại được đánh giá là ICM ở run35 và RND ở run36. ICM đạt reward tail-50 là 2.416, trong khi RND đạt 2.487. Mặc dù cả hai đều cải thiện so với PPO baseline, mức tăng còn tương đối nhỏ và chưa tạo ra thay đổi bản chất trong hành vi của tác nhân. Điều này gợi ý rằng khó khăn chính của môi trường không chỉ nằm ở việc thiếu tín hiệu khám phá, mà còn đến từ độ khó ban đầu của phân phối bản đồ và nhiệm vụ chiến đấu.
 
 \begin{figure}[H]
     \centering
@@ -139,14 +139,14 @@ Hai biến thể phần thưởng nội tại được đánh giá là ICM ở r
     \label{fig:baseline_intrinsic_reward}
 \end{figure}
 
-\subsection{ICM và dấu hiệu encoding collapse}
+\subsection{ICM và dấu hiệu biểu diễn chưa ổn định}
 
-ICM học một inverse model dự đoán hành động từ trạng thái trước và sau \cite{Pathak2017}. Với action space $(3,3,3,9)$, entropy ngẫu nhiên lý thuyết là khoảng 5.49 nat. Inverse loss của run35 quanh 4.36, chỉ giảm khoảng 21\% so với mức ngẫu nhiên lý thuyết. Điều này cho thấy encoding học được còn yếu: representation không phân biệt tốt tác động của từng nhánh hành động trong môi trường nhiều yếu tố nhiễu như đạn, kẻ địch và procedural map.
+ICM học một inverse model dự đoán hành động từ trạng thái trước và sau \cite{Pathak2017}. Với action space $(3,3,3,9)$, entropy ngẫu nhiên lý thuyết là khoảng 5.49 nat. Inverse loss của run35 quanh 4.36, chỉ giảm khoảng 21\% so với mức ngẫu nhiên lý thuyết. Điều này cho thấy biểu diễn học được còn yếu: representation không phân biệt tốt tác động của từng nhánh hành động trong môi trường nhiều yếu tố nhiễu như đạn, kẻ địch và bản đồ sinh theo thủ tục.
 
 \begin{figure}[H]
     \centering
     \begin{tikzpicture}[x=1.1cm,y=0.65cm, every node/.style={font=\footnotesize}]
-        \draw[->] (0,0) -- (5.6,0) node[right]{training};
+        \draw[->] (0,0) -- (5.6,0) node[right]{huấn luyện};
         \draw[->] (0,0) -- (0,6.0) node[above]{loss};
         \foreach \y/\label in {1/1,2/2,3/3,4/4,5/5} \draw[gray!25] (0,\y) -- (5.2,\y) node[left, black]{\label};
         \draw[dashed, red] (0,5.49) -- (5.2,5.49);
@@ -158,7 +158,7 @@ ICM học một inverse model dự đoán hành động từ trạng thái trư�
     \label{fig:icm_inverse_plateau}
 \end{figure}
 
-RND không cần dự đoán hành động nên tránh được inverse loss collapse \cite{Burda2018}, nhưng reward nội tại của run36 giảm nhanh về mức nhỏ khi model dự đoán quen với phân phối quan sát. Vì vậy, RND tốt hơn ICM một chút ở reward tail-50, nhưng vẫn chưa vượt qua trần baseline một cách đáng kể.
+RND không cần dự đoán hành động nên tránh được hiện tượng inverse loss suy giảm chất lượng \cite{Burda2018}, nhưng phần thưởng nội tại của run36 giảm nhanh về mức nhỏ khi mô hình dự đoán quen với phân phối quan sát. Vì vậy, RND tốt hơn ICM một chút ở reward tail-50, nhưng vẫn chưa vượt qua trần baseline một cách đáng kể.
 
 \section{Ảnh hưởng của LSTM}
 
@@ -179,7 +179,7 @@ Run42 thêm LSTM với bộ nhớ kích thước 256 và chuỗi quan sát dài 
     \label{fig:lstm_trend}
 \end{figure}
 
-Kết quả này cho thấy memory architecture có thể là hướng cải tiến phụ, nhưng không giải quyết vấn đề chính của môi trường: agent vẫn bắt đầu từ phân phối Hard quá rộng và khó nhận được chuỗi reward thành công đủ thường xuyên.
+Kết quả này cho thấy kiến trúc bộ nhớ có thể là hướng cải tiến phụ, nhưng không giải quyết vấn đề chính của môi trường: tác nhân vẫn bắt đầu từ phân phối Hard quá rộng và khó nhận được chuỗi phần thưởng thành công đủ thường xuyên.
 
 \section{Curriculum learning: cải thiện nổi bật}
 
@@ -210,7 +210,7 @@ Run46 là thí nghiệm quan trọng nhất. Curriculum bắt đầu ở Easy, c
     \label{fig:run46_lesson_transition}
 \end{figure}
 
-Reward theo lesson của run46 cho thấy Easy mean 6.364, Medium mean 4.181 và Hard mean 3.843. Khi vào Hard, đường reward không tăng tuyến tính mà dao động trong vùng 3.1--4.2 theo rolling window 200k bước. Dao động này là hợp lý vì nhóm Hard có nhiều cấu hình bản đồ hơn, đồng thời spawn và phân phối enemy cũng đa dạng hơn.
+Phần thưởng theo lesson của run46 cho thấy Easy mean 6.364, Medium mean 4.181 và Hard mean 3.843. Khi vào Hard, đường phần thưởng không tăng tuyến tính mà dao động trong vùng 3.1--4.2 theo rolling window 200k bước. Dao động này là hợp lý vì nhóm Hard có nhiều cấu hình bản đồ hơn, đồng thời vị trí sinh và phân phối kẻ địch cũng đa dạng hơn.
 
 \begin{figure}[H]
     \centering
@@ -220,7 +220,7 @@ Reward theo lesson của run46 cho thấy Easy mean 6.364, Medium mean 4.181 và
     \vspace{0.2em}
     \begin{minipage}{0.94\textwidth}
         \small
-        Hình cho thấy reward không tăng đều sau khi vào Hard mà dao động quanh một vùng ổn định. Run50 cao hơn run46 ở phần sau quá trình huấn luyện, gợi ý ICM chỉ phát huy rõ khi policy đã có kỹ năng nền từ curriculum.
+        Hình cho thấy phần thưởng không tăng đều sau khi vào Hard mà dao động quanh một vùng ổn định. Run50 cao hơn run46 ở phần sau quá trình huấn luyện, gợi ý ICM chỉ phát huy rõ khi policy đã có kỹ năng nền từ curriculum.
     \end{minipage}
 \end{figure}
 
@@ -232,7 +232,7 @@ Reward theo lesson của run46 cho thấy Easy mean 6.364, Medium mean 4.181 và
     \vspace{0.2em}
     \begin{minipage}{0.94\textwidth}
         \small
-        Tỷ lệ dọn phòng tăng mạnh ở giai đoạn đầu rồi chững lại khi bài toán chuyển sang phân phối Hard. Vì clear rate là chỉ số outcome, đường cong này bổ sung cho reward bằng cách cho thấy cải thiện không chỉ đến từ shaping reward.
+        Tỷ lệ dọn phòng tăng mạnh ở giai đoạn đầu rồi chững lại khi bài toán chuyển sang phân phối Hard. Vì clear rate là chỉ số kết quả, đường cong này bổ sung cho phần thưởng bằng cách cho thấy cải thiện không chỉ đến từ phần thưởng định hình.
     \end{minipage}
 \end{figure}
 
@@ -244,7 +244,7 @@ Reward theo lesson của run46 cho thấy Easy mean 6.364, Medium mean 4.181 và
     \vspace{0.2em}
     \begin{minipage}{0.94\textwidth}
         \small
-        Entropy của ba run nhanh chóng rơi về vùng xấp xỉ 4.40 nat và gần như đi ngang. Điều này giải thích vì sao tăng reward/clear rate không đồng nghĩa với việc policy trở nên quyết định hơn đáng kể.
+        Entropy của ba run nhanh chóng rơi về vùng xấp xỉ 4.40 nat và gần như đi ngang. Điều này giải thích vì sao tăng phần thưởng/clear rate không đồng nghĩa với việc policy trở nên quyết định hơn đáng kể.
     \end{minipage}
 \end{figure}
 
@@ -260,15 +260,15 @@ Reward theo lesson của run46 cho thấy Easy mean 6.364, Medium mean 4.181 và
     \end{minipage}
 \end{figure}
 
-Trong phạm vi các run đã thực hiện, đây là xu hướng mạnh nhất của khóa luận: curriculum không chỉ tăng reward trung bình mà còn tăng các chỉ số hành vi. Tail-50 của run46 đạt 0.994 kills/episode và cleared tail-50 đạt 0.267, cao hơn rõ rệt so với baseline. Về mặt cơ chế, curriculum learning có thể được hiểu như một cơ chế hỗ trợ gradient theo từng giai đoạn: ở Easy, agent gặp các episode thành công đủ thường xuyên để học chuỗi tiếp cận -- ngắm -- tấn công; khi sang Medium và Hard, policy đã có kỹ năng nền thay vì khám phá từ gần như ngẫu nhiên. Tuy nhiên, do mỗi cấu hình mới chỉ có một seed, kết luận này cần được xác nhận thêm bằng các run lặp lại có error bar.
+Trong phạm vi các run đã thực hiện, đây là xu hướng mạnh nhất của khóa luận: curriculum không chỉ tăng phần thưởng trung bình mà còn tăng các chỉ số hành vi. Tail-50 của run46 đạt 0.994 kills/episode và cleared tail-50 đạt 0.267, cao hơn rõ rệt so với baseline. Về mặt cơ chế, curriculum learning có thể được hiểu như một cơ chế hỗ trợ tín hiệu học theo từng giai đoạn: ở Easy, tác nhân gặp các episode thành công đủ thường xuyên để học chuỗi tiếp cận -- ngắm -- tấn công; khi sang Medium và Hard, policy đã có kỹ năng nền thay vì khám phá từ gần như ngẫu nhiên. Tuy nhiên, do mỗi cấu hình mới chỉ có một seed, kết luận này cần được xác nhận thêm bằng các run lặp lại có error bar.
 
 \section{Thử nghiệm kết hợp LSTM và ICM trên nền curriculum learning}
 
 Run47 thêm LSTM vào curriculum. Hard mean đạt 3.765, thấp hơn nhẹ so với 3.843 của run46. Chênh lệch này nhỏ và chưa đủ để kết luận LSTM làm xấu chính sách, nhưng đủ cho thấy memory không tạo thêm cải thiện rõ ràng khi curriculum đã cung cấp scaffold khám phá.
 
-Có hai giả thuyết giải thích kết quả này. Thứ nhất, \textit{LSTM làm chậm tốc độ hội tụ của PPO}: policy loss của run47 là 0.079, cao hơn gần 5 lần so với run46 là 0.017. Điều này gợi ý rằng các trọng số hồi tiếp của LSTM cần nhiều mẫu hơn để ổn định, khiến policy update kém hiệu quả hơn trong cùng 3M bước. Thứ hai, \textit{curriculum đã giải quyết phần lớn nhu cầu về bộ nhớ}: trong môi trường thưa thưởng, lợi ích chính của LSTM là giúp agent nhớ chuỗi hành vi thành công trong episode dài. Tuy nhiên, khi curriculum đã thu hẹp phân phối bản đồ về Easy/Medium ở giai đoạn đầu, độ dài hiệu quả của chuỗi quyết định ngắn lại, làm giảm lợi thế tương đối của LSTM so với MLP thuần.
+Có hai giả thuyết giải thích kết quả này. Thứ nhất, \textit{LSTM làm chậm tốc độ hội tụ của PPO}: policy loss của run47 là 0.079, cao hơn gần 5 lần so với run46 là 0.017. Điều này gợi ý rằng các trọng số hồi tiếp của LSTM cần nhiều mẫu hơn để ổn định, khiến cập nhật policy kém hiệu quả hơn trong cùng 3M bước. Thứ hai, \textit{curriculum đã giải quyết phần lớn nhu cầu về bộ nhớ}: trong môi trường thưa thưởng, lợi ích chính của LSTM là giúp tác nhân nhớ chuỗi hành vi thành công trong episode dài. Tuy nhiên, khi curriculum đã thu hẹp phân phối bản đồ về Easy/Medium ở giai đoạn đầu, độ dài hiệu quả của chuỗi quyết định ngắn lại, làm giảm lợi thế tương đối của LSTM so với MLP thuần.
 
-Run50 bổ sung ICM trên nền curriculum và được huấn luyện đủ 3.00M bước. Trên vùng Hard, reward mean đạt 4.369, cao hơn run46 là 3.843; tail-50 cuối run đạt 4.707. Một số chỉ số hành vi cũng cải thiện nhẹ, gồm số kẻ địch tiêu diệt trung bình đạt 1.016, cleared tail-50 đạt 0.273 và useful dash rate đạt 0.334. Điều này cho thấy ICM có thể hỗ trợ agent khám phá thêm các hành vi có ích khi đã được curriculum dẫn qua giai đoạn học ban đầu. Tuy nhiên, inverse loss vẫn ở mức cao, khoảng 4.337, chỉ giảm nhẹ so với run35. Do đó, cải thiện của run50 chủ yếu thể hiện ở hành vi và reward, trong khi ICM chưa cho thấy khả năng giải quyết triệt để khó khăn biểu diễn phát sinh từ action space rời rạc nhiều nhánh.
+Run50 bổ sung ICM trên nền curriculum và được huấn luyện đủ 3.00M bước. Trên vùng Hard, reward mean đạt 4.369, cao hơn run46 là 3.843; tail-50 cuối run đạt 4.707. Một số chỉ số hành vi cũng cải thiện nhẹ, gồm số kẻ địch tiêu diệt trung bình đạt 1.016, cleared tail-50 đạt 0.273 và useful dash rate đạt 0.334. Điều này cho thấy ICM có thể hỗ trợ tác nhân khám phá thêm các hành vi có ích khi đã được curriculum dẫn qua giai đoạn học ban đầu. Tuy nhiên, inverse loss vẫn ở mức cao, khoảng 4.337, chỉ giảm nhẹ so với run35. Do đó, cải thiện của run50 chủ yếu thể hiện ở hành vi và phần thưởng, trong khi ICM chưa cho thấy khả năng giải quyết triệt để khó khăn biểu diễn phát sinh từ action space rời rạc nhiều nhánh.
 
 \begin{table}[H]
     \centering
@@ -283,16 +283,16 @@ Run50 bổ sung ICM trên nền curriculum và được huấn luyện đủ 3.0
         \hline
         run47 Curriculum + LSTM & 3.0M & 3.765 & Gần tương đương, không có cộng hưởng rõ. \\
         \hline
-        run50 Curriculum + ICM & 3.0M & 4.369 & Cải thiện reward và kill so với run46; inverse loss vẫn cao. \\
+        run50 Curriculum + ICM & 3.0M & 4.369 & Cải thiện phần thưởng và số lần tiêu diệt so với run46; inverse loss vẫn cao. \\
         \hline
     \end{tabular}
 \end{table}
 
-Kết quả cập nhật này làm kết luận tinh tế hơn: curriculum vẫn là yếu tố nền quan trọng nhất, nhưng ICM có thể tạo thêm lợi ích khi agent đã có kỹ năng nền từ các lesson dễ hơn. Dù vậy, inverse loss còn cao cho thấy curiosity signal chủ yếu hỗ trợ khám phá/hành vi ở mức thực nghiệm, chưa chứng minh rằng representation của ICM đã học tốt quan hệ hành động--chuyển trạng thái trong môi trường này.
+Kết quả cập nhật này làm kết luận tinh tế hơn: curriculum vẫn là yếu tố nền quan trọng nhất, nhưng ICM có thể tạo thêm lợi ích khi tác nhân đã có kỹ năng nền từ các lesson dễ hơn. Dù vậy, inverse loss còn cao cho thấy curiosity signal chủ yếu hỗ trợ khám phá/hành vi ở mức thực nghiệm, chưa chứng minh rằng representation của ICM đã học tốt quan hệ hành động--chuyển trạng thái trong môi trường này.
 
-\section{Giảm phương sai môi trường bằng spawn cố định rồi ngẫu nhiên}
+\section{Giảm phương sai môi trường bằng vị trí sinh cố định rồi ngẫu nhiên}
 
-Run54 mở rộng curriculum thành 4 lesson: Easy Fixed, Medium Fixed, Hard Fixed và Hard Random. Lesson Hard Random bắt đầu khoảng 280k bước. Reward Hard mean đạt 3.925, số kill cuối run đạt 0.945 và damage gây ra đạt 33.673. Các chỉ số này gần run46 nhưng không vượt rõ, nên kết quả này được xem là tie có cải thiện marginal.
+Run54 mở rộng curriculum thành 4 lesson: Easy Fixed, Medium Fixed, Hard Fixed và Hard Random. Lesson Hard Random bắt đầu khoảng 280k bước. Reward Hard mean đạt 3.925, số lần tiêu diệt cuối run đạt 0.945 và sát thương gây ra đạt 33.673. Các chỉ số này gần run46 nhưng không vượt rõ, nên kết quả này được xem là tương đương với mức cải thiện nhỏ.
 
 \begin{figure}[H]
     \centering
@@ -329,19 +329,19 @@ Run54 mở rộng curriculum thành 4 lesson: Easy Fixed, Medium Fixed, Hard Fix
         \node[below=4pt] at (4.8,0){280k};
         \node[below=4pt] at (8.8,0){3M};
     \end{tikzpicture}
-    \caption{Curriculum 4-tier của run54: fixed spawn trước, random spawn sau}
+    \caption{Curriculum 4-tier của run54: vị trí sinh cố định trước, vị trí sinh ngẫu nhiên sau}
     \label{fig:run54_four_tier}
 \end{figure}
 
-Fixed spawn giúp giảm phương sai ở giai đoạn đầu, nhưng khi chuyển sang Hard Random thì agent vẫn phải xử lý cùng phân phối khó. Vì vậy, run54 chỉ cải thiện nhẹ ở hành vi combat và không làm thay đổi xu hướng tổng quát: curriculum là yếu tố chính trong nhóm thí nghiệm này, còn fixed-to-random là một biến thể thiết kế môi trường có tác động nhỏ hơn so với chính curriculum.
+Vị trí sinh cố định giúp giảm phương sai ở giai đoạn đầu, nhưng khi chuyển sang Hard Random thì tác nhân vẫn phải xử lý cùng phân phối khó. Vì vậy, run54 chỉ cải thiện nhẹ ở hành vi chiến đấu và không làm thay đổi xu hướng tổng quát: curriculum là yếu tố chính trong nhóm thí nghiệm này, còn chuyển từ vị trí sinh cố định sang ngẫu nhiên là một biến thể thiết kế môi trường có tác động nhỏ hơn so với chính curriculum.
 
 \section{Reward v2: tăng phần thưởng kết quả nhưng thay đổi thang đo}
 
-Run55 thay đổi reward landscape: tăng mạnh reward kill/clear/damage/aligned attack, giảm reward tiếp cận và phạt idle gần địch mạnh hơn. Log cuối cùng đã đạt 3.00M bước. Reward tail-50 đạt 9.600 và Hard mean đạt 9.337, nhưng không thể so trực tiếp với run46 vì thang reward đã thay đổi.
+Run55 thay đổi cấu trúc hàm thưởng: tăng mạnh phần thưởng tiêu diệt/dọn phòng/sát thương/tấn công đúng hướng, giảm phần thưởng tiếp cận và phạt đứng gần địch không hành động mạnh hơn. Log cuối cùng đã đạt 3.00M bước. Reward tail-50 đạt 9.600 và Hard mean đạt 9.337, nhưng không thể so trực tiếp với run46 vì thang thưởng đã thay đổi.
 
-Chỉ số đáng chú ý hơn là cleared peak đạt 0.80, cao hơn peak 0.615 của run46. Điều này cho thấy outcome-heavy reward có thể đẩy agent tấn công quyết đoán hơn. Tuy nhiên entropy tail vẫn quanh 4.408, nghĩa là reward v2 chưa phá được entropy plateau.
+Chỉ số đáng chú ý hơn là cleared peak đạt 0.80, cao hơn peak 0.615 của run46. Điều này cho thấy reward v2 nhấn mạnh kết quả có thể đẩy tác nhân tấn công quyết đoán hơn. Tuy nhiên entropy tail vẫn quanh 4.408, nghĩa là reward v2 chưa phá được entropy plateau.
 
-Do đó, run55 được tách khỏi nhóm so sánh reward v1 khi diễn giải reward mean. Với reward v2, các chỉ số đáng dùng hơn là cleared rate, kills, damage gây ra, damage nhận vào, survival hoặc các metric đã chuẩn hóa theo cùng thang đo. Cách tách này tránh việc hiểu nhầm rằng reward 9.337 của run55 có thể so trực tiếp với reward 3.843 của run46.
+Do đó, run55 được tách khỏi nhóm so sánh reward v1 khi diễn giải reward mean. Với reward v2, các chỉ số đáng dùng hơn là cleared rate, kills, sát thương gây ra, sát thương nhận vào, survival hoặc các metric đã chuẩn hóa theo cùng thang đo. Cách tách này tránh việc hiểu nhầm rằng giá trị phần thưởng 9.337 của run55 có thể so trực tiếp với giá trị 3.843 của run46.
 
 \begin{figure}[H]
     \centering
@@ -357,7 +357,7 @@ Do đó, run55 được tách khỏi nhóm so sánh reward v1 khi diễn giải 
         \node[above] at (1.25,0.615){0.615};
         \node[above] at (3.05,0.800){0.800};
     \end{tikzpicture}
-    \caption{Run55 tăng peak cleared rate, nhưng reward mean không so trực tiếp do đổi thang reward}
+    \caption{Run55 tăng peak cleared rate, nhưng reward mean không so trực tiếp do đổi thang thưởng}
     \label{fig:reward_v2_clear_peak}
 \end{figure}
 
@@ -395,7 +395,7 @@ Một hiện tượng nhất quán xuyên suốt các run là entropy của poli
     \label{fig:entropy_plateau}
 \end{figure}
 
-Trong phạm vi các ablation chính giữ nguyên observation 207 chiều, plateau này không được giải quyết bởi ICM, RND, LSTM, curriculum learning, giảm phương sai spawn hoặc reward redesign. Kết luận thận trọng là: entropy plateau là giới hạn thực nghiệm quan sát được trong thiết kế action space và môi trường hiện tại, chưa phải một định lý về PPO. Hướng tiếp theo hợp lý là đơn giản hóa action space, gom bớt branch hoặc thêm inductive bias cho ngắm và né đạn.
+Trong phạm vi các ablation chính giữ nguyên observation 207 chiều, plateau này không được giải quyết bởi ICM, RND, LSTM, curriculum learning, giảm phương sai vị trí sinh hoặc thiết kế lại phần thưởng. Kết luận thận trọng là: entropy plateau là giới hạn thực nghiệm quan sát được trong thiết kế action space và môi trường hiện tại, chưa phải một định lý về PPO. Hướng tiếp theo hợp lý là đơn giản hóa action space, gom bớt nhánh hoặc thêm inductive bias cho ngắm và né đạn.
 
 \section{Tổng hợp kết quả}
 
@@ -426,12 +426,12 @@ Trong phạm vi các ablation chính giữ nguyên observation 207 chiều, plat
         \hline
         run54 & 4-tier fixed-to-random & 3.0M & 3.925 & 0.945 & Tương đương run46; fixed-to-random chỉ cải thiện nhẹ. \\
         \hline
-        run55 & Curriculum + reward v2 & 3.0M & 9.337 & 1.014 & Clear peak cao hơn; reward scale khác nên không so mean trực tiếp. \\
+        run55 & Curriculum + reward v2 & 3.0M & 9.337 & 1.014 & Clear peak cao hơn; thang thưởng khác nên không so mean trực tiếp. \\
         \hline
     \end{tabular}
 \end{table}
 
-Một lưu ý quan trọng khi đọc Bảng~\ref{tab:master_ablation} là ngân sách huấn luyện giữa các nhóm chưa hoàn toàn đồng nhất. Các run không dùng curriculum như run34, run35, run36 và run42 kết thúc ở 1.0M bước, trong khi các run curriculum chính được huấn luyện đến 3.0M bước. Vì vậy, so sánh giữa hai nhóm phản ánh xu hướng thực nghiệm của toàn bộ cấu hình huấn luyện, nhưng chưa tách biệt hoàn toàn ảnh hưởng của curriculum khỏi ảnh hưởng của thời lượng huấn luyện dài hơn. Để so sánh chặt chẽ hơn, các cấu hình baseline/ICM/RND/LSTM cần được kéo dài lên 3.0M bước, hoặc các run curriculum cần được báo cáo thêm tại cùng mốc 1.0M bước.
+Một lưu ý quan trọng khi đọc Bảng~\ref{tab:master_ablation} là ngân sách huấn luyện giữa các nhóm chưa hoàn toàn đồng nhất. Các run không dùng curriculum như run34, run35, run36 và run42 kết thúc ở 1.0M bước, trong khi các run curriculum chính được huấn luyện đến 3.0M bước. Vì vậy, so sánh giữa hai nhóm phản ánh xu hướng thực nghiệm của toàn bộ cấu hình huấn luyện, nhưng chưa tách biệt hoàn toàn ảnh hưởng của curriculum khỏi ảnh hưởng của thời lượng huấn luyện dài hơn. Để so sánh chặt chẽ hơn, các baseline/ICM/RND/LSTM cần được kéo dài lên 3.0M bước, hoặc các run curriculum cần được báo cáo thêm tại cùng mốc 1.0M bước.
 
 \begin{figure}[H]
 \centering
@@ -458,22 +458,22 @@ Một lưu ý quan trọng khi đọc Bảng~\ref{tab:master_ablation} là ngân
   \fill[blue!45]          (0.55,5.18) rectangle (0.85,5.46); \node[anchor=west] at (1.00,5.32){Không curriculum (1M)};
   \fill[green!55!black!70](4.10,5.18) rectangle (4.40,5.46); \node[anchor=west] at (4.55,5.32){Curriculum-based (3M)};
 \end{tikzpicture}
-\caption{So sánh reward mean giữa các run dùng reward v1. Đường đứt khoảng ở 2.07 là mức baseline. Run55 (reward v2, mean 9.337) có thang reward khác nên không đưa vào biểu đồ.}
+\caption{So sánh reward mean giữa các run dùng reward v1. Đường đứt khoảng ở 2.07 là mức baseline. Run55 (reward v2, mean 9.337) có thang thưởng khác nên không đưa vào biểu đồ.}
 \label{fig:reward_comparison_all}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.98\textwidth]{figures/training/final_metrics_comparison.png}
-    \caption{So sánh các chỉ số hành vi cuối run. Hình này bổ sung cho Bảng~\ref{tab:run_metrics_main} bằng cách cho thấy curriculum không chỉ tăng reward mà còn cải thiện số enemy bị tiêu diệt, tỷ lệ dọn phòng và tỷ lệ dash hữu ích.}
+    \caption{So sánh các chỉ số hành vi cuối run. Hình này bổ sung cho Bảng~\ref{tab:run_metrics_main} bằng cách cho thấy curriculum không chỉ tăng phần thưởng mà còn cải thiện số kẻ địch bị tiêu diệt, tỷ lệ dọn phòng và tỷ lệ dash hữu ích.}
     \label{fig:final_metrics_comparison}
 \end{figure}
 
 \section{Ablation mở rộng: quan sát hỗ trợ BFS}
 
-Sau các run ablation chính về kỹ thuật huấn luyện, đề tài thực hiện thêm run59 như một ablation mở rộng về biểu diễn quan sát. Mục tiêu của run này là kiểm tra một giả thuyết cụ thể: agent có thể không thất bại chủ yếu vì không biết chiến đấu, mà vì biểu diễn quan sát 207 chiều chưa cung cấp đủ cấu trúc không gian để policy suy luận đường đi qua bản đồ có tường. Để kiểm tra giả thuyết này, run59 bổ sung ba chiều quan sát vào CombatAgent: hướng bước kế tiếp theo đường đi ngắn nhất tính bằng BFS và khoảng cách đường đi ngắn nhất đã chuẩn hóa tới kẻ địch còn sống gần nhất. Do đó, vector quan sát tăng từ 207 lên 210 chiều.
+Sau các run ablation chính về kỹ thuật huấn luyện, đề tài thực hiện thêm run59 như một ablation mở rộng về biểu diễn quan sát. Mục tiêu của run này là kiểm tra một giả thuyết cụ thể: tác nhân có thể không thất bại chủ yếu vì không biết chiến đấu, mà vì biểu diễn quan sát 207 chiều chưa cung cấp đủ cấu trúc không gian để policy suy luận đường đi qua bản đồ có tường. Để kiểm tra giả thuyết này, run59 bổ sung ba chiều quan sát vào CombatAgent: hướng bước kế tiếp theo đường đi ngắn nhất tính bằng BFS và khoảng cách đường đi ngắn nhất đã chuẩn hóa tới kẻ địch còn sống gần nhất. Do đó, vector quan sát tăng từ 207 lên 210 chiều.
 
-Điểm quan trọng khi diễn giải run59 là cấu hình này bổ sung yếu tố pathfinding vào quá trình học, nên không được đặt ngang hàng tuyệt đối với các run giữ nguyên observation 207 chiều. Chính sách vẫn được huấn luyện bằng PPO và vẫn phải học lựa chọn hành động di chuyển, ngắm, tấn công và dash, nhưng phần navigation nhận thêm tín hiệu hỗ trợ từ BFS. Nói cách khác, đây là biến thể \emph{BFS-assisted RL} hoặc \emph{path-informed observation}, dùng để đo tác động của tín hiệu đường đi đối với hiệu năng của agent.
+Điểm quan trọng khi diễn giải run59 là cấu hình này bổ sung yếu tố pathfinding vào quá trình học, nên không được đặt ngang hàng tuyệt đối với các run giữ nguyên observation 207 chiều. Chính sách vẫn được huấn luyện bằng PPO và vẫn phải học lựa chọn hành động di chuyển, ngắm, tấn công và dash, nhưng phần điều hướng nhận thêm tín hiệu hỗ trợ từ BFS. Nói cách khác, đây là biến thể \emph{BFS-assisted RL} hoặc \emph{path-informed observation}, dùng để đo tác động của tín hiệu đường đi đối với hiệu năng của tác nhân.
 
 \begin{table}[H]
     \centering
@@ -486,21 +486,21 @@ Sau các run ablation chính về kỹ thuật huấn luyện, đề tài thực
         \hline
         Cumulative reward & 14.09 cuối run; tail gần cuối khoảng 14.77 & Cao hơn rõ so với các run chính, nhưng không so trực tiếp vì observation và reward shaping đã thay đổi. \\
         \hline
-        Cleared-room rate & 0.727 cuối run; tail gần cuối khoảng 0.846 & Agent dọn phòng ổn định hơn khi được cung cấp tín hiệu đường đi. \\
+        Cleared-room rate & 0.727 cuối run; tail gần cuối khoảng 0.846 & Tác nhân dọn phòng ổn định hơn khi được cung cấp tín hiệu đường đi. \\
         \hline
-        Episode kills & 1.55 cuối run; tail gần cuối khoảng 1.78 & Số enemy bị tiêu diệt tăng, cho thấy navigation là một nút thắt thực tế của bài toán. \\
+        Episode kills & 1.55 cuối run; tail gần cuối khoảng 1.78 & Số kẻ địch bị tiêu diệt tăng, cho thấy khả năng điều hướng là một nút thắt thực tế của bài toán. \\
         \hline
         Policy entropy & Giảm từ khoảng 4.15 xuống 3.59; tail gần cuối khoảng 3.62 & Policy trở nên quyết đoán hơn so với các run bị plateau quanh 4.40 nat. \\
         \hline
         Curiosity reward & Khoảng 0.005 ở cuối run & ICM không còn chi phối hành vi ở cuối run. \\
         \hline
-        Enemy stuck recoveries & Tail gần cuối khoảng 3.07 mỗi episode & Môi trường vẫn còn nhiễu do enemy bị kẹt hoặc cần recovery, nên kết quả cần được đọc kèm hạn chế runtime. \\
+        Enemy stuck recoveries & Tail gần cuối khoảng 3.07 mỗi episode & Môi trường vẫn còn nhiễu do kẻ địch bị kẹt hoặc cần recovery, nên kết quả cần được đọc kèm hạn chế runtime. \\
         \hline
     \end{tabular}
 \end{table}
 
-Kết quả của Bảng~\ref{tab:run59_bfs_assisted} cho thấy khi bổ sung tín hiệu đường đi ngắn nhất, các chỉ số hành vi tăng mạnh hơn: tỷ lệ dọn phòng đạt trên 0.8 ở vùng cuối, số enemy bị tiêu diệt trung bình vượt 1.7 và entropy giảm sâu hơn so với plateau của các run 207 chiều. Đây là bước đột phá thực nghiệm lớn nhất trong toàn bộ quá trình thử nghiệm, vì nó không chỉ làm reward tăng mà còn cải thiện trực tiếp các chỉ số hành vi như clear rate, kills và mức độ quyết đoán của policy. Điều này cho thấy nút thắt chính của môi trường không chỉ nằm ở thuật toán PPO hay cơ chế exploration, mà còn nằm ở biểu diễn không gian của observation. Khi agent được cung cấp đặc trưng đường đi phù hợp hơn, policy có thể học hành vi tiếp cận và chiến đấu ổn định hơn. Run59 vì vậy được xem là bước đột phá về biểu diễn quan sát, đồng thời gợi ý rằng các hướng tiếp theo nên tập trung vào local occupancy grid, graph/path feature học được, imitation learning cho navigation, hoặc thiết kế lại map/enemy để giảm nhiễu từ các tình huống kẹt.
+Kết quả của Bảng~\ref{tab:run59_bfs_assisted} cho thấy khi bổ sung tín hiệu đường đi ngắn nhất, các chỉ số hành vi tăng mạnh hơn: tỷ lệ dọn phòng đạt trên 0.8 ở vùng cuối, số kẻ địch bị tiêu diệt trung bình vượt 1.7 và entropy giảm sâu hơn so với plateau của các run 207 chiều. Đây là bước đột phá thực nghiệm lớn nhất trong toàn bộ quá trình thử nghiệm, vì nó không chỉ làm phần thưởng tăng mà còn cải thiện trực tiếp các chỉ số hành vi như clear rate, kills và mức độ quyết đoán của policy. Điều này cho thấy nút thắt chính của môi trường không chỉ nằm ở thuật toán PPO hay cơ chế exploration, mà còn nằm ở biểu diễn không gian của observation. Khi tác nhân được cung cấp đặc trưng đường đi phù hợp hơn, policy có thể học hành vi tiếp cận và chiến đấu ổn định hơn. Run59 vì vậy được xem là bước đột phá về biểu diễn quan sát, đồng thời gợi ý rằng các hướng tiếp theo nên tập trung vào local occupancy grid, graph/path feature học được, imitation learning cho điều hướng, hoặc thiết kế lại bản đồ/kẻ địch để giảm nhiễu từ các tình huống kẹt.
 
-Do đó, run59 là bước cải thiện lớn nhất về hiệu năng thực nghiệm, nhưng bản chất của cải thiện này đến từ thay đổi biểu diễn quan sát chứ không chỉ từ thay đổi thuật toán học. Kết quả này không chứng minh agent đã tự học pathfinding hoàn toàn, mà cho thấy khi được cung cấp đặc trưng đường đi phù hợp hơn, policy có thể học hành vi combat và tiếp cận mục tiêu ổn định hơn.
+Do đó, run59 là bước cải thiện lớn nhất về hiệu năng thực nghiệm, nhưng bản chất của cải thiện này đến từ thay đổi biểu diễn quan sát chứ không chỉ từ thay đổi thuật toán học. Kết quả này không chứng minh tác nhân đã tự học pathfinding hoàn toàn, mà cho thấy khi được cung cấp đặc trưng đường đi phù hợp hơn, policy có thể học hành vi chiến đấu và tiếp cận mục tiêu ổn định hơn.
 
-Từ bảng tổng hợp, bốn nhận xét chính được rút ra trong phạm vi thí nghiệm một seed. Thứ nhất, PPO baseline đạt hành vi hợp lý nhưng bị giới hạn ở mức reward khoảng 2.1--2.5. Thứ hai, intrinsic motivation và LSTM chưa tạo cải thiện lớn khi chạy độc lập. Thứ ba, curriculum learning là yếu tố nổi bật nhất; khi kết hợp thêm ICM, reward Hard tăng lên 4.369 nhưng inverse loss vẫn cao. Thứ tư, entropy plateau vẫn tồn tại trong nhóm ablation chính 207 chiều, cho thấy cần nghiên cứu thêm về action space và cấu trúc policy.
+Từ bảng tổng hợp, bốn nhận xét chính được rút ra trong phạm vi thí nghiệm một seed. Thứ nhất, PPO baseline đạt hành vi hợp lý nhưng bị giới hạn ở mức phần thưởng khoảng 2.1--2.5. Thứ hai, intrinsic motivation và LSTM chưa tạo cải thiện lớn khi chạy độc lập. Thứ ba, curriculum learning là yếu tố nổi bật nhất; khi kết hợp thêm ICM, phần thưởng Hard tăng lên 4.369 nhưng inverse loss vẫn cao. Thứ tư, entropy plateau vẫn tồn tại trong nhóm ablation chính 207 chiều, cho thấy cần nghiên cứu thêm về action space và cấu trúc policy.
