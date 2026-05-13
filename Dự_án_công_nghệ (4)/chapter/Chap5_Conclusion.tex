@@ -9,7 +9,7 @@
 
 Khóa luận đã xây dựng và đánh giá một tác nhân học tăng cường sâu cho môi trường game hành động Roguelike trong Unity. Hệ thống cuối cùng sử dụng CombatAgent với quan sát vector 207 chiều, không gian hành động rời rạc nhiều nhánh $(3,3,3,9)$, pipeline sinh bản đồ bằng PCGNN và cơ chế curriculum learning điều khiển qua tham số difficulty. Bản đồ được sinh offline, chuyển sang định dạng văn bản của game, kiểm tra khả năng đi tới bằng BFS và chia thành Easy, Medium, Hard để phục vụ curriculum.
 
-Kết quả thực nghiệm cho thấy curriculum learning là xu hướng nổi bật nhất trong phạm vi các run đã thực hiện. PPO baseline trên phân phối khó đạt reward tail-50 2.073, trong khi run46 với curriculum đạt Hard mean 3.843, tương đương mức cải thiện khoảng 85\%. Khi ghép ICM lên nền curriculum, run50 đạt Hard mean 4.369 và 1.016 kills/episode, gợi ý rằng phần thưởng nội tại có thể cộng hưởng khi agent đã được scaffold bằng lesson dễ hơn. Biến thể fixed-to-random spawn trong run54 đạt Hard mean 3.925, cho thấy việc tổ chức độ khó môi trường là một yếu tố nền quan trọng. Các kết quả này chưa đi kèm error bar do mỗi cấu hình mới chỉ được chạy một seed, vì vậy cần được diễn giải như bằng chứng thực nghiệm ban đầu thay vì kết luận thống kê cuối cùng.
+Kết quả thực nghiệm cho thấy curriculum learning là xu hướng nổi bật nhất trong nhóm ablation chính về kỹ thuật huấn luyện. PPO baseline trên phân phối khó đạt reward tail-50 2.073, trong khi run46 với curriculum đạt Hard mean 3.843, tương đương mức cải thiện khoảng 85\%. Khi ghép ICM lên nền curriculum, run50 đạt Hard mean 4.369 và 1.016 kills/episode, gợi ý rằng phần thưởng nội tại có thể cộng hưởng khi agent đã được scaffold bằng lesson dễ hơn. Biến thể fixed-to-random spawn trong run54 đạt Hard mean 3.925, cho thấy việc tổ chức độ khó môi trường là một yếu tố nền quan trọng. Ở nhóm ablation mở rộng về biểu diễn quan sát, run59 với đặc trưng path-informed tạo ra bước cải thiện thực nghiệm lớn nhất; bản cập nhật run61 đạt cleared-room tail khoảng 0.846, số enemy tiêu diệt tail khoảng 1.78 và entropy giảm khỏi vùng plateau quanh 4.40 nat xuống khoảng 3.62 ở vùng cuối. Các kết quả này chưa đi kèm error bar do mỗi cấu hình mới chỉ được chạy một seed, vì vậy cần được diễn giải như bằng chứng thực nghiệm ban đầu thay vì kết luận thống kê cuối cùng.
 
 \begin{table}[H]
     \centering
@@ -30,6 +30,8 @@ Kết quả thực nghiệm cho thấy curriculum learning là xu hướng nổi
         \hline
         Reward v2 run55 & 0.800 cleared peak & Tăng giá trị đỉnh của tỷ lệ dọn phòng, nhưng reward mean không so trực tiếp do dùng thang reward khác. \\
         \hline
+        Path-informed run59/run61 & 0.846 cleared tail, 1.78 kills tail & Bước đột phá về biểu diễn quan sát; bổ sung tín hiệu pathfinding giúp agent tiếp cận và tiêu diệt enemy ổn định hơn. \\
+        \hline
         Entropy plateau & Khoảng 4.40 nat & Policy vẫn duy trì stochastic cao trong hầu hết cấu hình. \\
         \hline
     \end{tabular}
@@ -47,7 +49,9 @@ Các thí nghiệm ICM, RND và LSTM đem lại thông tin bổ sung nhưng khô
 
 Đóng góp thứ tư là các kết quả ablation có giá trị. ICM khi chạy độc lập không hoạt động tốt trong action space multi-discrete của bài toán, thể hiện qua inverse loss quanh 4.36 so với mức ngẫu nhiên lý thuyết 5.49. Khi ghép với curriculum, run50 cải thiện reward Hard lên 4.369 nhưng inverse loss vẫn ở 4.337, gợi ý rằng curiosity có thể hỗ trợ hành vi nhưng chưa giải quyết triệt để vấn đề representation.
 
-Đóng góp thứ năm là phát hiện entropy plateau. Trong phạm vi các ablation đã thử, entropy của policy duy trì quanh 4.40 nat bất kể thay đổi ICM, RND, LSTM, curriculum, giảm phương sai spawn hoặc reward redesign. Đây là một chỉ dấu quan trọng cho các nghiên cứu tiếp theo về thiết kế action space và inductive bias cho agent game hành động.
+Đóng góp thứ năm là phát hiện entropy plateau. Trong phạm vi các ablation chính đã thử, entropy của policy duy trì quanh 4.40 nat bất kể thay đổi ICM, RND, LSTM, curriculum, giảm phương sai spawn hoặc reward redesign. Đây là một chỉ dấu quan trọng cho các nghiên cứu tiếp theo về thiết kế action space và inductive bias cho agent game hành động.
+
+Đóng góp thứ sáu là ablation mở rộng về biểu diễn quan sát thông qua run59. Khi bổ sung đặc trưng path-informed dựa trên BFS, agent đạt bước cải thiện lớn nhất về hành vi: tỷ lệ dọn phòng, số enemy tiêu diệt và mức độ quyết đoán của policy đều tốt hơn rõ rệt. Kết quả này cho thấy biểu diễn không gian là yếu tố quyết định trong môi trường procedural combat, và mở ra hướng kết hợp RL với các đặc trưng navigation có cấu trúc thay vì chỉ thay đổi thuật toán huấn luyện.
 
 \section*{3. Hạn chế}
 
@@ -57,7 +61,7 @@ Hạn chế thứ hai là PCGNN hiện được dùng theo hướng offline và 
 
 Hạn chế thứ ba là tài nguyên phần cứng giới hạn. GPU tầm trung và thời gian huấn luyện hạn chế khiến các run quan trọng như run46, run50, run54 và run55 chưa có đủ điều kiện để lặp lại nhiều seed, dù các run curriculum chính đã có log đầy đủ 3M bước.
 
-Một hạn chế bổ sung được rút ra từ run59 là bài toán navigation trong bản đồ procedural chưa được giải quyết hoàn toàn bằng quan sát cục bộ 207 chiều. Khi bổ sung hướng bước tiếp theo theo BFS và khoảng cách đường đi ngắn nhất vào observation, hiệu năng tăng rõ, nhưng đây là thông tin hỗ trợ từ môi trường nên không còn là RL thuần theo nghĩa agent tự suy luận toàn bộ đường đi từ wall ray và vị trí tương đối của enemy. Vì vậy, run59 được xem là thí nghiệm chẩn đoán cho thấy navigation là nút thắt quan trọng, không phải bằng chứng rằng agent đã tự học pathfinding.
+Một hạn chế bổ sung được rút ra từ run59 là bài toán navigation trong bản đồ procedural chưa được giải quyết hoàn toàn bằng quan sát cục bộ 207 chiều. Khi bổ sung hướng bước tiếp theo theo BFS và khoảng cách đường đi ngắn nhất vào tín hiệu học, hiệu năng tăng rõ. Vì vậy, run59 được xem là một ablation mở rộng về biểu diễn quan sát, cho thấy yếu tố pathfinding có tác động lớn tới khả năng tiếp cận và tiêu diệt kẻ địch, đồng thời gợi ý rằng navigation là một nút thắt quan trọng của môi trường hiện tại.
 
 Hạn chế cuối cùng là entropy plateau chưa được giải quyết trong phạm vi khóa luận. Các thí nghiệm đã loại trừ một số nguyên nhân trực tiếp như reward scale hoặc curiosity signal, nhưng chưa kiểm tra sâu các hướng như giảm số hướng aim, gộp nhánh combat--aim, thay đổi entropy coefficient, dùng factorized policy khác, action abstraction hoặc imitation learning bootstrap.
 

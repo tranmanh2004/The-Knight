@@ -44,7 +44,7 @@ Về thiết kế hệ thống, đề tài xây dựng CombatAgent trong Unity M
 
 Về môi trường, đề tài kết hợp PCGNN và TilemapGenerator để xây dựng pipeline sinh bản đồ. PCGNN được dùng ở bước tiền xử lý để tạo nhiều ma trận bản đồ, sau đó adapter chuyển kết quả sinh sang định dạng văn bản của trò chơi với các ký hiệu tường, sàn, vị trí sinh người chơi và vị trí sinh kẻ địch. Các bản đồ này được đánh giá bằng các chỉ số như tỷ lệ tường, độ dài đường đi ngắn nhất, tỷ lệ ngõ cụt và khả năng đi tới giữa các điểm chính. TilemapGenerator trong Unity đọc các bản đồ đã được phân loại Easy, Medium và Hard, dùng BFS để kiểm tra vùng có thể di chuyển, lựa chọn vị trí sinh hợp lệ và đưa bản đồ vào các bài học huấn luyện tương ứng.
 
-Về thực nghiệm, đề tài triển khai một ma trận thí nghiệm loại trừ gồm nhiều lượt chạy từ run34 đến run55. Các nhóm thí nghiệm chính bao gồm PPO cơ sở, PPO kết hợp ICM, PPO kết hợp RND, PPO kết hợp LSTM, PPO với curriculum learning, curriculum learning kết hợp LSTM/ICM, biến thể chuyển từ vị trí sinh cố định sang ngẫu nhiên và thiết kế lại phần thưởng. Dữ liệu được ghi lại bằng TensorBoard và phân tích thông qua các chỉ số như tổng phần thưởng, tỷ lệ dọn phòng, số kẻ địch tiêu diệt, lượng sát thương gây ra và entropy của chính sách.
+Về thực nghiệm, đề tài triển khai một ma trận thí nghiệm loại trừ gồm nhiều lượt chạy từ run34 đến run55. Các nhóm thí nghiệm chính bao gồm PPO cơ sở, PPO kết hợp ICM, PPO kết hợp RND, PPO kết hợp LSTM, PPO với curriculum learning, curriculum learning kết hợp LSTM/ICM, biến thể chuyển từ vị trí sinh cố định sang ngẫu nhiên và thiết kế lại phần thưởng. Ngoài ra, đề tài bổ sung run59 như một ablation mở rộng về biểu diễn quan sát, trong đó tín hiệu đường đi từ BFS được đưa vào observation để kiểm tra vai trò của yếu tố pathfinding. Dữ liệu được ghi lại bằng TensorBoard và phân tích thông qua các chỉ số như tổng phần thưởng, tỷ lệ dọn phòng, số kẻ địch tiêu diệt, lượng sát thương gây ra và entropy của chính sách.
 
 Cụ thể, các phương pháp nghiên cứu được sử dụng gồm:
 \renewcommand{\labelitemi}{$-$}
@@ -55,6 +55,7 @@ Cụ thể, các phương pháp nghiên cứu được sử dụng gồm:
     \item Xây dựng pipeline sinh bản đồ bằng PCGNN, chuyển kết quả sinh sang định dạng văn bản của game và đánh giá bản đồ bằng các chỉ số hình học như tỷ lệ tường, độ dài đường đi, tỷ lệ ngõ cụt và khả năng đi tới.
     \item Thiết kế curriculum learning sử dụng các bản đồ do PCGNN sinh ra, chia thành các mức Easy, Medium và Hard để chuyển dần tác nhân từ môi trường dễ sang môi trường khó.
     \item Chạy và phân tích các thí nghiệm loại trừ bằng các chỉ số trích xuất từ TensorBoard nhằm phân tích xu hướng ảnh hưởng của từng kỹ thuật tới hiệu quả học trong phạm vi các run đã thực hiện.
+    \item Bổ sung ablation mở rộng về biểu diễn quan sát với run59, trong đó tín hiệu pathfinding từ BFS được đưa vào observation để đánh giá tác động của biểu diễn đường đi tới hành vi tiếp cận và tiêu diệt kẻ địch.
 \end{itemize}
 
 \vspace{0.3cm}
@@ -88,8 +89,9 @@ Thông qua quá trình nghiên cứu, triển khai và thực nghiệm, đề t�
     \item Xây dựng hệ thống sinh và tuyển chọn bản đồ bằng PCGNN, trong đó bản đồ được chuyển sang định dạng văn bản, kiểm tra khả năng đi tới, đánh giá độ khó và chia thành Easy, Medium và Hard để dùng trong curriculum learning.
     \item Thiết kế và đánh giá curriculum learning cho môi trường chiến đấu sinh theo thủ tục. Trong phạm vi các run một seed đã thực hiện, curriculum learning cho thấy xu hướng cải thiện lớn nhất: phần thưởng trung bình tăng từ 2.073 (PPO cơ sở) lên 3.843 ở vùng Hard, tương đương \textbf{+85\%}, trong khi các kỹ thuật đơn lẻ ICM, RND, LSTM chỉ đạt +16\%--20\%.
     \item Thực hiện ma trận thí nghiệm loại trừ với chín lượt chạy chính (run34--run55), bao gồm PPO cơ sở, ICM, RND, LSTM, curriculum learning, các thí nghiệm kết hợp và thiết kế lại phần thưởng, để phân tích định lượng vai trò của từng kỹ thuật.
+    \item Thực hiện ablation mở rộng về biểu diễn quan sát với run59. Khi bổ sung đặc trưng path-informed dựa trên BFS, clear rate và số enemy bị tiêu diệt tăng mạnh, cho thấy navigation là một nút thắt quan trọng của môi trường procedural combat.
     \item Ghi nhận xu hướng cộng hưởng giữa curriculum learning và ICM: reward Hard tăng từ 3.843 lên 4.369, trong khi Curriculum + LSTM gần tương đương curriculum learning đơn thuần. Do mỗi cấu hình mới chạy một seed, kết quả này cần được xác nhận thêm bằng nhiều seed.
-    \item Phát hiện và ghi nhận hiện tượng entropy bão hòa quanh \textbf{4.40 nat} xuất hiện nhất quán trong tất cả chín cấu hình thí nghiệm (entropy tối đa lý thuyết: 5.49 nat), gợi ý rằng thiết kế không gian hành động $(3,3,3,9)$ và cơ chế che hành động là nguồn gốc cần nghiên cứu tiếp.
+    \item Phát hiện và ghi nhận hiện tượng entropy bão hòa quanh \textbf{4.40 nat} xuất hiện nhất quán trong chín cấu hình ablation chính giữ nguyên observation 207 chiều (entropy tối đa lý thuyết: 5.49 nat), gợi ý rằng thiết kế không gian hành động $(3,3,3,9)$ và cơ chế che hành động là nguồn gốc cần nghiên cứu tiếp.
 \end{itemize}
 
 \vspace{0.3cm}
@@ -105,6 +107,6 @@ Nội dung chính của dự án được trình bày như sau:
 	\item Chương 1: Cơ sở lý thuyết -- Trình bày các khái niệm nền tảng về học tăng cường, PPO, GAE, ICM, RND, LSTM, PCGNN và curriculum learning, làm cơ sở cho thiết kế CombatAgent và các thí nghiệm ở các chương sau.
 	\item Chương 2: Phân tích và thiết kế hệ thống Agent -- Mô tả thiết kế CombatAgent, bao gồm không gian quan sát 207 chiều, không gian hành động rời rạc nhiều nhánh $(3,3,3,9)$, hàm phần thưởng, pipeline sinh bản đồ bằng PCGNN và khung curriculum learning.
 	\item Chương 3: Cài đặt và thực nghiệm -- Trình bày quá trình hiện thực trên Unity ML-Agents và TopDown Engine, bao gồm TilemapGenerator, adapter bản đồ PCGNN, CombatAgent, cấu hình PPO, quy trình trích xuất chỉ số từ TensorBoard và ma trận thí nghiệm loại trừ.
-    \item Chương 4: Kết quả thực nghiệm và đánh giá -- Phân tích các lượt chạy từ run34 đến run55, so sánh PPO cơ sở, ICM, RND, LSTM, curriculum learning, thiết kế lại phần thưởng và hiện tượng entropy bão hòa.
+    \item Chương 4: Kết quả thực nghiệm và đánh giá -- Phân tích các lượt chạy từ run34 đến run55, so sánh PPO cơ sở, ICM, RND, LSTM, curriculum learning, thiết kế lại phần thưởng, hiện tượng entropy bão hòa và ablation mở rộng run59 với quan sát hỗ trợ BFS.
 	\item Kết luận và hướng nghiên cứu tiếp theo: Tổng kết các phát hiện chính, đặc biệt là vai trò nổi bật của curriculum learning trong phạm vi thí nghiệm; chỉ ra hạn chế do mỗi cấu hình mới chỉ được chạy trên một seed; và đề xuất các hướng mở rộng như thiết kế lại không gian hành động, chạy nhiều seed, kết hợp học bắt chước và mở rộng sang huấn luyện đa tác nhân.
 \end{itemize}

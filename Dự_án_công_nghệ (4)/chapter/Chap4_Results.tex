@@ -395,7 +395,7 @@ Một hiện tượng nhất quán xuyên suốt các run là entropy của poli
     \label{fig:entropy_plateau}
 \end{figure}
 
-Trong phạm vi các ablation đã thử, Trong phạm vi các ablation đã thử, plateau này không được giải quyết bởi ICM, RND, LSTM, curriculum learning, giảm phương sai spawn hoặc reward redesign. Kết luận thận trọng là: entropy plateau là giới hạn thực nghiệm quan sát được trong thiết kế action space và môi trường hiện tại, chưa phải một định lý về PPO. Hướng tiếp theo hợp lý là đơn giản hóa action space, gom bớt branch hoặc thêm inductive bias cho ngắm và né đạn.
+Trong phạm vi các ablation chính giữ nguyên observation 207 chiều, plateau này không được giải quyết bởi ICM, RND, LSTM, curriculum learning, giảm phương sai spawn hoặc reward redesign. Kết luận thận trọng là: entropy plateau là giới hạn thực nghiệm quan sát được trong thiết kế action space và môi trường hiện tại, chưa phải một định lý về PPO. Hướng tiếp theo hợp lý là đơn giản hóa action space, gom bớt branch hoặc thêm inductive bias cho ngắm và né đạn.
 
 \section{Tổng hợp kết quả}
 
@@ -469,36 +469,38 @@ Một lưu ý quan trọng khi đọc Bảng~\ref{tab:master_ablation} là ngân
     \label{fig:final_metrics_comparison}
 \end{figure}
 
-\section{Thí nghiệm chẩn đoán với quan sát hỗ trợ BFS}
+\section{Ablation mở rộng: quan sát hỗ trợ BFS}
 
-Sau các run ablation chính, đề tài thực hiện thêm run59 nhằm kiểm tra một giả thuyết cụ thể: agent có thể không thất bại chủ yếu vì không biết chiến đấu, mà vì không suy luận được đường đi qua bản đồ có tường chỉ từ vị trí tương đối của enemy và các wall ray. Để kiểm tra giả thuyết này, run59 bổ sung ba chiều quan sát vào CombatAgent: hướng bước kế tiếp theo đường đi ngắn nhất tính bằng BFS và khoảng cách đường đi ngắn nhất đã chuẩn hóa tới kẻ địch còn sống gần nhất. Do đó, vector quan sát tăng từ 207 lên 210 chiều.
+Sau các run ablation chính về kỹ thuật huấn luyện, đề tài thực hiện thêm run59 như một ablation mở rộng về biểu diễn quan sát. Mục tiêu của run này là kiểm tra một giả thuyết cụ thể: agent có thể không thất bại chủ yếu vì không biết chiến đấu, mà vì biểu diễn quan sát 207 chiều chưa cung cấp đủ cấu trúc không gian để policy suy luận đường đi qua bản đồ có tường. Để kiểm tra giả thuyết này, run59 bổ sung ba chiều quan sát vào CombatAgent: hướng bước kế tiếp theo đường đi ngắn nhất tính bằng BFS và khoảng cách đường đi ngắn nhất đã chuẩn hóa tới kẻ địch còn sống gần nhất. Do đó, vector quan sát tăng từ 207 lên 210 chiều.
 
-Điểm quan trọng là run59 không được xem là một baseline RL thuần. Chính sách vẫn được huấn luyện bằng PPO và vẫn phải học lựa chọn hành động di chuyển, ngắm, tấn công và dash, nhưng phần navigation đã nhận thêm thông tin hỗ trợ từ môi trường. Nói cách khác, đây là biến thể \emph{BFS-assisted RL} hoặc \emph{path-informed observation}, không phải cấu hình mà agent tự học toàn bộ pathfinding từ quan sát cục bộ.
+Điểm quan trọng khi diễn giải run59 là cấu hình này bổ sung yếu tố pathfinding vào quá trình học, nên không được đặt ngang hàng tuyệt đối với các run giữ nguyên observation 207 chiều. Chính sách vẫn được huấn luyện bằng PPO và vẫn phải học lựa chọn hành động di chuyển, ngắm, tấn công và dash, nhưng phần navigation nhận thêm tín hiệu hỗ trợ từ BFS. Nói cách khác, đây là biến thể \emph{BFS-assisted RL} hoặc \emph{path-informed observation}, dùng để đo tác động của tín hiệu đường đi đối với hiệu năng của agent.
 
 \begin{table}[H]
     \centering
     \small
-    \caption{Kết quả run59 với quan sát hỗ trợ BFS ở mốc 5.0M bước}
+    \caption{Kết quả cấu hình path-informed sau bản cập nhật run61 ở mốc 1.0M bước}
     \label{tab:run59_bfs_assisted}
     \begin{tabular}{|p{4.1cm}|p{3.2cm}|p{6.4cm}|}
         \hline
         \textbf{Chỉ số} & \textbf{Giá trị cuối / vùng cuối} & \textbf{Diễn giải} \\
         \hline
-        Cumulative reward & 16.66; tail gần cuối khoảng 16.37 & Cao hơn rõ so với các run chính, nhưng không so trực tiếp vì observation và reward shaping đã thay đổi. \\
+        Cumulative reward & 14.09 cuối run; tail gần cuối khoảng 14.77 & Cao hơn rõ so với các run chính, nhưng không so trực tiếp vì observation và reward shaping đã thay đổi. \\
         \hline
-        Cleared-room rate & 0.818 cuối run; tail gần cuối khoảng 0.712 & Agent dọn phòng ổn định hơn khi được cung cấp tín hiệu đường đi. \\
+        Cleared-room rate & 0.727 cuối run; tail gần cuối khoảng 0.846 & Agent dọn phòng ổn định hơn khi được cung cấp tín hiệu đường đi. \\
         \hline
-        Episode kills & 1.79 cuối run; tail gần cuối khoảng 1.60 & Số enemy bị tiêu diệt tăng, cho thấy navigation là một nút thắt thực tế của bài toán. \\
+        Episode kills & 1.55 cuối run; tail gần cuối khoảng 1.78 & Số enemy bị tiêu diệt tăng, cho thấy navigation là một nút thắt thực tế của bài toán. \\
         \hline
-        Policy entropy & Giảm từ khoảng 4.47 xuống 3.70 & Policy trở nên quyết đoán hơn so với các run bị plateau quanh 4.40 nat. \\
+        Policy entropy & Giảm từ khoảng 4.15 xuống 3.59; tail gần cuối khoảng 3.62 & Policy trở nên quyết đoán hơn so với các run bị plateau quanh 4.40 nat. \\
         \hline
-        Curiosity reward & Giảm xuống khoảng 0.006 & ICM không còn chi phối hành vi ở cuối run. \\
+        Curiosity reward & Khoảng 0.005 ở cuối run & ICM không còn chi phối hành vi ở cuối run. \\
         \hline
-        Enemy stuck recoveries & Khoảng 2.94 mỗi episode & Môi trường vẫn còn nhiễu do enemy bị kẹt hoặc cần recovery, nên kết quả cần được đọc kèm hạn chế runtime. \\
+        Enemy stuck recoveries & Tail gần cuối khoảng 3.07 mỗi episode & Môi trường vẫn còn nhiễu do enemy bị kẹt hoặc cần recovery, nên kết quả cần được đọc kèm hạn chế runtime. \\
         \hline
     \end{tabular}
 \end{table}
 
-Kết quả của Bảng~\ref{tab:run59_bfs_assisted} cho thấy khi agent được nhìn thấy hướng đường đi ngắn nhất, các chỉ số hành vi tăng mạnh hơn: tỷ lệ dọn phòng đạt trên 0.7 ở vùng cuối, số enemy bị tiêu diệt trung bình vượt 1.5 và entropy giảm sâu hơn so với plateau của các run 207 chiều. Điều này ủng hộ giả thuyết rằng navigation qua bản đồ procedural là một khó khăn lớn của môi trường hiện tại. Tuy nhiên, kết quả này không nên được dùng để khẳng định rằng agent đã tự học pathfinding. Run59 có giá trị chính như một thí nghiệm chẩn đoán: nếu cung cấp thông tin đường đi làm hiệu năng tăng rõ, thì các hướng tiếp theo nên tập trung vào biểu diễn không gian tốt hơn như local occupancy grid, graph/path feature học được, imitation learning cho navigation, hoặc thiết kế lại map/enemy để giảm nhiễu từ các tình huống kẹt.
+Kết quả của Bảng~\ref{tab:run59_bfs_assisted} cho thấy khi bổ sung tín hiệu đường đi ngắn nhất, các chỉ số hành vi tăng mạnh hơn: tỷ lệ dọn phòng đạt trên 0.8 ở vùng cuối, số enemy bị tiêu diệt trung bình vượt 1.7 và entropy giảm sâu hơn so với plateau của các run 207 chiều. Đây là bước đột phá thực nghiệm lớn nhất trong toàn bộ quá trình thử nghiệm, vì nó không chỉ làm reward tăng mà còn cải thiện trực tiếp các chỉ số hành vi như clear rate, kills và mức độ quyết đoán của policy. Điều này cho thấy nút thắt chính của môi trường không chỉ nằm ở thuật toán PPO hay cơ chế exploration, mà còn nằm ở biểu diễn không gian của observation. Khi agent được cung cấp đặc trưng đường đi phù hợp hơn, policy có thể học hành vi tiếp cận và chiến đấu ổn định hơn. Run59 vì vậy được xem là bước đột phá về biểu diễn quan sát, đồng thời gợi ý rằng các hướng tiếp theo nên tập trung vào local occupancy grid, graph/path feature học được, imitation learning cho navigation, hoặc thiết kế lại map/enemy để giảm nhiễu từ các tình huống kẹt.
 
-Từ bảng tổng hợp, bốn nhận xét chính được rút ra trong phạm vi thí nghiệm một seed. Thứ nhất, PPO baseline đạt hành vi hợp lý nhưng bị giới hạn ở mức reward khoảng 2.1--2.5. Thứ hai, intrinsic motivation và LSTM chưa tạo cải thiện lớn khi chạy độc lập. Thứ ba, curriculum learning là yếu tố nổi bật nhất; khi kết hợp thêm ICM, reward Hard tăng lên 4.369 nhưng inverse loss vẫn cao. Thứ tư, entropy plateau vẫn tồn tại trong hầu hết cấu hình, cho thấy cần nghiên cứu thêm về action space và cấu trúc policy.
+Do đó, run59 là bước cải thiện lớn nhất về hiệu năng thực nghiệm, nhưng bản chất của cải thiện này đến từ thay đổi biểu diễn quan sát chứ không chỉ từ thay đổi thuật toán học. Kết quả này không chứng minh agent đã tự học pathfinding hoàn toàn, mà cho thấy khi được cung cấp đặc trưng đường đi phù hợp hơn, policy có thể học hành vi combat và tiếp cận mục tiêu ổn định hơn.
+
+Từ bảng tổng hợp, bốn nhận xét chính được rút ra trong phạm vi thí nghiệm một seed. Thứ nhất, PPO baseline đạt hành vi hợp lý nhưng bị giới hạn ở mức reward khoảng 2.1--2.5. Thứ hai, intrinsic motivation và LSTM chưa tạo cải thiện lớn khi chạy độc lập. Thứ ba, curriculum learning là yếu tố nổi bật nhất; khi kết hợp thêm ICM, reward Hard tăng lên 4.369 nhưng inverse loss vẫn cao. Thứ tư, entropy plateau vẫn tồn tại trong nhóm ablation chính 207 chiều, cho thấy cần nghiên cứu thêm về action space và cấu trúc policy.
