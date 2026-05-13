@@ -29,7 +29,7 @@ behaviors:
     #   rewarded after guessing it from wall rays.
     #
     # Do not initialize this run from older 207-dim checkpoints.
-    max_steps: 5000000
+    max_steps: 1000000
     time_horizon: 64
     summary_freq: 10000
     keep_checkpoints: 15

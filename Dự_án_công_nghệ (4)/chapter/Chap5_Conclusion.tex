@@ -1,0 +1,79 @@
+\clearpage
+\phantomsection
+
+\addcontentsline{toc}{chapter}{{KẾT LUẬN VÀ HƯỚNG NGHIÊN CỨU TIẾP THEO}}
+
+\chapter*{Kết luận và hướng nghiên cứu tiếp theo}
+
+\section*{1. Tổng kết kết quả}
+
+Khóa luận đã xây dựng và đánh giá một tác nhân học tăng cường sâu cho môi trường game hành động Roguelike trong Unity. Hệ thống cuối cùng sử dụng CombatAgent với quan sát vector 207 chiều, không gian hành động rời rạc nhiều nhánh $(3,3,3,9)$, pipeline sinh bản đồ bằng PCGNN và cơ chế curriculum learning điều khiển qua tham số difficulty. Bản đồ được sinh offline, chuyển sang định dạng văn bản của game, kiểm tra khả năng đi tới bằng BFS và chia thành Easy, Medium, Hard để phục vụ curriculum.
+
+Kết quả thực nghiệm cho thấy curriculum learning là xu hướng nổi bật nhất trong phạm vi các run đã thực hiện. PPO baseline trên phân phối khó đạt reward tail-50 2.073, trong khi run46 với curriculum đạt Hard mean 3.843, tương đương mức cải thiện khoảng 85\%. Khi ghép ICM lên nền curriculum, run50 đạt Hard mean 4.369 và 1.016 kills/episode, gợi ý rằng phần thưởng nội tại có thể cộng hưởng khi agent đã được scaffold bằng lesson dễ hơn. Biến thể fixed-to-random spawn trong run54 đạt Hard mean 3.925, cho thấy việc tổ chức độ khó môi trường là một yếu tố nền quan trọng. Các kết quả này chưa đi kèm error bar do mỗi cấu hình mới chỉ được chạy một seed, vì vậy cần được diễn giải như bằng chứng thực nghiệm ban đầu thay vì kết luận thống kê cuối cùng.
+
+\begin{table}[H]
+    \centering
+    \small
+    \caption{Các kết quả nổi bật của khóa luận}
+    \label{tab:conclusion_best_results}
+    \begin{tabular}{|p{4.5cm}|c|p{7cm}|}
+        \hline
+        \textbf{Kết quả} & \textbf{Giá trị} & \textbf{Ý nghĩa} \\
+        \hline
+        Baseline PPO & 2.073 reward tail-50 & Mốc so sánh không curriculum. \\
+        \hline
+        Curriculum run46 & 3.843 Hard mean & Tăng khoảng 85\% so với baseline trong run đã thực hiện. \\
+        \hline
+        Curriculum + ICM run50 & 4.369 Hard mean & Cải thiện thêm trên nền curriculum, nhưng inverse loss vẫn cao. \\
+        \hline
+        Fixed-to-random run54 & 3.925 Hard mean & Gần run46, cho thấy fixed-to-random spawn là một tinh chỉnh môi trường có tác động nhỏ hơn curriculum. \\
+        \hline
+        Reward v2 run55 & 0.800 cleared peak & Tăng giá trị đỉnh của tỷ lệ dọn phòng, nhưng reward mean không so trực tiếp do dùng thang reward khác. \\
+        \hline
+        Entropy plateau & Khoảng 4.40 nat & Policy vẫn duy trì stochastic cao trong hầu hết cấu hình. \\
+        \hline
+    \end{tabular}
+\end{table}
+
+Các thí nghiệm ICM, RND và LSTM đem lại thông tin bổ sung nhưng không làm thay đổi xu hướng chính. Khi chạy độc lập, ICM có dấu hiệu inverse model học yếu trên action space nhiều nhánh; RND cải thiện nhẹ hơn ICM nhưng không vượt trần; LSTM có xu hướng học chậm và tăng dần nhưng chưa tạo thay đổi nổi bật trong ngân sách huấn luyện hiện tại. Khi ghép với curriculum, LSTM không tạo cộng hưởng rõ, còn ICM trong run50 giúp tăng reward và kills nhưng inverse loss vẫn cao.
+
+\section*{2. Đóng góp của khóa luận}
+
+Đóng góp thứ nhất là xây dựng được một pipeline thực nghiệm hoàn chỉnh cho RL trong game hành động Roguelike: từ thiết kế observation/action, sinh bản đồ bằng PCGNN, chuẩn hóa map sang text asset, kiểm tra reachability bằng BFS, đến huấn luyện PPO bằng Unity ML-Agents. Pipeline này không chỉ chạy trên một map cố định mà mở rộng sang tập map được chia theo độ khó.
+
+Đóng góp thứ hai là kết quả thực nghiệm về curriculum learning trong môi trường procedural combat. Các số liệu trong phạm vi một seed cho thấy việc đưa agent qua chuỗi Easy -- Medium -- Hard giúp policy học được kỹ năng nền trước khi đối mặt với phân phối khó, từ đó tạo cải thiện lớn hơn so với intrinsic reward hoặc thay đổi kiến trúc memory khi các kỹ thuật này chạy độc lập.
+
+Đóng góp thứ ba là pipeline tuyển chọn bản đồ PCGNN cho curriculum. Hệ thống đã bổ sung adapter đặt \texttt{P}/\texttt{E}, kiểm tra đường đi, tính các chỉ số như tỷ lệ tường, độ dài đường đi, tỷ lệ ngõ cụt, A* difficulty và chia map theo percentile. Với batch 14x14 gồm 1000 map, hệ thống tạo được 1000 map duy nhất, 100\% map có đường đi hợp lệ và chia thành 50 Easy, 50 Medium, 900 Hard để người thiết kế lựa chọn.
+
+Đóng góp thứ tư là các kết quả ablation có giá trị. ICM khi chạy độc lập không hoạt động tốt trong action space multi-discrete của bài toán, thể hiện qua inverse loss quanh 4.36 so với mức ngẫu nhiên lý thuyết 5.49. Khi ghép với curriculum, run50 cải thiện reward Hard lên 4.369 nhưng inverse loss vẫn ở 4.337, gợi ý rằng curiosity có thể hỗ trợ hành vi nhưng chưa giải quyết triệt để vấn đề representation.
+
+Đóng góp thứ năm là phát hiện entropy plateau. Trong phạm vi các ablation đã thử, entropy của policy duy trì quanh 4.40 nat bất kể thay đổi ICM, RND, LSTM, curriculum, giảm phương sai spawn hoặc reward redesign. Đây là một chỉ dấu quan trọng cho các nghiên cứu tiếp theo về thiết kế action space và inductive bias cho agent game hành động.
+
+\section*{3. Hạn chế}
+
+Hạn chế lớn nhất của khóa luận là mỗi run mới chỉ được chạy một seed. Vì vậy, các kết luận về chênh lệch nhỏ cần được xem là xu hướng thực nghiệm, chưa phải kết quả thống kê có error bar. Các phát hiện có biên chênh lệch lớn, như curriculum tăng khoảng 85\%, là tín hiệu thực nghiệm đáng chú ý hơn so với các chênh lệch nhỏ; tuy nhiên vẫn cần chạy nhiều seed để xác nhận độ ổn định.
+
+Hạn chế thứ hai là PCGNN hiện được dùng theo hướng offline và có bước con người tuyển chọn. Cách này giúp ổn định huấn luyện và giảm lỗi tích hợp, nhưng chưa phải một cơ chế adaptive PCG theo thời gian thực, nơi độ khó map thay đổi trực tiếp dựa trên năng lực hiện tại của agent. Ngoài ra, khóa luận chưa có một đánh giá tách biệt đủ sâu về khả năng generalization trên unseen maps, chẳng hạn so sánh agent huấn luyện trên map thủ công với agent huấn luyện bằng curriculum PCGNN rồi kiểm thử trên tập map PCGNN chưa từng thấy.
+
+Hạn chế thứ ba là tài nguyên phần cứng giới hạn. GPU tầm trung và thời gian huấn luyện hạn chế khiến các run quan trọng như run46, run50, run54 và run55 chưa có đủ điều kiện để lặp lại nhiều seed, dù các run curriculum chính đã có log đầy đủ 3M bước.
+
+Một hạn chế bổ sung được rút ra từ run59 là bài toán navigation trong bản đồ procedural chưa được giải quyết hoàn toàn bằng quan sát cục bộ 207 chiều. Khi bổ sung hướng bước tiếp theo theo BFS và khoảng cách đường đi ngắn nhất vào observation, hiệu năng tăng rõ, nhưng đây là thông tin hỗ trợ từ môi trường nên không còn là RL thuần theo nghĩa agent tự suy luận toàn bộ đường đi từ wall ray và vị trí tương đối của enemy. Vì vậy, run59 được xem là thí nghiệm chẩn đoán cho thấy navigation là nút thắt quan trọng, không phải bằng chứng rằng agent đã tự học pathfinding.
+
+Hạn chế cuối cùng là entropy plateau chưa được giải quyết trong phạm vi khóa luận. Các thí nghiệm đã loại trừ một số nguyên nhân trực tiếp như reward scale hoặc curiosity signal, nhưng chưa kiểm tra sâu các hướng như giảm số hướng aim, gộp nhánh combat--aim, thay đổi entropy coefficient, dùng factorized policy khác, action abstraction hoặc imitation learning bootstrap.
+
+\section*{4. Hướng nghiên cứu tiếp theo}
+
+Hướng đầu tiên là thiết kế lại action space. Không gian $(3,3,3,9)$ giúp biểu diễn điều khiển game đầy đủ, nhưng cũng làm entropy cao và khiến policy khó trở nên quyết đoán. Một hướng khả thi là gộp nhánh combat/aim, giảm số hướng aim, hoặc dùng action mask mạnh hơn theo ngữ cảnh.
+
+Hướng thứ hai là chạy lại các run quan trọng với nhiều seed. Tối thiểu nên chạy run34, run46, run50, run54 và run55 với ba seed để có mean, standard deviation và confidence interval. Điều này sẽ giúp kết luận về curriculum, ICM trên nền curriculum và reward v2 có sức thuyết phục thống kê cao hơn.
+
+Hướng thứ ba là mở rộng quan sát. Structured observation đem lại sample efficiency, nhưng chưa kiểm tra khả năng chuyển sang các game Roguelike khác. Một hướng dài hạn là kết hợp vector observation với pixel observation hoặc local occupancy grid để tăng tính tổng quát.
+
+Hướng thứ tư là dùng imitation learning hoặc behavior cloning để bootstrap. Nếu có một tập demonstration nhỏ từ người chơi, agent có thể bắt đầu từ policy biết di chuyển, né và tấn công cơ bản, sau đó dùng PPO/curriculum để tinh chỉnh trên phân phối map khó.
+
+Hướng thứ năm là đưa PCGNN từ offline sang adaptive curriculum. Khi agent đạt hiệu năng cao ở một tier, hệ thống có thể sinh thêm map mới quanh vùng độ khó cao hơn, sau đó kiểm tra bằng metric và đưa vào pool huấn luyện. Đây là hướng gần với adaptive procedural content generation và có thể giúp giảm hiện tượng agent học quá khớp vào tập map cố định.
+
+Cuối cùng, hệ thống có thể mở rộng sang multi-agent training. Môi trường TopDown Engine hỗ trợ nhiều nhân vật và nhiều enemy, vì vậy các kịch bản cooperative hoặc competitive sẽ là hướng tự nhiên để kiểm tra khả năng phối hợp, chia mục tiêu và thích nghi chiến thuật của agent.
+
+Mã nguồn và tài liệu liên quan được cập nhật tại:
+\url{https://github.com/tranmanh2004}

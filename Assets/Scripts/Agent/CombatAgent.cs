@@ -63,12 +63,13 @@ public class CombatAgent : Agent
     private const float ApproachTargetReward = 0.008f;
     private const float MoveAwayFromTargetPenalty = -0.001f;
     private const float AimAtTargetReward = 0.001f;
-    private const float ReadyAttackIntentWithTargetReward = 0.01f;
+    private const float ReadyAttackIntentWithTargetReward = 0.002f;
     private const float CooldownPatienceReward = 0.0001f;
-    private const float AttackAlignedReward = 0.12f;
+    private const float AttackAlignedReward = 0.015f;
     private const float InvalidAttackPenalty = -0.003f;
-    private const float MissedAttackPenalty = -0.05f;
-    private const int MissedAttackGraceDecisions = 4;
+    private const float MissedAttackPenalty = -0.12f;
+    private const float RepeatedAttackWhilePendingPenalty = -0.02f;
+    private const int MissedAttackGraceDecisions = 6;
     private const float UsefulDashReward = 0.04f;
     private const float WastefulDashPenalty = -0.002f;
     private const float IdleNearEnemyPenalty = -0.0005f;
@@ -188,6 +189,8 @@ public class CombatAgent : Agent
     [Header("Aggressive Seek Training")]
     [Tooltip("Adds extra reward for moving toward the nearest living enemy even before it is a valid line-of-sight target. Can also be enabled by trainer env parameter 'aggressive_seek'=1.")]
     public bool UseAggressiveSeekReward = false;
+    [Tooltip("Only allows attack actions when the current target is inside this distance. Set <= 0 to disable range gating.")]
+    public float TrainingAttackMaxDistance = 2.8f;
 
     // --- Hằng số định danh hành động ---
     public const int VectorObservationSize = 210;
@@ -1074,7 +1077,7 @@ public class CombatAgent : Agent
             Debug.LogWarning($"[CombatAgent] Action mask target refresh failed: {e.Message}", gameObject);
         }
 
-        if (!IsTargetValid(_currentTarget) || !IsWeaponReady())
+        if (!CanRequestAttack())
         {
             actionMask.SetActionEnabled(BRANCH_COMBAT, COMBAT_ATTACK, false);
         }
@@ -1289,7 +1292,7 @@ public class CombatAgent : Agent
         {
             _episodeAttackActions++;
 
-            if (!weaponReady)
+            if (!weaponReady || !IsCurrentTargetInAttackRange())
             {
                 return;
             }
@@ -1431,6 +1434,13 @@ public class CombatAgent : Agent
 
     private void RegisterPendingAttack()
     {
+        if (_pendingAttackDecision >= 0)
+        {
+            _episodeInvalidAttacks++;
+            AddReward(RepeatedAttackWhilePendingPenalty);
+            return;
+        }
+
         _pendingAttackDecision = _episodeDecisionCount;
         _pendingAttackEnemyHealth = _previousTotalEnemyHealth;
     }
@@ -2173,7 +2183,7 @@ public class CombatAgent : Agent
     {
         if (requestedCombat == COMBAT_ATTACK)
         {
-            if (!IsTargetValid(_currentTarget) || !IsWeaponReady())
+            if (!CanRequestAttack())
             {
                 _episodeBlockedAttackActions++;
                 return COMBAT_NONE;
@@ -2186,6 +2196,29 @@ public class CombatAgent : Agent
         }
 
         return requestedCombat;
+    }
+
+    private bool CanRequestAttack()
+    {
+        return IsTargetValid(_currentTarget)
+            && IsWeaponReady()
+            && _pendingAttackDecision < 0
+            && IsCurrentTargetInAttackRange();
+    }
+
+    private bool IsCurrentTargetInAttackRange()
+    {
+        if (TrainingAttackMaxDistance <= 0f)
+        {
+            return true;
+        }
+
+        if (!IsTargetValid(_currentTarget))
+        {
+            return false;
+        }
+
+        return Vector2.Distance(transform.position, _currentTarget.position) <= TrainingAttackMaxDistance;
     }
 
     private float GetCurrentTargetDistance()
