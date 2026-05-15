@@ -1,0 +1,42 @@
+{
+    "name": "root",
+    "metadata": {
+        "timer_format_version": "0.1.0",
+        "start_time_seconds": "1778750916",
+        "python_version": "3.10.12 | packaged by Anaconda, Inc. | (main, Jul  5 2023, 19:01:18) [MSC v.1916 64 bit (AMD64)]",
+        "command_line_arguments": "C:\\Users\\ADMIN\\anaconda3\\envs\\unity1\\Scripts\\mlagents-learn Assets/Scripts/Agent/curriculum_local_grid_aggressive_config.yaml --run-id=run63_continue_from_run62_24M --initialize-from=run62_24M_source --results-dir=Assets/results",
+        "mlagents_version": "1.1.0",
+        "mlagents_envs_version": "1.1.0",
+        "communication_protocol_version": "1.5.0",
+        "pytorch_version": "2.2.2+cpu",
+        "numpy_version": "1.23.5",
+        "end_time_seconds": "1778750977"
+    },
+    "total": 61.188805299811065,
+    "count": 1,
+    "self": 0.007227499969303608,
+    "children": {
+        "run_training.setup": {
+            "total": 0.04093990009278059,
+            "count": 1,
+            "self": 0.04093990009278059
+        },
+        "TrainerController.start_learning": {
+            "total": 61.14063789974898,
+            "count": 1,
+            "self": 5.7299621403217316e-05,
+            "children": {
+                "TrainerController._reset_env": {
+                    "total": 61.14057060005143,
+                    "count": 1,
+                    "self": 61.14057060005143
+                },
+                "TrainerController._save_models": {
+                    "total": 1.00000761449337e-05,
+                    "count": 1,
+                    "self": 1.00000761449337e-05
+                }
+            }
+        }
+    }
+}

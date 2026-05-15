@@ -51,14 +51,14 @@ behaviors:
     init_path: null
     keep_checkpoints: 15
     even_checkpoints: false
-    max_steps: 3000000
+    max_steps: 50000000
     time_horizon: 64
     summary_freq: 10000
     threaded: false
     self_play: null
     behavioral_cloning: null
 env_settings:
-  env_path: Build\The Knight.exe
+  env_path: C:\Riot Games\The-Knight\Build\The Knight.exe
   env_args: null
   base_port: 5005
   num_envs: 8
@@ -83,7 +83,7 @@ environment_parameters:
     - value:
         sampler_type: constant
         sampler_parameters:
-          seed: 3236
+          seed: 1660
           value: 0
       name: EasyFixed
       completion_criteria:
@@ -96,7 +96,7 @@ environment_parameters:
     - value:
         sampler_type: constant
         sampler_parameters:
-          seed: 3237
+          seed: 1661
           value: 1
       name: MediumFixed
       completion_criteria:
@@ -109,7 +109,7 @@ environment_parameters:
     - value:
         sampler_type: constant
         sampler_parameters:
-          seed: 3238
+          seed: 1662
           value: 2
       name: HardFixed
       completion_criteria:
@@ -122,7 +122,7 @@ environment_parameters:
     - value:
         sampler_type: constant
         sampler_parameters:
-          seed: 3239
+          seed: 1663
           value: 3
       name: HardRandom
       completion_criteria: null
@@ -131,7 +131,7 @@ environment_parameters:
     - value:
         sampler_type: constant
         sampler_parameters:
-          seed: 3240
+          seed: 1664
           value: 1
       name: Enabled
       completion_criteria: null
@@ -139,7 +139,7 @@ checkpoint_settings:
   run_id: run62_local_grid_aggressive
   initialize_from: null
   load_model: false
-  resume: false
+  resume: true
   force: false
   train_model: false
   inference: false

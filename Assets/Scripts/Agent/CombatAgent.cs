@@ -73,11 +73,11 @@ public class CombatAgent : Agent
     private const float UsefulDashReward = 0.04f;
     private const float WastefulDashPenalty = -0.002f;
     private const float IdleNearEnemyPenalty = -0.0005f;
-    private const float AggressiveSeekProgressReward = 0.04f;
-    private const float AggressiveSeekProgressRewardCap = 0.06f;
+    private const float AggressiveSeekProgressReward = 0.1f;
+    private const float AggressiveSeekProgressRewardCap = 0.12f;
     private const float AggressiveSeekDirectionReward = 0.01f;
-    private const float AggressiveSeekMoveAwayPenalty = -0.008f;
-    private const float AggressiveSeekIdlePenalty = -0.004f;
+    private const float AggressiveSeekMoveAwayPenalty = -0.02f;
+    private const float AggressiveSeekIdlePenalty = -0.008f;
     private const float AggressiveSeekTargetAcquiredReward = 0.05f;
     private const float CloseTargetNoAttackPenalty = -0.008f;
     private const float AggressiveSeekCloseDistance = 2.5f;

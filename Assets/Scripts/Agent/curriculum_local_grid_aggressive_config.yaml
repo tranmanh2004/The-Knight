@@ -33,7 +33,7 @@ behaviors:
     # the BFS next-step direction.
     #
     # Do not initialize this run from 207-dim or 210-dim checkpoints.
-    max_steps: 3000000
+    max_steps: 50000000
     time_horizon: 64
     summary_freq: 10000
     keep_checkpoints: 15

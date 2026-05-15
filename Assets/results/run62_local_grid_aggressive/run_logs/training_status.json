@@ -1,6 +1,6 @@
 {
     "difficulty": {
-        "lesson_num": 0
+        "lesson_num": 3
     },
     "aggressive_seek": {
         "lesson_num": 0
@@ -9,5 +9,153 @@
         "stats_format_version": "0.3.0",
         "mlagents_version": "1.1.0",
         "torch_version": "2.2.2+cpu"
+    },
+    "CombatAgentConfig": {
+        "checkpoints": [
+            {
+                "steps": 20999975,
+                "file_path": "results\\run62_local_grid_aggressive\\CombatAgentConfig\\CombatAgentConfig-20999975.onnx",
+                "reward": 10.869868298115975,
+                "creation_time": 1778739515.436308,
+                "auxillary_file_paths": [
+                    "results\\run62_local_grid_aggressive\\CombatAgentConfig\\CombatAgentConfig-20999975.pt"
+                ]
+            },
+            {
+                "steps": 21249987,
+                "file_path": "results\\run62_local_grid_aggressive\\CombatAgentConfig\\CombatAgentConfig-21249987.onnx",
+                "reward": 12.13836106183854,
+                "creation_time": 1778740003.519263,
+                "auxillary_file_paths": [
+                    "results\\run62_local_grid_aggressive\\CombatAgentConfig\\CombatAgentConfig-21249987.pt"
+                ]
+            },
+            {
+                "steps": 21499995,
+                "file_path": "results\\run62_local_grid_aggressive\\CombatAgentConfig\\CombatAgentConfig-21499995.onnx",
+                "reward": 11.95370214088605,
+                "creation_time": 1778740678.1620302,
+                "auxillary_file_paths": [
+                    "results\\run62_local_grid_aggressive\\CombatAgentConfig\\CombatAgentConfig-21499995.pt"
+                ]
+            },
+            {
+                "steps": 21749943,
+                "file_path": "results\\run62_local_grid_aggressive\\CombatAgentConfig\\CombatAgentConfig-21749943.onnx",
+                "reward": 10.627922861278057,
+                "creation_time": 1778741243.0325017,
+                "auxillary_file_paths": [
+                    "results\\run62_local_grid_aggressive\\CombatAgentConfig\\CombatAgentConfig-21749943.pt"
+                ]
+            },
+            {
+                "steps": 21999940,
+                "file_path": "results\\run62_local_grid_aggressive\\CombatAgentConfig\\CombatAgentConfig-21999940.onnx",
+                "reward": 11.980207914859056,
+                "creation_time": 1778741685.7168493,
+                "auxillary_file_paths": [
+                    "results\\run62_local_grid_aggressive\\CombatAgentConfig\\CombatAgentConfig-21999940.pt"
+                ]
+            },
+            {
+                "steps": 22249947,
+                "file_path": "results\\run62_local_grid_aggressive\\CombatAgentConfig\\CombatAgentConfig-22249947.onnx",
+                "reward": 14.801502797752619,
+                "creation_time": 1778742123.7681813,
+                "auxillary_file_paths": [
+                    "results\\run62_local_grid_aggressive\\CombatAgentConfig\\CombatAgentConfig-22249947.pt"
+                ]
+            },
+            {
+                "steps": 22499986,
+                "file_path": "results\\run62_local_grid_aggressive\\CombatAgentConfig\\CombatAgentConfig-22499986.onnx",
+                "reward": null,
+                "creation_time": 1778742669.7964852,
+                "auxillary_file_paths": [
+                    "results\\run62_local_grid_aggressive\\CombatAgentConfig\\CombatAgentConfig-22499986.pt"
+                ]
+            },
+            {
+                "steps": 22749996,
+                "file_path": "results\\run62_local_grid_aggressive\\CombatAgentConfig\\CombatAgentConfig-22749996.onnx",
+                "reward": 9.397812738083303,
+                "creation_time": 1778743325.1444123,
+                "auxillary_file_paths": [
+                    "results\\run62_local_grid_aggressive\\CombatAgentConfig\\CombatAgentConfig-22749996.pt"
+                ]
+            },
+            {
+                "steps": 22999984,
+                "file_path": "results\\run62_local_grid_aggressive\\CombatAgentConfig\\CombatAgentConfig-22999984.onnx",
+                "reward": 14.293193465967972,
+                "creation_time": 1778743809.3779786,
+                "auxillary_file_paths": [
+                    "results\\run62_local_grid_aggressive\\CombatAgentConfig\\CombatAgentConfig-22999984.pt"
+                ]
+            },
+            {
+                "steps": 23249951,
+                "file_path": "results\\run62_local_grid_aggressive\\CombatAgentConfig\\CombatAgentConfig-23249951.onnx",
+                "reward": 14.46191251885008,
+                "creation_time": 1778744236.2547944,
+                "auxillary_file_paths": [
+                    "results\\run62_local_grid_aggressive\\CombatAgentConfig\\CombatAgentConfig-23249951.pt"
+                ]
+            },
+            {
+                "steps": 23499994,
+                "file_path": "results\\run62_local_grid_aggressive\\CombatAgentConfig\\CombatAgentConfig-23499994.onnx",
+                "reward": 12.769434201717377,
+                "creation_time": 1778744754.236491,
+                "auxillary_file_paths": [
+                    "results\\run62_local_grid_aggressive\\CombatAgentConfig\\CombatAgentConfig-23499994.pt"
+                ]
+            },
+            {
+                "steps": 23749996,
+                "file_path": "results\\run62_local_grid_aggressive\\CombatAgentConfig\\CombatAgentConfig-23749996.onnx",
+                "reward": 14.110166297904376,
+                "creation_time": 1778745379.8559813,
+                "auxillary_file_paths": [
+                    "results\\run62_local_grid_aggressive\\CombatAgentConfig\\CombatAgentConfig-23749996.pt"
+                ]
+            },
+            {
+                "steps": 23999964,
+                "file_path": "results\\run62_local_grid_aggressive\\CombatAgentConfig\\CombatAgentConfig-23999964.onnx",
+                "reward": 14.331502069319997,
+                "creation_time": 1778745907.9981048,
+                "auxillary_file_paths": [
+                    "results\\run62_local_grid_aggressive\\CombatAgentConfig\\CombatAgentConfig-23999964.pt"
+                ]
+            },
+            {
+                "steps": 0,
+                "file_path": "results\\run62_local_grid_aggressive\\CombatAgentConfig\\CombatAgentConfig-0.onnx",
+                "reward": null,
+                "creation_time": 1778748035.4472606,
+                "auxillary_file_paths": [
+                    "results\\run62_local_grid_aggressive\\CombatAgentConfig\\CombatAgentConfig-0.pt"
+                ]
+            },
+            {
+                "steps": 110187,
+                "file_path": "results\\run62_local_grid_aggressive\\CombatAgentConfig\\CombatAgentConfig-110187.onnx",
+                "reward": 2.741569493462642,
+                "creation_time": 1778749488.8943706,
+                "auxillary_file_paths": [
+                    "results\\run62_local_grid_aggressive\\CombatAgentConfig\\CombatAgentConfig-110187.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 110187,
+            "file_path": "results\\run62_local_grid_aggressive\\CombatAgentConfig.onnx",
+            "reward": 2.741569493462642,
+            "creation_time": 1778749488.8943706,
+            "auxillary_file_paths": [
+                "results\\run62_local_grid_aggressive\\CombatAgentConfig\\CombatAgentConfig-110187.pt"
+            ]
+        }
     }
 }
