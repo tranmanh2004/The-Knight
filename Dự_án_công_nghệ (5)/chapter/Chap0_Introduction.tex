@@ -36,7 +36,7 @@ Từ các mục tiêu trên, đề tài xác định hai câu hỏi nghiên cứ
 \renewcommand{\labelitemi}{$-$}
 \begin{itemize}
     \item \textbf{Q1}: Trong số ICM, RND, LSTM và curriculum learning, kỹ thuật nào tạo ra cải thiện lớn nhất khi huấn luyện agent chiến đấu trong môi trường Roguelike có bản đồ sinh theo thủ tục?
-    \item \textbf{Q2}: Khi kết hợp curriculum learning với các kỹ thuật trên, có xuất hiện hiệu ứng cộng hưởng rõ rệt hay không?
+    \item \textbf{Q2}: Khi kết hợp curriculum learning với các kỹ thuật trên, có xuất hiện hiệu ứng bổ trợ rõ rệt hay không?
 \end{itemize}
 
 Để trả lời hai câu hỏi này, đề tài triển khai ma trận thí nghiệm loại trừ gồm chín run chính, trong đó mỗi run thay đổi đúng một biến so với cấu hình tham chiếu. Mỗi cấu hình chỉ được chạy một seed; vì vậy các so sánh được hiểu là xu hướng thực nghiệm, chưa phải kết luận thống kê có khoảng tin cậy.
@@ -52,7 +52,7 @@ Thông qua quá trình nghiên cứu, triển khai và thực nghiệm, đề t�
     \item Xây dựng pipeline huấn luyện DRL cho game Roguelike trong Unity kết hợp PCGNN, curriculum learning và PPO.
     \item Thiết kế CombatAgent với quan sát 207 chiều và không gian hành động đa nhánh $(3,3,3,9)$, phù hợp cho bài toán di chuyển--ngắm--chiến đấu đồng thời.
     \item Bằng chứng thực nghiệm cho thấy curriculum learning cải thiện phần thưởng trung bình \textbf{+85\%} (2.073 → 3.843) so với PPO baseline, trong khi ICM, RND và LSTM chỉ đạt +16\%--20\%.
-    \item Phát hiện entropy plateau 4.40 nat nhất quán trên chín cấu hình ablation, gợi ý mạnh rằng đây là hệ quả của quan sát thiếu đặc trưng không gian chứ không phải giới hạn của PPO hay action space.
+    \item Phát hiện entropy plateau 4.40 nat nhất quán trên chín cấu hình ablation, cho thấy đây là hệ quả của quan sát thiếu đặc trưng không gian chứ không phải giới hạn của PPO hay action space.
     \item Run59 (\emph{path-informed}, +BFS features) cho thấy tìm đường là một nút thắt quan trọng; run62 (432 chiều, 33.45M bước) phá plateau xuống 3.099 nat và đạt clear\_rate 0.626 mà không cần cài cứng BFS.
 \end{itemize}
 

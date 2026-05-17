@@ -93,7 +93,7 @@ Các run không dùng curriculum kết thúc ở 1M bước nên được giữ 
 
 Run34 là cấu hình PPO baseline, chưa áp dụng curriculum learning. Sau 1 triệu bước huấn luyện, phần thưởng tích lũy trung bình trên 50 episode cuối đạt 2.073, tỷ lệ dọn phòng trung bình đạt 0.129 và tỷ lệ dọn phòng cao nhất đạt 0.50. Kết quả này cho thấy tác nhân đã học được một số hành vi cơ bản như tiếp cận và tấn công kẻ địch, nhưng chưa duy trì ổn định khả năng dọn phòng trên phân phối bản đồ khó.
 
-Hai biến thể phần thưởng nội tại được đánh giá là ICM ở run35 và RND ở run36. ICM đạt phần thưởng tail-50 là 2.416, trong khi RND đạt 2.487. Mặc dù cả hai đều cải thiện so với PPO baseline, mức tăng còn tương đối nhỏ và chưa tạo ra thay đổi bản chất trong hành vi của tác nhân. Điều này gợi ý rằng khó khăn chính của môi trường không chỉ nằm ở việc thiếu tín hiệu khám phá, mà còn đến từ độ khó ban đầu của phân phối bản đồ và nhiệm vụ chiến đấu.
+Hai biến thể phần thưởng nội tại được đánh giá là ICM ở run35 và RND ở run36. ICM đạt phần thưởng tail-50 là 2.416, RND đạt 2.487. Cả hai đều cải thiện so với PPO baseline, nhưng mức tăng còn tương đối nhỏ và chưa tạo ra thay đổi bản chất trong hành vi của tác nhân. Có thể thấy khó khăn chính của môi trường không chỉ nằm ở việc thiếu tín hiệu thúc đẩy khám phá, mà còn đến từ độ khó ban đầu của phân phối bản đồ và nhiệm vụ chiến đấu.
 
 \begin{figure}[H]
     \centering
@@ -117,7 +117,7 @@ RND không cần dự đoán hành động nên tránh được hiện tượng 
 
 \section{LSTM: bộ nhớ có cần thiết không?}
 
-Run42 thêm LSTM với bộ nhớ kích thước 256 và chuỗi quan sát dài 64 bước. Khác với ICM/RND, LSTM có xu hướng học chậm nhưng tăng dần về cuối. Phần thưởng trung bình trượt 200k bước tăng từ 1.64 ở mốc 100k lên 2.71 ở mốc 1M. Điều này phù hợp với giả thuyết rằng bộ nhớ có ích cho hồi chiêu, đạn và trạng thái khuất tầm nhìn, nhưng lợi ích chưa đủ lớn để tạo thay đổi nổi bật trong quy mô huấn luyện hiện tại.
+Run42 thêm LSTM với bộ nhớ kích thước 256 và chuỗi quan sát dài 64 bước. Khác với ICM/RND, LSTM có xu hướng học chậm nhưng tăng dần về cuối. Phần thưởng trung bình trượt 200k bước tăng từ 1.64 ở mốc 100k lên 2.71 ở mốc 1M. Xu hướng này phù hợp với giả thuyết bộ nhớ có ích cho hồi chiêu, đạn và trạng thái khuất tầm nhìn; tuy nhiên lợi ích chưa đủ lớn để tạo cải thiện đáng chú ý trong quy mô huấn luyện hiện tại.
 
 \begin{figure}[H]
     \centering
@@ -126,7 +126,7 @@ Run42 thêm LSTM với bộ nhớ kích thước 256 và chuỗi quan sát dài 
     \label{fig:lstm_trend}
 \end{figure}
 
-Kết quả này cho thấy kiến trúc bộ nhớ có thể là hướng cải tiến phụ, nhưng không giải quyết vấn đề chính của môi trường: tác nhân vẫn bắt đầu từ phân phối Hard quá rộng và khó nhận được chuỗi phần thưởng thành công đủ thường xuyên.
+Như vậy, kiến trúc bộ nhớ có thể là hướng cải tiến phụ chứ không giải quyết được vấn đề chính của môi trường: tác nhân vẫn bắt đầu từ phân phối Hard quá rộng và khó nhận được chuỗi phần thưởng thành công đủ thường xuyên.
 
 \section{Curriculum learning: cải thiện nổi bật}
 
@@ -153,7 +153,7 @@ Phần thưởng theo lesson của run46 cho thấy trung bình ở Easy đạt 
     \vspace{0.2em}
     \begin{minipage}{0.94\textwidth}
         \small
-        Hình cho thấy phần thưởng không tăng đều sau khi vào Hard mà dao động quanh một vùng ổn định. Run50 cao hơn run46 ở phần sau quá trình huấn luyện, gợi ý ICM chỉ phát huy rõ khi chính sách đã có kỹ năng nền từ curriculum.
+        Hình cho thấy phần thưởng không tăng đều sau khi vào Hard mà dao động quanh một vùng ổn định. Run50 cao hơn run46 ở phần sau quá trình huấn luyện -- ICM chỉ phát huy rõ khi chính sách đã có kỹ năng cơ bản từ curriculum.
     \end{minipage}
 \end{figure}
 
@@ -189,19 +189,19 @@ Phần thưởng theo lesson của run46 cho thấy trung bình ở Easy đạt 
     \vspace{0.2em}
     \begin{minipage}{0.94\textwidth}
         \small
-        Run46 và run50 chuyển lên Hard từ rất sớm nên phần lớn 3M bước vẫn đánh giá trên cùng phân phối khó. Run54 có thêm lesson Hard Random, vì vậy đường lesson đạt mức 3 và phản ánh biến thể fixed-to-random spawn.
+        Run46 và run50 chuyển lên Hard từ rất sớm nên phần lớn 3M bước vẫn đánh giá trên cùng phân phối khó. Run54 có thêm lesson Hard Random, nên đường lesson đạt mức 3 và phản ánh biến thể fixed-to-random spawn.
     \end{minipage}
 \end{figure}
 
-Trong phạm vi các run đã thực hiện, đây là xu hướng mạnh nhất của khóa luận: curriculum không chỉ tăng phần thưởng trung bình mà còn tăng các chỉ số hành vi. Tail-50 của run46 đạt 0.994 kills/episode và tỷ lệ dọn phòng tail-50 đạt 0.267, cao hơn rõ rệt so với mốc so sánh. Về mặt cơ chế, curriculum learning đóng vai trò hỗ trợ tín hiệu học theo từng giai đoạn: ở Easy, tác nhân gặp các episode thành công đủ thường xuyên để học chuỗi tiếp cận -- ngắm -- tấn công; khi sang Medium và Hard, chính sách đã có kỹ năng nền thay vì khám phá từ gần như ngẫu nhiên. Tuy nhiên, do mỗi cấu hình mới chỉ có một seed, kết luận này cần được xác nhận thêm bằng các run lặp lại có error bar.
+Trong các run đã thực hiện, đây là xu hướng mạnh nhất của khóa luận: curriculum không chỉ tăng phần thưởng trung bình mà còn cải thiện các chỉ số hành vi. Tail-50 của run46 đạt 0.994 kills/episode và tỷ lệ dọn phòng tail-50 đạt 0.267, cao hơn rõ rệt so với mốc so sánh. Về mặt cơ chế, curriculum learning hỗ trợ tín hiệu học theo từng giai đoạn: ở Easy, tác nhân gặp các episode thành công đủ thường xuyên để học chuỗi tiếp cận -- ngắm -- tấn công; khi sang Medium và Hard, chính sách đã có kỹ năng cơ bản thay vì khám phá từ gần như ngẫu nhiên. Do mỗi cấu hình mới chỉ có một seed, kết luận này cần được xác nhận thêm bằng các run lặp lại có error bar.
 
 \section{Kết hợp curriculum với LSTM và ICM}
 
-Run47 thêm LSTM vào curriculum. Trung bình ở Hard đạt 3.765, thấp hơn nhẹ so với 3.843 của run46. Chênh lệch này nhỏ và chưa đủ để kết luận LSTM làm xấu chính sách, nhưng đủ cho thấy bộ nhớ không tạo thêm cải thiện rõ ràng khi curriculum đã cung cấp khung đỡ cho khám phá.
+Run47 thêm LSTM vào curriculum. Trung bình ở Hard đạt 3.765, thấp hơn nhẹ so với 3.843 của run46. Chênh lệch này nhỏ, chưa đủ để kết luận LSTM làm xấu chính sách, nhưng đủ cho thấy bộ nhớ không tạo thêm cải thiện rõ ràng khi curriculum đã cung cấp nền tảng để khám phá.
 
-Có hai giả thuyết giải thích kết quả này. Thứ nhất, \textit{LSTM làm chậm tốc độ hội tụ của PPO}: policy loss của run47 là 0.079, cao hơn gần 5 lần so với run46 là 0.017. Điều này gợi ý rằng các trọng số hồi tiếp của LSTM cần nhiều mẫu hơn để ổn định, khiến cập nhật chính sách kém hiệu quả hơn trong cùng 3M bước. Thứ hai, \textit{curriculum đã giải quyết phần lớn nhu cầu về bộ nhớ}: trong môi trường thưa thưởng, lợi ích chính của LSTM là giúp tác nhân nhớ chuỗi hành vi thành công trong episode dài. Tuy nhiên, khi curriculum đã thu hẹp phân phối bản đồ về Easy/Medium ở giai đoạn đầu, độ dài hiệu quả của chuỗi quyết định ngắn lại, làm giảm lợi thế tương đối của LSTM so với MLP thuần.
+Có hai giả thuyết giải thích kết quả này. Giả thuyết đầu tiên là \textit{LSTM làm chậm tốc độ hội tụ của PPO}: policy loss của run47 đạt 0.079, cao hơn gần 5 lần so với 0.017 của run46. Các trọng số hồi tiếp của LSTM cần nhiều mẫu hơn để ổn định, làm cập nhật chính sách kém hiệu quả trong cùng 3M bước. Giả thuyết còn lại là \textit{curriculum đã giải quyết phần lớn nhu cầu về bộ nhớ}: trong môi trường thưa thưởng, lợi ích chính của LSTM là giúp tác nhân nhớ chuỗi hành vi thành công trong episode dài; khi curriculum đã thu hẹp phân phối bản đồ về Easy/Medium ở giai đoạn đầu, độ dài hiệu quả của chuỗi quyết định ngắn lại, làm giảm lợi thế tương đối của LSTM so với MLP thuần.
 
-Run50 bổ sung ICM trên nền curriculum và được huấn luyện đủ 3.00M bước. Trên vùng Hard, phần thưởng trung bình đạt 4.369, cao hơn run46 là 3.843; tail-50 cuối run đạt 4.707. Một số chỉ số hành vi cũng cải thiện nhẹ, gồm số kẻ địch tiêu diệt trung bình đạt 1.016, tỷ lệ dọn phòng tail-50 đạt 0.273 và tỷ lệ dash hữu ích đạt 0.334. Điều này cho thấy ICM có thể hỗ trợ tác nhân khám phá thêm các hành vi có ích khi đã được curriculum dẫn qua giai đoạn học ban đầu. Tuy nhiên, inverse loss vẫn ở mức cao, khoảng 4.337, chỉ giảm nhẹ so với run35. Do đó, cải thiện của run50 chủ yếu thể hiện ở hành vi và phần thưởng, còn vấn đề biểu diễn phát sinh từ không gian hành động rời rạc nhiều nhánh chưa được ICM giải quyết triệt để.
+Run50 bổ sung ICM trên nền curriculum và được huấn luyện đủ 3.00M bước. Trên vùng Hard, phần thưởng trung bình đạt 4.369, cao hơn run46 (3.843); tail-50 cuối run đạt 4.707. Một số chỉ số hành vi cũng cải thiện nhẹ: số kẻ địch tiêu diệt trung bình 1.016, tỷ lệ dọn phòng tail-50 0.273 và tỷ lệ dash hữu ích 0.334. ICM do đó có thể hỗ trợ tác nhân khám phá thêm các hành vi có ích một khi đã được curriculum dẫn qua giai đoạn học ban đầu. Tuy nhiên, inverse loss vẫn ở mức cao, khoảng 4.337, chỉ giảm nhẹ so với run35. Như vậy, cải thiện của run50 chủ yếu thể hiện ở hành vi và phần thưởng. Vấn đề biểu diễn phát sinh từ không gian hành động rời rạc nhiều nhánh chưa được ICM giải quyết triệt để.
 
 \begin{table}[H]
     \centering
@@ -214,14 +214,14 @@ Run50 bổ sung ICM trên nền curriculum và được huấn luyện đủ 3.0
         \hline
         run46 Curriculum & 3.0M & 3.843 & Baseline curriculum, cải thiện chính. \\
         \hline
-        run47 Curriculum + LSTM & 3.0M & 3.765 & Gần tương đương, không có cộng hưởng rõ. \\
+        run47 Curriculum + LSTM & 3.0M & 3.765 & Gần tương đương, không có tác dụng bổ trợ rõ. \\
         \hline
         run50 Curriculum + ICM & 3.0M & 4.369 & Cải thiện phần thưởng và số lần tiêu diệt so với run46; inverse loss vẫn cao. \\
         \hline
     \end{tabular}
 \end{table}
 
-Kết quả cập nhật này làm kết luận tinh tế hơn: curriculum vẫn là yếu tố nền quan trọng nhất, nhưng ICM có thể tạo thêm lợi ích khi tác nhân đã có kỹ năng nền từ các lesson dễ hơn. Dù vậy, inverse loss còn cao cho thấy tín hiệu nội tại chủ yếu hỗ trợ khám phá/hành vi ở mức thực nghiệm, chưa chứng minh rằng biểu diễn của ICM đã học tốt quan hệ hành động--chuyển trạng thái trong môi trường này.
+Kết quả cập nhật này làm kết luận tinh tế hơn: curriculum vẫn là yếu tố nền quan trọng nhất, còn ICM có thể tạo thêm lợi ích khi tác nhân đã có kỹ năng cơ bản từ các lesson dễ hơn. Tuy vậy, inverse loss vẫn ở mức cao -- tín hiệu nội tại chủ yếu hỗ trợ khám phá/hành vi ở mức thực nghiệm, chưa chứng minh rằng biểu diễn của ICM đã học tốt quan hệ hành động--chuyển trạng thái trong môi trường này.
 
 \section{Giảm phương sai: vị trí sinh cố định rồi ngẫu nhiên}
 
@@ -238,9 +238,9 @@ Vị trí sinh cố định giúp giảm phương sai ở giai đoạn đầu, n
 
 \section{Reward v2: tăng phần thưởng kết quả nhưng thay đổi thang đo}
 
-Run55 thay đổi cấu trúc hàm thưởng: tăng mạnh phần thưởng tiêu diệt/dọn phòng/sát thương/tấn công đúng hướng, giảm phần thưởng tiếp cận và phạt mạnh hơn hành vi đứng gần địch không hành động. Run được huấn luyện đến 3.00M bước. Phần thưởng tail-50 đạt 9.600 và trung bình ở Hard đạt 9.337, nhưng không thể so trực tiếp với run46 vì thang thưởng đã thay đổi.
+Run55 thay đổi cấu trúc hàm thưởng: tăng mạnh phần thưởng tiêu diệt/dọn phòng/sát thương/tấn công đúng hướng, giảm phần thưởng tiếp cận và phạt mạnh hơn hành vi đứng gần địch không hành động. Run được huấn luyện đến 3.00M bước. Phần thưởng tail-50 đạt 9.600 và trung bình ở Hard đạt 9.337, nhưng không thể so sánh trực tiếp với run46 vì thang thưởng đã thay đổi.
 
-Chỉ số đáng chú ý hơn là đỉnh tỷ lệ dọn phòng đạt 0.80, cao hơn đỉnh 0.615 của run46. Điều này cho thấy reward v2 nhấn mạnh kết quả có thể đẩy tác nhân tấn công quyết đoán hơn. Tuy nhiên entropy tail vẫn quanh 4.408, nghĩa là reward v2 chưa phá được entropy plateau.
+Chỉ số đáng chú ý hơn là đỉnh tỷ lệ dọn phòng đạt 0.80, cao hơn đỉnh 0.615 của run46. Khi nhấn mạnh kết quả, reward v2 đẩy tác nhân tấn công quyết đoán hơn. Tuy nhiên entropy tail vẫn quanh 4.408 -- reward v2 chưa phá được entropy plateau.
 
 Do đó, run55 được tách khỏi nhóm so sánh reward v1 khi diễn giải phần thưởng trung bình. Với reward v2, các chỉ số đáng dùng hơn là tỷ lệ dọn phòng, số kẻ địch tiêu diệt, sát thương gây ra, sát thương nhận vào, tỷ lệ sống sót hoặc các chỉ số đã chuẩn hóa theo cùng thang đo. Cách tách này tránh hiểu nhầm rằng giá trị phần thưởng 9.337 của run55 có thể so trực tiếp với 3.843 của run46.
 
@@ -262,7 +262,7 @@ Một hiện tượng nhất quán xuyên suốt các run là entropy của chí
     \label{fig:entropy_plateau}
 \end{figure}
 
-Trong phạm vi các ablation chính giữ nguyên quan sát 207 chiều, plateau này không được giải quyết bởi ICM, RND, LSTM, curriculum learning, giảm phương sai vị trí sinh hoặc thiết kế lại phần thưởng. Tuy nhiên, khi run62 kết hợp quan sát lưới cục bộ với curriculum 4 bậc, ICM và được huấn luyện đến 33.45M bước, entropy giảm bền vững xuống 3.10 nat và duy trì ở mức này. Kết luận thận trọng được cập nhật là: plateau này nhiều khả năng xuất phát từ biểu diễn quan sát 207 chiều và số bước huấn luyện 1--3M trong các ablation chính, chứ không phải từ giới hạn cứng của PPO hay action space hiện tại.
+Trong các ablation chính giữ nguyên quan sát 207 chiều, plateau này không được giải quyết bởi ICM, RND, LSTM, curriculum learning, giảm phương sai vị trí sinh hay thiết kế lại phần thưởng. Khi run62 kết hợp quan sát lưới cục bộ với curriculum 4 bậc, ICM và được huấn luyện đến 33.45M bước, entropy giảm bền vững xuống 3.10 nat và duy trì ở mức này. Kết luận thận trọng được cập nhật như sau: plateau xuất phát chủ yếu từ biểu diễn quan sát 207 chiều và số bước huấn luyện 1--3M trong các ablation chính, không phải từ giới hạn cứng của PPO hay action space hiện tại.
 
 \section{Tổng hợp kết quả}
 
@@ -277,19 +277,19 @@ Trong phạm vi các ablation chính giữ nguyên quan sát 207 chiều, platea
         \hline
         \textbf{Run} & \textbf{Thiết lập} & \textbf{Steps} & \textbf{Reward} & \textbf{Kills} & \textbf{Kết luận} \\
         \hline
-        run34 & PPO baseline & 1.0M & 2.073 & 0.721 & Mốc so sánh; học được chiến đấu cơ bản nhưng trần thấp. \\
+        run34 & PPO baseline & 1.0M & 2.073 & 0.721 & Mốc so sánh; học được chiến đấu cơ bản nhưng đạt trần ở mức thấp. \\
         \hline
         run35 & PPO + ICM & 1.0M & 2.416 & 0.752 & Cải thiện nhỏ; inverse loss cao. \\
         \hline
-        run36 & PPO + RND & 1.0M & 2.487 & 0.796 & Tốt hơn ICM nhẹ, nhưng chưa tạo thay đổi nổi bật. \\
+        run36 & PPO + RND & 1.0M & 2.487 & 0.796 & Tốt hơn ICM nhẹ, nhưng chưa tạo cải thiện đáng chú ý. \\
         \hline
         run42 & PPO + LSTM & 1.0M & 2.411 & 0.769 & Học chậm nhưng tăng dần; lợi ích hạn chế. \\
         \hline
         run46 & PPO + Curriculum & 3.0M & 3.843 & 0.994 & Cải thiện chính, kill/episode và tỷ lệ dọn phòng đều tăng rõ. \\
         \hline
-        run47 & Curriculum + LSTM & 3.0M & 3.765 & 0.921 & Không cộng hưởng rõ với curriculum. \\
+        run47 & Curriculum + LSTM & 3.0M & 3.765 & 0.921 & Không tạo tác dụng bổ trợ rõ với curriculum. \\
         \hline
-        run50 & Curriculum + ICM & 3.0M & 4.369 & 1.016 & Cộng hưởng nhẹ với curriculum; inverse loss vẫn cao. \\
+        run50 & Curriculum + ICM & 3.0M & 4.369 & 1.016 & Bổ trợ nhẹ với curriculum; inverse loss vẫn cao. \\
         \hline
         run54 & 4-tier fixed-to-random & 3.0M & 3.925 & 0.945 & Tương đương run46; fixed-to-random chỉ cải thiện nhẹ. \\
         \hline
@@ -320,7 +320,7 @@ Một lưu ý quan trọng khi đọc Bảng~\ref{tab:master_ablation} là quy m
 
 Sau các run ablation chính về kỹ thuật huấn luyện, đề tài thực hiện thêm run59 như một ablation mở rộng về biểu diễn quan sát. Mục tiêu của run này là kiểm tra một giả thuyết cụ thể: tác nhân có thể không thất bại chủ yếu vì không biết chiến đấu, mà vì biểu diễn quan sát 207 chiều chưa cung cấp đủ cấu trúc không gian để chính sách suy luận đường đi qua bản đồ có tường. Để kiểm tra giả thuyết này, run59 bổ sung ba chiều quan sát vào CombatAgent: hướng bước kế tiếp theo đường đi ngắn nhất tính bằng BFS và khoảng cách đường đi ngắn nhất đã chuẩn hóa tới kẻ địch còn sống gần nhất. Do đó, vector quan sát tăng từ 207 lên 210 chiều.
 
-Điểm quan trọng khi diễn giải run59 là cấu hình này bổ sung yếu tố tìm đường vào quá trình học, nên không thể so trực tiếp với các run giữ nguyên quan sát 207 chiều. Chính sách vẫn được huấn luyện bằng PPO và vẫn phải học lựa chọn hành động di chuyển, ngắm, tấn công và dash, nhưng phần điều hướng nhận thêm tín hiệu hỗ trợ từ BFS. Nói cách khác, đây là biến thể \emph{BFS-assisted RL} hoặc \emph{path-informed observation}, dùng để đo tác động của tín hiệu đường đi đối với hiệu năng của tác nhân.
+Run59 bổ sung yếu tố tìm đường vào quá trình học, do đó không thể so sánh trực tiếp với các run giữ nguyên quan sát 207 chiều. Chính sách vẫn dùng PPO và phải tự học các hành động di chuyển, ngắm, tấn công, dash; điểm khác biệt nằm ở việc phần điều hướng được hỗ trợ thêm bằng tín hiệu BFS. Nói cách khác, đây là biến thể \emph{BFS-assisted RL} hay \emph{path-informed observation} (quan sát có thông tin đường đi), nhằm đo tác động của tín hiệu đường đi đối với hiệu năng của tác nhân.
 
 \begin{table}[H]
     \centering
@@ -346,15 +346,15 @@ Sau các run ablation chính về kỹ thuật huấn luyện, đề tài thực
     \end{tabular}
 \end{table}
 
-Kết quả của Bảng~\ref{tab:run59_bfs_assisted} cho thấy khi bổ sung tín hiệu đường đi ngắn nhất, các chỉ số hành vi tăng mạnh hơn: tỷ lệ dọn phòng đạt trên 0.8 ở vùng cuối, số kẻ địch bị tiêu diệt trung bình vượt 1.7 và entropy giảm sâu hơn so với plateau của các run 207 chiều. Đây là bước đột phá thực nghiệm lớn nhất trong toàn bộ quá trình thử nghiệm, vì nó không chỉ làm phần thưởng tăng mà còn cải thiện trực tiếp các chỉ số hành vi như tỷ lệ dọn phòng, số kẻ địch tiêu diệt và mức độ quyết đoán của chính sách. Điều này cho thấy nút thắt chính của môi trường không chỉ nằm ở thuật toán PPO hay cơ chế khám phá, mà còn nằm ở biểu diễn không gian của quan sát. Khi tác nhân được cung cấp đặc trưng đường đi phù hợp hơn, chính sách có thể học hành vi tiếp cận và chiến đấu ổn định hơn. Run59 vì vậy được xem là bước đột phá về biểu diễn quan sát, đồng thời gợi ý rằng các hướng tiếp theo nên tập trung vào local occupancy grid, graph/path feature học được, imitation learning cho điều hướng, hoặc thiết kế lại bản đồ/kẻ địch để giảm nhiễu từ các tình huống kẹt.
+Bảng~\ref{tab:run59_bfs_assisted} cho thấy khi bổ sung tín hiệu đường đi ngắn nhất, các chỉ số hành vi tăng mạnh hơn: tỷ lệ dọn phòng đạt trên 0.8 ở vùng cuối, số kẻ địch bị tiêu diệt trung bình vượt 1.7 và entropy giảm sâu hơn so với plateau của các run 207 chiều. Đây là mức cải thiện đáng kể nhất trong toàn bộ quá trình thử nghiệm, vì nó không chỉ làm phần thưởng tăng mà còn cải thiện trực tiếp các chỉ số hành vi như tỷ lệ dọn phòng, số kẻ địch tiêu diệt và mức độ quyết đoán của chính sách. Có thể thấy nút thắt chính của môi trường không chỉ nằm ở thuật toán PPO hay cơ chế khám phá, mà còn ở biểu diễn không gian của quan sát. Khi tác nhân được cung cấp đặc trưng đường đi phù hợp hơn, chính sách có thể học hành vi tiếp cận và chiến đấu ổn định hơn. Các hướng tiếp theo nên tập trung vào local occupancy grid, graph/path feature học được, imitation learning cho điều hướng, hoặc thiết kế lại bản đồ/kẻ địch để giảm nhiễu từ các tình huống kẹt.
 
-Do đó, run59 là bước cải thiện lớn nhất về hiệu năng thực nghiệm, nhưng bản chất của cải thiện này đến từ thay đổi biểu diễn quan sát chứ không chỉ từ thay đổi thuật toán học. Kết quả này không chứng minh tác nhân đã tự học tìm đường hoàn toàn, mà cho thấy khi được cung cấp đặc trưng đường đi phù hợp hơn, chính sách có thể học hành vi chiến đấu và tiếp cận mục tiêu ổn định hơn.
+Run59 mang lại bước cải thiện lớn nhất về hiệu năng thực nghiệm, nhưng bản chất của cải thiện đến từ thay đổi biểu diễn quan sát chứ không chỉ từ thuật toán học. Kết quả không chứng minh tác nhân đã tự học tìm đường hoàn toàn; nó chỉ cho thấy khi được cung cấp đặc trưng đường đi phù hợp hơn, chính sách có thể học hành vi chiến đấu và tiếp cận mục tiêu ổn định hơn.
 
-Bảng tổng hợp cho phép rút ra bốn nhận xét chính trong phạm vi thí nghiệm một seed. Thứ nhất, PPO baseline đạt hành vi hợp lý nhưng bị giới hạn ở mức phần thưởng khoảng 2.1--2.5. Thứ hai, intrinsic motivation và LSTM chưa tạo cải thiện lớn khi chạy độc lập. Thứ ba, curriculum learning là yếu tố nổi bật nhất; khi kết hợp thêm ICM, phần thưởng Hard tăng lên 4.369 nhưng inverse loss vẫn cao. Thứ tư, entropy plateau vẫn tồn tại trong nhóm ablation chính 207 chiều. Ở run62, khi kết hợp quan sát lưới cục bộ, curriculum 4 bậc, ICM và huấn luyện đến 33.45M bước, entropy giảm xuống 3.099 nat và clear\_rate đạt 0.626; tuy nhiên, do run62 thay đổi nhiều yếu tố đồng thời, kết quả này được xem là bằng chứng thăm dò thay vì ablation đơn biến.
+Bảng tổng hợp cho phép rút ra bốn nhận xét chính trong phạm vi thí nghiệm một seed. Trước hết, PPO baseline đạt hành vi hợp lý nhưng bị giới hạn ở mức phần thưởng khoảng 2.1--2.5. Tiếp đến, intrinsic motivation và LSTM chưa tạo cải thiện lớn khi chạy độc lập. Đáng chú ý hơn, curriculum learning là yếu tố nổi bật nhất; khi kết hợp thêm ICM, phần thưởng Hard tăng lên 4.369 nhưng inverse loss vẫn cao. Cuối cùng, entropy plateau vẫn tồn tại trong nhóm ablation chính 207 chiều. Ở run62, khi kết hợp quan sát lưới cục bộ, curriculum 4 bậc, ICM và huấn luyện đến 33.45M bước, entropy giảm xuống 3.099 nat và clear\_rate đạt 0.626. Tuy nhiên, do run62 thay đổi nhiều yếu tố đồng thời, kết quả này được xem là bằng chứng thăm dò thay vì ablation đơn biến.
 
 \section{Observation bottleneck -- run62: local grid end-to-end}
 
-Sau khi run59/61 cho thấy biểu diễn không gian và tín hiệu điều hướng là yếu tố đột phá, đề tài tiến hành run62 với cấu hình kết hợp: quan sát lưới cục bộ mở rộng đặc trưng không gian, curriculum 4 bậc (EasyFixed $\rightarrow$ MediumFixed $\rightarrow$ HardFixed $\rightarrow$ HardRandom), ICM với strength 0.001, và tham số \texttt{aggressive\_seek} luôn bật để kẻ địch truy đuổi tích cực hơn. Run này được thực hiện trên 8 môi trường song song trong hai session liên tiếp do giới hạn tài nguyên, tổng cộng đạt \textbf{33.45M bước} (24.25M bước trong session đầu, tiếp tục thêm 9.2M bước trong session sau với trọng số được khởi tạo từ checkpoint 24.25M).
+Sau khi run59/61 xác định biểu diễn không gian và tín hiệu điều hướng là yếu tố đột phá, đề tài tiến hành run62 với cấu hình kết hợp. Quan sát chuyển sang lưới cục bộ để mở rộng đặc trưng không gian; curriculum được nâng lên 4 bậc (EasyFixed $\rightarrow$ MediumFixed $\rightarrow$ HardFixed $\rightarrow$ HardRandom); ICM bật với strength 0.001; tham số \texttt{aggressive\_seek} luôn bật để kẻ địch truy đuổi tích cực hơn. Run chạy trên 8 môi trường song song trong hai session liên tiếp do giới hạn tài nguyên, tổng cộng đạt \textbf{33.45M bước} -- 24.25M bước ở session đầu, thêm 9.2M bước ở session sau với trọng số khởi tạo từ checkpoint 24.25M.
 
 \begin{figure}[H]
     \centering
@@ -390,4 +390,4 @@ Sau 33.45M bước, phần thưởng tail-50 đạt 14.105 (đỉnh 18.673), s�
     \end{tabular}
 \end{table}
 
-Hai điểm kết luận từ run này. Thứ nhất, entropy plateau 4.40 nat quan sát ở các ablation 1--3M bước với quan sát 207 chiều không phải là giới hạn cứng của PPO hay action space, mà là hệ quả của số bước huấn luyện chưa đủ kết hợp với quan sát thiếu đặc trưng không gian; khi tất cả các yếu tố trong cấu hình run62 được kết hợp, entropy giảm bền vững. Thứ hai, khi lưới cục bộ được huấn luyện đến 33.45M bước, tác nhân có thể đạt tỷ lệ dọn phòng tiệm cận BFS-assisted mà không cần cài cứng cơ chế tìm đường, mở ra hướng học hoàn toàn end-to-end cho bài toán điều hướng trong môi trường có tường.
+Run62 đem lại hai kết luận. Thứ nhất, entropy plateau 4.40 nat quan sát ở các ablation 1--3M bước với quan sát 207 chiều không phải giới hạn cứng của PPO hay action space, mà là hệ quả của số bước huấn luyện chưa đủ kết hợp với quan sát thiếu đặc trưng không gian; khi tất cả các yếu tố trong cấu hình run62 được kết hợp, entropy giảm bền vững. Thứ hai, khi lưới cục bộ được huấn luyện đến 33.45M bước, tác nhân có thể đạt tỷ lệ dọn phòng tiệm cận BFS-assisted mà không cần cài cứng cơ chế tìm đường -- mở ra hướng học hoàn toàn end-to-end cho bài toán điều hướng trong môi trường có tường.

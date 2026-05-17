@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 
-OUTDIR = r"c:\Riot Games\The-Knight\Du_an_cong_nghe_5\figures\training"
+OUTDIR = r"d:\Project\The Knight\Dự_án_công_nghệ (5)\figures\training"
 
 # ── output dir ────────────────────────────────────────────────────────────────
 _real = r"c:\Riot Games\The-Knight\Dự_án_công_nghệ (5)\figures\training"
@@ -120,7 +120,7 @@ def plot_training_reward_curves():
 
     # 1M stop marker
     ax.axvline(1.0, color='#bbb', lw=1.0, linestyle='--', zorder=0)
-    ax.text(1.02, 13.2, '← 1M-step\n   runs stop', fontsize=8.5, color='#999', va='top')
+    ax.text(1.02, 13.2, '← Các run 1M-step\n   dừng tại đây', fontsize=10.5, color='#555', va='top', fontweight='bold')
 
     # Baseline reference
     ax.axhline(2.073, color=C['run34'], lw=0.8, linestyle=':', alpha=0.5)

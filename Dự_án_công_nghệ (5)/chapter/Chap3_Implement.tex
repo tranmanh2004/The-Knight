@@ -81,7 +81,7 @@ Do đó, phần ``cải tiến'' trong khóa luận không nằm ở việc thay
 
 \subsection{Adapter và kiểm tra hợp lệ}
 
-Adapter thực hiện ba việc. Thứ nhất, ma trận tile của PCGNN được chuyển sang ký tự \# và dấu chấm (.). Thứ hai, hệ thống tìm thành phần liên thông lớn nhất của vùng sàn và đặt P/E ở hai ô cách xa nhau trong thành phần đó. Thứ ba, BFS được chạy lại để xác nhận đường đi từ P tới E tồn tại. Nhờ vậy, các bản đồ đưa vào Unity tránh được lỗi phổ biến của PCG như người chơi bị nhốt, kẻ địch nằm ở vùng không thể tiếp cận hoặc bản đồ không có đủ ô sàn hợp lệ.
+Adapter thực hiện ba việc: chuyển ma trận tile của PCGNN sang ký tự \# và dấu chấm (.); tìm thành phần liên thông lớn nhất của vùng sàn và đặt P/E ở hai ô cách xa nhau trong thành phần đó; chạy lại BFS để xác nhận đường đi từ P tới E tồn tại. Nhờ vậy, các bản đồ đưa vào Unity tránh được các lỗi phổ biến của PCG như người chơi bị nhốt, kẻ địch nằm ở vùng không thể tiếp cận, hay bản đồ thiếu ô sàn hợp lệ.
 
 Mỗi bản đồ hợp lệ được ghi ra file .txt, đồng thời một dòng chỉ số được lưu trong file \emph{metrics.csv}. Các chỉ số chính gồm:
 
@@ -130,7 +130,7 @@ Với cấu hình 14x14 dùng cho thử nghiệm tích hợp, pipeline đã sinh
     \end{tabular}
 \end{table}
 
-Cần lưu ý rằng Bảng~\ref{tab:pcgnn_map_generation_summary} mô tả tập bản đồ sau bước sinh và phân loại ngoại tuyến. Trong các thí nghiệm Unity hiện tại, đề tài không sử dụng toàn bộ 1000 bản đồ này mà chọn một tập con đại diện gồm 5 Easy, 5 Medium và 50 Hard để gán vào TilemapGenerator. Cách làm này giúp kiểm soát chất lượng bản đồ trước khi mở rộng sang toàn bộ tập bản đồ sinh tự động.
+Lưu ý là Bảng~\ref{tab:pcgnn_map_generation_summary} mô tả tập bản đồ sau bước sinh và phân loại ngoại tuyến. Trong các thí nghiệm Unity hiện tại, đề tài không sử dụng toàn bộ 1000 bản đồ này mà chọn một tập con đại diện gồm 5 Easy, 5 Medium và 50 Hard để gán vào TilemapGenerator. Cách làm này giúp kiểm soát chất lượng bản đồ trước khi mở rộng sang toàn bộ tập bản đồ sinh tự động.
 
 \subsection{Kết quả sinh bản đồ}
 
@@ -223,9 +223,9 @@ Mỗi nhóm thí nghiệm loại trừ chỉ thay đổi một yếu tố chính
         \hline
         run46 & PPO + Curriculum & 3.0M & Thí nghiệm curriculum chính. \\
         \hline
-        run47 & Curriculum + LSTM & 3.0M & Kiểm tra LSTM có cộng hưởng với curriculum hay không. \\
+        run47 & Curriculum + LSTM & 3.0M & Kiểm tra LSTM có bổ trợ cho curriculum hay không. \\
         \hline
-        run50 & Curriculum + ICM & 3.0M & Kiểm tra ICM có phục hồi khi có curriculum làm khung đỡ hay không. \\
+        run50 & Curriculum + ICM & 3.0M & Kiểm tra ICM có phục hồi khi curriculum đóng vai trò nền tảng hay không. \\
         \hline
         run54 & 4-tier fixed-to-random & 3.0M & Kiểm tra giảm phương sai vị trí sinh đầu huấn luyện. \\
         \hline
@@ -240,7 +240,7 @@ Ngoài ma trận ablation chính về kỹ thuật huấn luyện, đề tài th
 
 Nhóm đầu tiên là run59 -- ablation về quan sát. Run59 không được đưa vào Bảng~\ref{tab:ablation_matrix_design} vì đây là ablation về biểu diễn quan sát, không phải ablation thuần về thuật toán huấn luyện. Khác với các run 207 chiều, run59 mở rộng vector quan sát lên 210 chiều bằng cách bổ sung ba tín hiệu đường đi: hướng bước tiếp theo theo BFS trên tilemap và khoảng cách đường đi ngắn nhất đã chuẩn hóa tới kẻ địch còn sống gần nhất. Có thể xem đây là một cấu hình \emph{path-informed}, trong đó yếu tố tìm đường được đưa vào tín hiệu học để kiểm tra giả thuyết rằng nút thắt lớn của môi trường nằm ở khả năng điều hướng trong bản đồ có tường. Vì thay đổi kích thước quan sát, run59 được huấn luyện như một run mới, không khởi tạo tiếp từ checkpoint 207 chiều của các run trước.
 
-Nhóm thứ hai là run62, trong đó lưới chiếm chỗ cục bộ được kiểm tra ở quy mô 33.45M bước. Khác với ma trận ablation chính, run62 kết hợp nhiều thay đổi đồng thời -- quan sát mở rộng, hyperparameter điều chỉnh, curriculum 4 bậc, ICM và quy mô huấn luyện lớn hơn -- vì vậy không thể cô lập tác động của từng yếu tố riêng lẻ. Đây là thí nghiệm thăm dò mở rộng, không phải ablation đơn biến. Sau khi run59 cho thấy quan sát không gian là yếu tố đột phá, đề tài xây dựng cấu hình mở rộng thay thế 16 chiều wall ray bằng lưới chiếm chỗ cục bộ 15$\times$15 (225 chiều), nâng tổng kích thước quan sát lên \textbf{432 chiều} (13 + 4 + 225 + 54 + 120 + 16 = 432, trong đó wall ray vẫn được giữ). Run62 kết hợp cấu hình này với curriculum 4 bậc, ICM (strength 0.001), aggressive seek luôn bật và 8 môi trường song song. Mục tiêu là kiểm tra xem quan sát lưới cục bộ có thể tiệm cận hiệu năng BFS-assisted mà không cần cài cứng cơ chế tìm đường khi số bước huấn luyện tăng lên đáng kể. Quá trình huấn luyện đạt 33.45M bước trong hai session liên tiếp. Bảng~\ref{tab:run62_ppo_config} tóm tắt các tham số khác biệt so với cấu hình baseline.
+Nhóm thứ hai là run62, trong đó lưới chiếm chỗ cục bộ được kiểm tra ở quy mô 33.45M bước. Khác với ma trận ablation chính, run62 kết hợp nhiều thay đổi đồng thời -- quan sát mở rộng, hyperparameter điều chỉnh, curriculum 4 bậc, ICM và quy mô huấn luyện lớn hơn -- vì vậy không thể cô lập tác động của từng yếu tố riêng lẻ. Đây là thí nghiệm thăm dò mở rộng, không phải ablation đơn biến. Sau khi run59 cho thấy quan sát không gian là yếu tố đột phá, đề tài xây dựng cấu hình mở rộng: thay thế 16 chiều wall ray bằng lưới chiếm chỗ cục bộ 15$\times$15 (225 chiều). Tổng kích thước quan sát do đó nâng lên \textbf{432 chiều} (13 + 4 + 225 + 54 + 120 + 16 = 432, trong đó wall ray vẫn được giữ). Run62 kết hợp cấu hình này với curriculum 4 bậc, ICM (strength 0.001), aggressive seek luôn bật và 8 môi trường song song. Mục tiêu là kiểm tra xem quan sát lưới cục bộ có thể tiệm cận hiệu năng BFS-assisted mà không cần cài cứng cơ chế tìm đường khi số bước huấn luyện tăng lên đáng kể. Quá trình huấn luyện đạt 33.45M bước trong hai session liên tiếp. Bảng~\ref{tab:run62_ppo_config} tóm tắt các tham số khác biệt so với cấu hình baseline.
 
 \begin{table}[H]
     \centering

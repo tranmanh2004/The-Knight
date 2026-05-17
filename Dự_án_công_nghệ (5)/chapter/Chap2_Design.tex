@@ -152,7 +152,7 @@ Tổ hợp hai nhánh moveX và moveY tạo ra 9 hướng di chuyển (bao gồm
     \label{eq:max_entropy}
 \end{equation}
 
-Giá trị này được dùng lại trong Chương~4 khi phân tích hiện tượng entropy plateau. Cần lưu ý rằng action mask có thể làm entropy cực đại thực tế thấp hơn tại một số trạng thái, vì các hành động như tấn công hoặc dash không phải lúc nào cũng hợp lệ.
+Giá trị này được dùng lại trong Chương~4 khi phân tích hiện tượng entropy plateau. Lưu ý là action mask có thể làm entropy cực đại thực tế thấp hơn tại một số trạng thái, vì các hành động như tấn công hoặc dash không phải lúc nào cũng hợp lệ.
 
 \section{Thiết kế hàm phần thưởng}
 
@@ -222,12 +222,11 @@ Mỗi bản đồ sau khi sinh được chuẩn hóa về định dạng văn b�
 Độ khó bản đồ được đánh giá bằng các chỉ số hình học gồm tỷ lệ tường, độ dài đường đi ngắn nhất giữa P và E, tỷ lệ ngõ cụt, tỷ lệ vùng có thể đi tới và độ khó A*. Trong phiên bản sử dụng cho tập bản đồ hiện tại, điểm độ khó được tính theo công thức:
 
 \begin{equation}
-    \text{difficulty\_score}
-    = 0.90 \times \text{wall\_ratio}
-    + 0.05 \times \min(\text{path\_norm}, 1.0)
-    + 0.03 \times \text{dead\_end\_ratio}
-    + 0.02 \times \text{astar\_difficulty}.
-    \label{eq:map_difficulty_score}
+\begin{aligned}
+    \text{difficulty\_score} ={} & 0.90 \times \text{wall\_ratio} + 0.05 \times \min(\text{path\_norm}, 1.0) \\
+    & {}+ 0.03 \times \text{dead\_end\_ratio} + 0.02 \times \text{astar\_difficulty}.
+\end{aligned}
+\label{eq:map_difficulty_score}
 \end{equation}
 
 Trong công thức~\ref{eq:map_difficulty_score}, \emph{wall\_ratio} được gán trọng số cao nhất vì mật độ tường ảnh hưởng trực tiếp đến không gian di chuyển và mức độ phức tạp của bản đồ. Các thành phần còn lại như độ dài đường đi, tỷ lệ ngõ cụt và độ khó A* đóng vai trò bổ trợ, giúp tinh chỉnh thứ hạng độ khó thay vì chi phối hoàn toàn kết quả phân loại. Thay vì đặt ngưỡng tuyệt đối cứng cho mọi generator, hệ thống có thể sắp xếp bản đồ theo độ khó tương đối: 5\% dễ nhất được đưa vào Easy, 5\% tiếp theo vào Medium và phần còn lại vào Hard. Cách chia này phù hợp với giai đoạn tuyển chọn thủ công vì người thiết kế vẫn có thể xem lại từng thư mục và chọn những bản đồ tốt nhất trước khi đưa sang Unity.
@@ -285,7 +284,7 @@ Bảng~\ref{tab:difficulty_spawn_policy} tóm tắt cách chọn bản đồ và
     }
 \end{table}
 
-Như vậy, độ khó không chỉ tăng vì bản đồ chuyển từ Easy sang Medium và Hard, mà còn tăng vì phương sai vị trí sinh được mở rộng ở lesson Hard Random. Cách tách này giúp tác nhân học trước các kỹ năng nền như tiếp cận, né đạn và căn hướng tấn công trong môi trường ít nhiễu hơn, sau đó mới phải thích nghi với vị trí sinh thay đổi mạnh.
+Như vậy, độ khó không chỉ tăng vì bản đồ chuyển từ Easy sang Medium và Hard, mà còn vì phương sai vị trí sinh được mở rộng ở lesson Hard Random. Cách tách này giúp tác nhân học trước các kỹ năng cơ bản như tiếp cận, né đạn và căn hướng tấn công trong môi trường ít nhiễu hơn, rồi mới phải thích nghi với vị trí sinh thay đổi mạnh.
 
 \section{Khung curriculum learning}
 

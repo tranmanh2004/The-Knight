@@ -10,7 +10,7 @@ import matplotlib.patches as mpatches
 import numpy as np
 import os
 
-OUT = r"c:\Riot Games\The-Knight\Dự_án_công_nghệ (5)\figures\training"
+OUT = r"d:\Project\The Knight\Dự_án_công_nghệ (5)\figures\training"
 os.makedirs(OUT, exist_ok=True)
 
 STYLE = {
@@ -111,10 +111,10 @@ for (x0, x1, y, lbl), c in zip(segs46, colors46):
         ax.text(x1 + 3e4, y + 0.05, lbl, ha="left", va="center",
                 fontsize=9, color=c, fontweight="bold")
 
-# Transition markers + annotated tick values (rotated to avoid overlap)
-for x, label in [(70e3, "70k"), (140e3, "140k")]:
+# Transition markers + annotated tick values (staggered vertically to avoid overlap)
+for x, label, y_off in [(70e3, "70k", -0.35), (140e3, "140k", -0.65)]:
     ax.axvline(x, color="gray", lw=0.8, ls="--", alpha=0.6)
-    ax.annotate(label, xy=(x, 0), xytext=(x, -0.35),
+    ax.annotate(label, xy=(x, 0), xytext=(x, y_off),
                 ha="center", va="top", fontsize=8, color="gray",
                 annotation_clip=False)
 
@@ -151,12 +151,14 @@ for (x0, x1, y, lbl), c in zip(segs54, colors54):
         ax.text(x1 + 5e4, y + 0.05, lbl, ha="left", va="center",
                 fontsize=9, color=c, fontweight="bold")
 
-# Transition markers + tick values rotated below the axis
-for x, label in [(60e3, "60k"), (130e3, "130k"), (280e3, "280k")]:
+# Transition markers + tick values staggered at three y-offsets below the axis
+for x, label, y_off in [(60e3, "60k", -0.45),
+                         (130e3, "130k", -0.85),
+                         (280e3, "280k", -1.25)]:
     ax.axvline(x, color="gray", lw=0.8, ls="--", alpha=0.6)
-    ax.annotate(label, xy=(x, 0), xytext=(x, -0.45),
+    ax.annotate(label, xy=(x, 0), xytext=(x, y_off),
                 ha="center", va="top", fontsize=8, color="gray",
-                rotation=30, annotation_clip=False)
+                annotation_clip=False)
 
 ax.set_xlim(-5e4, 3.1e6)
 ax.set_ylim(0.4, 4.9)
@@ -226,11 +228,12 @@ ax.text(9.7, 5.49, r"$H_{\max}=5.49$", va="center", ha="left",
 ax.text(9.7, 4.40, r"plateau $\approx 4.40$", va="center", ha="left",
         fontsize=8.5, color="#E65100")
 
-# Legend top-left (corner is empty there — all bars except run62 are at ~4.4)
+# Legend placed outside the axes (above) so it does not overlap bars or value labels
 blue_patch   = mpatches.Patch(color="steelblue",  label="Ablation 207 chiều")
 orange_patch = mpatches.Patch(color="darkorange", label="run62 (432 chiều)")
 ax.legend(handles=[blue_patch, orange_patch],
-          loc="upper left", fontsize=8.5, framealpha=0.95)
+          loc="lower center", bbox_to_anchor=(0.45, 1.02),
+          ncol=2, fontsize=8.5, framealpha=0.95, frameon=False)
 
 fig.tight_layout()
 save(fig, "fig412_entropy_plateau")
