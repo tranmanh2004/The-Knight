@@ -6,7 +6,7 @@
 
 \noindent{\Large \textbf{Bài toán}}
 
-Game hành động Roguelike đặt ra ba thách thức đồng thời cho tác nhân học tăng cường. Thứ nhất, \textit{phân phối bản đồ thay đổi theo từng lượt chơi (episode)}: tác nhân không thể ghi nhớ bố cục cố định mà phải khái quát hóa chính sách qua nhiều cấu hình không gian khác nhau. Thứ hai, \textit{không gian hành động đa nhánh $(3,3,3,9)$}: tác nhân phải phối hợp đồng thời hướng di chuyển, quyết định chiến đấu và góc ngắm bắn trong thời gian thực. Thứ ba, \textit{phần thưởng thưa và bị trì hoãn}: các tín hiệu có giá trị cao như tiêu diệt kẻ địch hoặc dọn sạch phòng chỉ xuất hiện sau khi tác nhân hoàn thành chuỗi hành vi liên tiếp gồm tiếp cận, né tránh, căn hướng và tấn công.
+Game hành động Roguelike đặt ra ba thách thức đồng thời cho tác nhân học tăng cường. Thứ nhất, \textit{phân phối bản đồ thay đổi theo từng lượt chơi (episode)}: tác nhân không thể ghi nhớ bố cục cố định mà phải khái quát hóa chính sách qua nhiều cấu hình không gian khác nhau. Thứ hai, \textit{không gian hành động đa nhánh $(3,3,3,9)$}: tác nhân phải phối hợp đồng thời hướng di chuyển, quyết định chiến đấu và góc ngắm trong thời gian thực. Thứ ba, \textit{phần thưởng thưa và bị trì hoãn}: các tín hiệu có giá trị cao như tiêu diệt kẻ địch hoặc dọn sạch phòng chỉ xuất hiện sau khi tác nhân hoàn thành chuỗi hành vi liên tiếp gồm tiếp cận, né tránh, căn hướng và tấn công.
 
 Sự kết hợp của ba thách thức này khiến các kỹ thuật đơn lẻ như phần thưởng nội tại (ICM, RND) hay bộ nhớ tuần tự (LSTM) chưa chắc tạo ra cải thiện rõ rệt, từ đó đặt ra câu hỏi: cần kết hợp cơ chế nào để tác nhân học được hành vi chiến đấu hiệu quả trên môi trường sinh theo thủ tục?
 
@@ -15,10 +15,10 @@ Sự kết hợp của ba thách thức này khiến các kỹ thuật đơn l�
 
 \begin{itemize}
     \item \textbf{Đầu vào (quan sát $s_t$)}: vector cấu trúc mô tả trạng thái người chơi, kẻ địch trong tầm nhìn, đạn đang bay và tường xung quanh (cấu hình cơ sở: 207 chiều).
-    \item \textbf{Đầu ra (hành động $a_t$)}: bốn nhánh rời rạc $(3,3,3,9)$ gồm di chuyển trục X, di chuyển trục Y, ý định chiến đấu (none/attack/dash) và hướng ngắm.
+    \item \textbf{Đầu ra (hành động $a_t$)}: bốn nhánh rời rạc $(3,3,3,9)$ gồm di chuyển trục X, di chuyển trục Y, ý định chiến đấu (none/attack/dash) và hướng tấn công.
     \item \textbf{Hàm thưởng $r_t$}: kết hợp tín hiệu kết quả thưa (hạ kẻ địch, dọn phòng) và tín hiệu định hình dày (tiếp cận, căn hướng tấn công).
     \item \textbf{Mục tiêu tối ưu}: tìm chính sách $\pi_\theta$ cực đại hóa kỳ vọng tổng phần thưởng.
-    \item \textbf{Tiêu chí thành công}: tỷ lệ dọn phòng tail-50 $\geq 0.5$ trên phân phối bản đồ Hard sinh bởi PCGNN.
+    \item \textbf{Tiêu chí thành công}: tỷ lệ dọn phòng tail-50 $\geq 0.5$ trên phân phối bản đồ Hard do PCGNN sinh.
 \end{itemize}
 
 \vspace{0.5cm}
@@ -28,10 +28,10 @@ Sự kết hợp của ba thách thức này khiến các kỹ thuật đơn l�
 
 \renewcommand{\labelitemi}{$-$}
 \begin{itemize}
-    \item \textbf{MT1}: Xây dựng tác nhân RL có thể chiến đấu hiệu quả trong môi trường Roguelike thủ tục sinh, đánh giá qua \textit{clear\_rate} và \textit{kills/episode}.
-    \item \textbf{MT2}: Giải quyết bài toán phần thưởng thưa và phân phối bản đồ thay đổi bằng cách kết hợp học theo chương trình (curriculum learning) với bản đồ sinh bởi PCGNN.
-    \item \textbf{MT3}: Xác định kỹ thuật hỗ trợ nào (ICM, RND, LSTM) thực sự tác động đến hiệu năng thông qua ma trận thí nghiệm loại trừ (ablation).
-    \item \textbf{MT4}: Kiểm tra giả thuyết rằng biểu diễn quan sát là nút thắt của bài toán, đồng thời đánh giá khả năng cải thiện điều hướng mà không mã hóa sẵn cơ chế tìm đường cho tác nhân.
+    \item \textbf{MT1}: Xây dựng tác nhân RL có thể chiến đấu hiệu quả trong môi trường Roguelike sinh theo thủ tục, đánh giá qua \textit{clear\_rate} và \textit{kills/episode}.
+    \item \textbf{MT2}: Giải quyết bài toán phần thưởng thưa và phân phối bản đồ thay đổi bằng cách kết hợp học theo chương trình (curriculum learning) với bản đồ do PCGNN sinh.
+    \item \textbf{MT3}: Xác định kỹ thuật hỗ trợ nào (ICM, RND, LSTM) thực sự tác động đến hiệu năng thông qua ma trận thí nghiệm loại trừ.
+    \item \textbf{MT4}: Kiểm tra giả thuyết rằng biểu diễn quan sát là nút thắt của bài toán, đồng thời đánh giá khả năng cải thiện điều hướng mà không cung cấp trực tiếp hướng đi tối ưu cho tác nhân.
 \end{itemize}
 
 \vspace{0.5cm}
@@ -67,7 +67,7 @@ Thông qua quá trình nghiên cứu, triển khai và thực nghiệm, đề t�
     \item Thiết kế CombatAgent với quan sát 207 chiều và không gian hành động đa nhánh $(3,3,3,9)$, phù hợp cho bài toán di chuyển--ngắm--chiến đấu đồng thời.
     \item Bằng chứng thực nghiệm cho thấy curriculum learning cải thiện phần thưởng trung bình \textbf{+85\%} (2.073 → 3.843) so với cấu hình PPO cơ sở, trong khi ICM, RND và LSTM chỉ đạt +16\%--20\%.
     \item Phát hiện vùng bão hòa entropy 4.40 nat nhất quán trên chín cấu hình thí nghiệm loại trừ, cho thấy đây là hệ quả của quan sát thiếu đặc trưng không gian chứ không phải giới hạn của PPO hay không gian hành động.
-    \item Run59 (\emph{path-informed}, bổ sung đặc trưng BFS) cho thấy tìm đường là một nút thắt quan trọng; run62 (432 chiều, 33.45M bước) đưa entropy xuống 3.099 nat và đạt clear\_rate 0.626 mà không cần cài cứng BFS.
+    \item Run59 (\emph{path-informed}, bổ sung đặc trưng BFS) cho thấy tìm đường là một nút thắt quan trọng; run62 (432 chiều, 40.82M bước) đưa entropy xuống 3.048 nat và đạt clear\_rate 0.666 dù không được cung cấp trực tiếp hướng đi tối ưu.
 \end{itemize}
 
 \vspace{0.3cm}
@@ -78,8 +78,8 @@ Thông qua quá trình nghiên cứu, triển khai và thực nghiệm, đề t�
 \begin{itemize}
 	\item \textbf{Mở đầu}: Bài toán, bốn mục tiêu của đề tài, giải pháp tổng quan và câu hỏi nghiên cứu.
 	\item \textbf{Chương 1}: Cơ sở lý thuyết -- RL, PPO, GAE và các kỹ thuật hỗ trợ (ICM, RND, LSTM, PCGNN, curriculum), phân tích hạn chế và cách đề tài xử lý. Giới thiệu đặc trưng của Roguelike làm nền tảng cho thiết kế.
-	\item \textbf{Chương 2}: Thiết kế hệ thống -- Tổng quan quy trình đầu cuối, đặc tả MDP, quan sát, không gian hành động, hàm phần thưởng, quy trình PCGNN và khung curriculum learning.
-	\item \textbf{Chương 3}: Cài đặt và thực nghiệm -- Môi trường phần cứng/phần mềm, CombatAgent, cấu hình PPO và ma trận thí nghiệm loại trừ (9 cấu hình ablation + run59 + run62).
+	\item \textbf{Chương 2}: Thiết kế hệ thống -- Tổng quan quy trình đầu cuối, đặc tả POMDP, quan sát, không gian hành động, hàm phần thưởng, quy trình PCGNN và khung curriculum learning.
+	\item \textbf{Chương 3}: Cài đặt và thực nghiệm -- Môi trường phần cứng/phần mềm, CombatAgent, cấu hình PPO và ma trận thí nghiệm loại trừ (9 cấu hình chính + run59 + run62).
 	\item \textbf{Chương 4}: Kết quả thực nghiệm -- Độ đo và tiêu chí đánh giá, sau đó phân tích kết quả nhóm theo câu hỏi nghiên cứu: kỹ thuật khám phá, curriculum learning, vùng bão hòa entropy và nút thắt quan sát (observation bottleneck).
 	\item \textbf{Kết luận}: Tổng kết kết quả, hạn chế và hướng nghiên cứu tiếp theo.
 \end{itemize}

@@ -42,7 +42,7 @@ Tất cả chỉ số được trích từ log TensorBoard. Dưới đây là đ
 \begin{itemize}
     \item \textbf{cumulative\_reward}: tổng phần thưởng tích lũy mỗi lượt chơi theo thang phần thưởng đang dùng (v1 hoặc v2). \textit{Chú ý}: run55 dùng v2 nên không so sánh trực tiếp với các cấu hình v1.
     \item \textbf{clear\_rate}: tỷ lệ lượt chơi tác nhân tiêu diệt toàn bộ kẻ địch trong phòng. Tiêu chí thành công: clear\_rate $\geq 0.5$. Đây là độ đo trực tiếp nhất cho mục tiêu chiến đấu của đề tài.
-    \item \textbf{kills/episode}: số kẻ địch trung bình bị tiêu diệt mỗi lượt chơi. Bổ sung cho clear\_rate khi phòng có nhiều kẻ địch.
+    \item \textbf{kills/episode}: số kẻ địch trung bình bị tiêu diệt mỗi lượt chơi.
     \item \textbf{entropy (nat)}: độ hỗn loạn của phân phối hành động. Giá trị cao cho thấy chính sách chưa quyết đoán; giá trị cực đại lý thuyết là $\ln(3)+\ln(3)+\ln(3)+\ln(9) \approx 5.49$ nat. Tiêu chí bão hòa: entropy ổn định quanh 4.40 nat trên nhiều cấu hình là dấu hiệu nút thắt không chỉ đến từ thuật toán.
     \item \textbf{tail-50}: trung bình 50 lượt chơi cuối để tránh so sánh giá trị cực đại. Tất cả chỉ số so sánh trong chương này đều dùng tail-50 trừ khi ghi chú khác.
     \item \textbf{rolling\_reward\_200k}: phần thưởng trung bình động theo từng khoảng 200k bước, dùng để vẽ xu hướng học.
@@ -95,7 +95,7 @@ Các ngưỡng này được dùng xuyên suốt phần phân tích còn lại; 
         run62 & Lưới cục bộ + aggressive\_seek + ICM + 4 bậc & 40.82M & 14.913 & 0.666 & 1.582 & 49.193 & 23.314 & 0.439 & 3.048 \\
         \bottomrule
     \end{tabular}
-    % \vspace{4pt}
+    \vspace{10pt}
     
     \begin{minipage}{0.96\textwidth}
         \small\textit{Ghi chú}: run62 không so sánh trực tiếp với các lần chạy khác do khác biệt về kích thước quan sát (432 chiều so với 207), số bước huấn luyện (40.82M so với 1--3M bước), hyperparameter PPO điều chỉnh và các thay đổi môi trường bổ sung. Run62 được đưa vào bảng như cấu hình tham chiếu mở rộng, không dùng như một so sánh trực tiếp.
@@ -132,7 +132,7 @@ Trong Bảng~\ref{tab:run_metrics_main}, cột Reward là \textbf{reward\_tail50
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.98\textwidth]{figures/training/training_reward_curves.png}
-    \caption{Đường phần thưởng trong quá trình huấn luyện của các cấu hình chính}
+    \caption{Diễn biến phần thưởng theo số bước huấn luyện của các cấu hình chính}
     \label{fig:training_reward_curves}
 \end{figure}
 
@@ -191,40 +191,40 @@ Sau khi ICM, RND và LSTM chỉ tạo cải thiện nhẹ, curriculum learning �
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.85\textwidth]{figures/training/fig45_run46_lesson_transition.pdf}
-    \caption{Lịch chuyển bài học của run46: Easy $\rightarrow$ Medium $\rightarrow$ Hard}
+    \caption{Quá trình chuyển mức độ khó của run46: Easy $\rightarrow$ Medium $\rightarrow$ Hard}
     \label{fig:run46_lesson_transition}
 \end{figure}
 
-Phần thưởng theo bài học của run46 cho thấy trung bình trên Easy đạt 6.364, trên Medium đạt 4.181 và trên Hard đạt 3.843. Khi vào nhóm Hard, đường phần thưởng không tăng tuyến tính mà dao động trong vùng 3.1--4.2 khi lấy trung bình động trên mỗi khoảng 200k bước. Dao động này là hợp lý vì nhóm Hard có nhiều cấu hình bản đồ hơn, đồng thời vị trí sinh và phân bố kẻ địch cũng đa dạng hơn.
+Phần thưởng theo từng mức độ khó của run46 cho thấy trung bình trên Easy đạt 6.364, trên Medium đạt 4.181 và trên Hard đạt 3.843. Khi vào nhóm Hard, diễn biến phần thưởng không tăng tuyến tính mà dao động trong vùng 3.1--4.2 khi lấy trung bình động trên mỗi khoảng 200k bước. Dao động này là hợp lý vì nhóm Hard có nhiều cấu hình bản đồ hơn, đồng thời vị trí sinh và phân bố kẻ địch cũng đa dạng hơn.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.98\textwidth]{figures/training/curriculum_reward_trend.png}
-    \caption{Xu hướng phần thưởng trong các lần chạy dùng curriculum}
+    \caption{Xu hướng phần thưởng trong các cấu hình dùng curriculum}
     \label{fig:curriculum_reward_trend}
     \vspace{0.2em}
     \begin{minipage}{0.94\textwidth}
         \small
-        Đường phần thưởng không tăng đều sau khi vào Hard mà dao động quanh một vùng ổn định. Run50 cao hơn run46 ở phần sau quá trình huấn luyện -- ICM chỉ phát huy rõ khi chính sách đã có kỹ năng cơ bản từ curriculum.
+        Diễn biến phần thưởng không tăng đều sau khi vào Hard mà dao động quanh một vùng ổn định. Run50 cao hơn run46 ở phần sau quá trình huấn luyện -- ICM chỉ phát huy rõ khi chính sách đã có kỹ năng cơ bản từ curriculum.
     \end{minipage}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.98\textwidth]{figures/training/curriculum_clear_rate_trend.png}
-    \caption{Xu hướng tỷ lệ dọn phòng trong các lần chạy dùng curriculum}
+    \caption{Xu hướng tỷ lệ dọn phòng trong các cấu hình dùng curriculum}
     \label{fig:curriculum_clear_rate_trend}
     \vspace{0.2em}
     \begin{minipage}{0.94\textwidth}
         \small
-        Tỷ lệ dọn phòng tăng mạnh ở giai đoạn đầu rồi chững lại khi bài toán chuyển sang nhóm Hard. Vì tỷ lệ dọn phòng là chỉ số kết quả, đường tỷ lệ dọn phòng này bổ sung góc nhìn cho phần thưởng: cải thiện không chỉ nằm ở phần thưởng định hình mà còn ở hành vi dọn phòng thực tế.
+        Tỷ lệ dọn phòng tăng mạnh ở giai đoạn đầu rồi chững lại khi bài toán chuyển sang nhóm Hard. Vì tỷ lệ dọn phòng là chỉ số kết quả, xu hướng tỷ lệ dọn phòng này bổ sung góc nhìn cho phần thưởng: cải thiện không chỉ nằm ở phần thưởng định hình mà còn ở hành vi dọn phòng thực tế.
     \end{minipage}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{figures/training/curriculum_entropy_trend.png}
-    \caption{Xu hướng entropy chính sách trong các lần chạy dùng curriculum}
+    \caption{Xu hướng entropy chính sách trong các cấu hình dùng curriculum}
     \label{fig:curriculum_entropy_trend}
     \vspace{0.2em}
     \begin{minipage}{0.94\textwidth}
@@ -236,16 +236,16 @@ Phần thưởng theo bài học của run46 cho thấy trung bình trên Easy �
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{figures/training/curriculum_lesson_schedule.png}
-    \caption{Lịch chuyển bài học trong các lần chạy dùng curriculum}
+    \caption{Quá trình chuyển mức độ khó trong các cấu hình dùng curriculum}
     \label{fig:curriculum_lesson_schedule}
     \vspace{0.2em}
     \begin{minipage}{0.94\textwidth}
         \small
-        Run46 và run50 chuyển lên Hard từ rất sớm nên phần lớn 3M bước vẫn đánh giá trên cùng phân phối khó. Run54 có thêm bài học Hard Random, nên đường curriculum đạt mức 3 và phản ánh biến thể chuyển từ vị trí sinh cố định sang ngẫu nhiên.
+        Run46 và run50 chuyển lên Hard từ rất sớm nên phần lớn 3M bước vẫn đánh giá trên cùng phân phối khó. Run54 có thêm mức Hard Random, nên giá trị curriculum đạt mức 3 và phản ánh biến thể chuyển từ vị trí sinh cố định sang ngẫu nhiên.
     \end{minipage}
 \end{figure}
 
-Trong các lần chạy đã thực hiện, đây là xu hướng rõ nhất của khóa luận: curriculum không chỉ tăng phần thưởng trung bình mà còn cải thiện các chỉ số hành vi. Tail-50 của run46 đạt 0.994 kills/episode và tỷ lệ dọn phòng tail-50 đạt 0.267, cao hơn rõ rệt so với mốc so sánh. Về mặt cơ chế, curriculum learning hỗ trợ tín hiệu học theo từng giai đoạn: ở Easy, tác nhân gặp các lượt chơi thành công đủ thường xuyên để học chuỗi tiếp cận -- ngắm -- tấn công; khi sang Medium và Hard, chính sách đã có kỹ năng cơ bản thay vì khám phá từ gần như ngẫu nhiên. Do mỗi cấu hình mới chỉ chạy một seed, kết luận này cần được xác nhận thêm bằng các lần chạy lặp lại có error bar.
+Trong các lần chạy đã thực hiện, đây là xu hướng rõ nhất của khóa luận: curriculum không chỉ tăng phần thưởng trung bình mà còn cải thiện các chỉ số hành vi. Tail-50 của run46 đạt 0.994 kills/episode và tỷ lệ dọn phòng tail-50 đạt 0.267, cao hơn rõ rệt so với mốc so sánh. Về mặt cơ chế, curriculum learning hỗ trợ tín hiệu học theo từng giai đoạn: ở Easy, tác nhân gặp các lượt chơi thành công đủ thường xuyên để học chuỗi tiếp cận -- ngắm -- tấn công; khi sang Medium và Hard, chính sách đã có kỹ năng cơ bản thay vì khám phá từ gần như ngẫu nhiên. Do mỗi cấu hình mới chỉ chạy một seed, kết luận này cần được xác nhận thêm bằng các lần chạy lặp lại có khoảng sai số.
 
 \section{Kết hợp curriculum với LSTM và ICM}
 \label{sec:curriculum_combinations}
@@ -274,12 +274,12 @@ Run50 bổ sung ICM trên nền curriculum và được huấn luyện đủ 3.0
     \end{tabular}
 \end{table}
 
-Kết quả này cho phép diễn giải thận trọng hơn: curriculum vẫn là yếu tố nền quan trọng nhất, còn ICM có thể tạo thêm lợi ích khi tác nhân đã có kỹ năng cơ bản từ các bài học dễ hơn. Tuy vậy, inverse loss vẫn ở mức cao -- tín hiệu nội tại chủ yếu hỗ trợ khám phá/hành vi ở mức thực nghiệm, chưa chứng minh rằng biểu diễn của ICM đã học tốt quan hệ hành động--chuyển trạng thái trong môi trường này.
+Kết quả này cho phép diễn giải thận trọng hơn: curriculum vẫn là yếu tố nền quan trọng nhất, còn ICM có thể tạo thêm lợi ích khi tác nhân đã có kỹ năng cơ bản từ các mức dễ hơn. Tuy vậy, inverse loss vẫn ở mức cao -- tín hiệu nội tại chủ yếu hỗ trợ khám phá/hành vi ở mức thực nghiệm, chưa chứng minh rằng biểu diễn của ICM đã học tốt quan hệ hành động--chuyển trạng thái trong môi trường này.
 
 \section{Ảnh hưởng của chiến lược vị trí sinh}
 \label{sec:spawn_strategy_results}
 
-Để phân tích thêm MT2, run54 kiểm tra liệu việc giảm phương sai vị trí sinh ở đầu quá trình học có giúp curriculum ổn định hơn hay không. Run54 mở rộng curriculum thành 4 bài học: \emph{Easy Fixed}, \emph{Medium Fixed}, \emph{Hard Fixed} và \emph{Hard Random}. Bài học \emph{Hard Random} bắt đầu khoảng 280k bước. Phần thưởng trung bình trên Hard đạt 3.925, số lần tiêu diệt cuối quá trình huấn luyện đạt 0.945 và sát thương gây ra đạt 33.673. Các chỉ số này gần run46 nhưng không vượt rõ, nên kết quả này được xem là tương đương với mức cải thiện nhỏ.
+Để phân tích thêm MT2, run54 kiểm tra liệu việc giảm phương sai vị trí sinh ở đầu quá trình học có giúp curriculum ổn định hơn hay không. Run54 mở rộng curriculum thành 4 mức độ khó: \emph{Easy Fixed}, \emph{Medium Fixed}, \emph{Hard Fixed} và \emph{Hard Random}. Mức \emph{Hard Random} bắt đầu khoảng 280k bước. Phần thưởng trung bình trên Hard đạt 3.925, số lần tiêu diệt cuối quá trình huấn luyện đạt 0.945 và sát thương gây ra đạt 33.673. Các chỉ số này gần run46 nhưng không vượt rõ, nên kết quả này được xem là tương đương với mức cải thiện nhỏ.
 
 \begin{figure}[H]
     \centering
@@ -325,12 +325,12 @@ Trong các ablation chính giữ nguyên quan sát 207 chiều, vùng bão hòa 
 
 Sau các lần chạy ablation chính về kỹ thuật huấn luyện, đề tài thực hiện thêm run59 như một ablation mở rộng về biểu diễn quan sát. Mục tiêu của run này là kiểm tra một giả thuyết cụ thể: tác nhân có thể không thất bại chủ yếu vì không biết chiến đấu, mà vì biểu diễn quan sát 207 chiều chưa cung cấp đủ cấu trúc không gian để chính sách suy luận đường đi qua bản đồ có tường. Để kiểm tra giả thuyết này, run59 bổ sung ba chiều quan sát vào CombatAgent: hướng bước kế tiếp theo đường đi ngắn nhất tính bằng BFS và khoảng cách đường đi ngắn nhất đã chuẩn hóa tới kẻ địch còn sống gần nhất. Do đó, vector quan sát tăng từ 207 lên 210 chiều.
 
-Run59 bổ sung yếu tố tìm đường vào quá trình học, do đó không thể so sánh trực tiếp với các lần chạy giữ nguyên quan sát 207 chiều. Chính sách vẫn dùng PPO và phải tự học các hành động di chuyển, ngắm, tấn công, dash; điểm khác biệt nằm ở việc phần điều hướng được hỗ trợ thêm bằng tín hiệu BFS. Nói cách khác, đây là biến thể \emph{BFS-assisted RL} hay \emph{path-informed observation} (quan sát có thông tin đường đi), nhằm đo tác động của tín hiệu đường đi đối với hiệu năng của tác nhân.
+Run59 bổ sung yếu tố tìm đường vào quá trình học, do đó không thể so sánh trực tiếp với các lần chạy giữ nguyên quan sát 207 chiều. Chính sách vẫn dùng PPO và phải tự học các hành động di chuyển, ngắm, tấn công, dash; điểm khác biệt nằm ở việc phần điều hướng được hỗ trợ thêm bằng tín hiệu BFS. Nói cách khác, đây là biến thể học tăng cường có hỗ trợ BFS (\emph{BFS-assisted RL}) hay quan sát có thông tin đường đi (\emph{path-informed observation}), nhằm đo tác động của tín hiệu đường đi đối với hiệu năng của tác nhân.
 
 \begin{table}[H]
     \centering
     \small
-    \caption{Kết quả cấu hình \emph{path-informed} sau bản cập nhật run61 ở mốc 1.0M bước}
+    \caption{Kết quả cấu hình run59 \emph{path-informed}}
     \label{tab:run59_bfs_assisted}
     \begin{tabular}{|p{4.1cm}|p{3.2cm}|p{6.4cm}|}
         \hline
@@ -355,10 +355,10 @@ Bảng~\ref{tab:run59_bfs_assisted} cho thấy khi bổ sung tín hiệu đườ
 
 Run59 mang lại bước cải thiện lớn nhất về hiệu năng thực nghiệm, nhưng bản chất của cải thiện đến từ thay đổi biểu diễn quan sát chứ không chỉ từ thuật toán học. Kết quả không chứng minh tác nhân đã tự học tìm đường hoàn toàn; nó chỉ cho thấy khi được cung cấp đặc trưng đường đi phù hợp hơn, chính sách có thể học hành vi chiến đấu và tiếp cận mục tiêu ổn định hơn.
 
-\section{Quan sát lưới cục bộ trong huấn luyện end-to-end}
+\section{Quan sát lưới cục bộ trong huấn luyện đầu cuối}
 \label{sec:run62_local_grid}
 
-Sau khi run59/61 xác định biểu diễn không gian và tín hiệu điều hướng là yếu tố tạo cải thiện rõ rệt, đề tài tiến hành run62 với cấu hình kết hợp. Quan sát chuyển sang lưới cục bộ để mở rộng đặc trưng không gian; curriculum được nâng lên 4 bậc (EasyFixed $\rightarrow$ MediumFixed $\rightarrow$ HardFixed $\rightarrow$ HardRandom); ICM bật với strength 0.001; tham số \texttt{aggressive\_seek} luôn bật để kẻ địch truy đuổi tích cực hơn. Cấu hình này chạy trên 8 môi trường song song trong hai phiên chạy liên tiếp do giới hạn tài nguyên, tổng cộng đạt \textbf{40.82M bước} -- 24.25M bước ở phiên chạy đầu, thêm 16.57M bước ở phiên chạy sau với trọng số khởi tạo từ checkpoint 24.25M.
+Sau khi run59 xác định biểu diễn không gian và tín hiệu điều hướng là yếu tố tạo cải thiện rõ rệt, đề tài tiến hành run62 với cấu hình kết hợp. Quan sát chuyển sang lưới cục bộ để mở rộng đặc trưng không gian; curriculum được nâng lên 4 bậc (EasyFixed $\rightarrow$ MediumFixed $\rightarrow$ HardFixed $\rightarrow$ HardRandom); ICM bật với strength 0.001; tham số \texttt{aggressive\_seek} luôn bật để kẻ địch truy đuổi tích cực hơn. Cấu hình này chạy trên 8 môi trường song song trong hai phiên chạy liên tiếp do giới hạn tài nguyên, tổng cộng đạt \textbf{40.82M bước} -- 24.25M bước ở phiên chạy đầu, thêm 16.57M bước ở phiên chạy sau với trọng số khởi tạo từ checkpoint 24.25M.
 
 \begin{figure}[H]
     \centering
@@ -367,7 +367,7 @@ Sau khi run59/61 xác định biểu diễn không gian và tín hiệu điều 
     \label{fig:run62_merged_overview}
 \end{figure}
 
-Sau 40.82M bước, phần thưởng tail-50 đạt 14.913 (giá trị cực đại 19.695), số kẻ địch tiêu diệt tail-50 đạt 1.582, tỷ lệ dọn phòng tail-50 đạt 0.666 và tỷ lệ dash hữu ích đạt 0.439. Tỷ lệ dọn phòng 0.666 nằm giữa run46 curriculum cơ sở (0.267) và run61 BFS-assisted (0.846), nhưng đáng chú ý là run này không mã hóa sẵn BFS mà chỉ dùng quan sát lưới cục bộ để tác nhân tự học không gian từ dữ liệu, cho thấy lưới cục bộ có thể tiệm cận BFS khi quy mô huấn luyện đủ lớn.
+Sau 40.82M bước, phần thưởng tail-50 đạt 14.913 (giá trị cực đại 19.695), số kẻ địch tiêu diệt tail-50 đạt 1.582, tỷ lệ dọn phòng tail-50 đạt 0.666 và tỷ lệ dash hữu ích đạt 0.439. Tỷ lệ dọn phòng 0.666 nằm giữa run46 curriculum cơ sở (0.267) và run59 có hỗ trợ BFS (0.846), nhưng đáng chú ý là run này không mã hóa sẵn BFS mà chỉ dùng quan sát lưới cục bộ để tác nhân tự học không gian từ dữ liệu, cho thấy lưới cục bộ có thể tiệm cận cấu hình có hỗ trợ BFS khi quy mô huấn luyện đủ lớn.
 
 Kết quả đáng chú ý là entropy giảm bền vững từ vùng bão hòa 4.40 nat của các ablation 1--3M bước xuống còn 3.048 tail-50, tức thấp hơn 1.35 nat so với mức cũ. Đây là lần đầu tiên chính sách thoát khỏi vùng bão hòa entropy trong quá trình huấn luyện; tuy nhiên vì run62 thay đổi nhiều yếu tố đồng thời, chưa thể xác định lưới cục bộ là yếu tố duy nhất quyết định kết quả này.
 
@@ -394,7 +394,7 @@ Kết quả đáng chú ý là entropy giảm bền vững từ vùng bão hòa 
     \end{tabular}
 \end{table}
 
-Từ run62 có thể rút ra hai kết luận. Thứ nhất, vùng bão hòa entropy 4.40 nat quan sát ở các ablation 1--3M bước với quan sát 207 chiều không phải giới hạn cứng của PPO hay không gian hành động, mà là hệ quả của số bước huấn luyện chưa đủ kết hợp với quan sát thiếu đặc trưng không gian; khi tất cả các yếu tố trong cấu hình run62 được kết hợp, entropy giảm bền vững. Thứ hai, khi lưới cục bộ được huấn luyện đến 40.82M bước, tác nhân có thể đạt tỷ lệ dọn phòng tiệm cận BFS-assisted mà không cần mã hóa sẵn cơ chế tìm đường -- mở ra hướng học hoàn toàn end-to-end cho bài toán điều hướng trong môi trường có tường.
+Từ run62 có thể rút ra hai kết luận. Thứ nhất, vùng bão hòa entropy 4.40 nat quan sát ở các ablation 1--3M bước với quan sát 207 chiều không phải giới hạn cứng của PPO hay không gian hành động, mà là hệ quả của số bước huấn luyện chưa đủ kết hợp với quan sát thiếu đặc trưng không gian; khi tất cả các yếu tố trong cấu hình run62 được kết hợp, entropy giảm bền vững. Thứ hai, khi lưới cục bộ được huấn luyện đến 40.82M bước, tác nhân có thể đạt tỷ lệ dọn phòng tiệm cận cấu hình có hỗ trợ BFS mà không cần mã hóa sẵn cơ chế tìm đường -- mở ra hướng học hoàn toàn đầu cuối cho bài toán điều hướng trong môi trường có tường.
 
 \section{Tổng hợp kết quả}
 \label{sec:results_summary}
@@ -404,7 +404,7 @@ Từ run62 có thể rút ra hai kết luận. Thứ nhất, vùng bão hòa ent
     \footnotesize
     \setlength{\tabcolsep}{3.5pt}
     \renewcommand{\arraystretch}{1.22}
-    \caption{Tổng hợp các lần chạy chính}
+    \caption{Tổng hợp các cấu hình thí nghiệm chính}
     \label{tab:master_ablation}
     \begin{tabular}{|>{\raggedright\arraybackslash}p{1.15cm}|>{\raggedright\arraybackslash}p{2.65cm}|>{\centering\arraybackslash}p{1.05cm}|>{\centering\arraybackslash}p{1.95cm}|>{\centering\arraybackslash}p{1.35cm}|>{\raggedright\arraybackslash}p{6cm}|}
         \hline
@@ -428,7 +428,7 @@ Từ run62 có thể rút ra hai kết luận. Thứ nhất, vùng bão hòa ent
         \hline
         run55 & Curriculum + hàm thưởng v2 & 3.0M & 9.337 & 1.014 & Giá trị cực đại của tỷ lệ dọn phòng cao hơn; thang thưởng khác nên không so sánh trực tiếp giá trị trung bình. \\
         \hline
-        run62 & Lưới cục bộ + {aggressive\_seek} + ICM + 4 bậc & 40.82M & 14.913 & 1.582 & Entropy 3.05 -- thoát khỏi vùng bão hòa cũ; tỷ lệ dọn phòng 0.666; tiệm cận BFS-assisted mà không mã hóa sẵn BFS. \\
+        run62 & Lưới cục bộ + {aggressive\_seek} + ICM + 4 bậc & 40.82M & 14.913 & 1.582 & Entropy 3.05 -- thoát khỏi vùng bão hòa cũ; tỷ lệ dọn phòng 0.666; tiệm cận cấu hình có hỗ trợ BFS mà không mã hóa sẵn BFS. \\
         \hline
     \end{tabular}
 \end{table}
@@ -439,7 +439,7 @@ Bảng~\ref{tab:master_ablation} cho phép rút ra bốn nhận xét chính tron
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.9\textwidth]{figures/training/fig413_reward_comparison.pdf}
-    \caption{So sánh phần thưởng trung bình giữa các lần chạy dùng hàm thưởng v1.}
+    \caption{So sánh phần thưởng trung bình giữa các cấu hình dùng hàm thưởng v1.}
     \label{fig:reward_comparison_all}
 \end{figure}
 

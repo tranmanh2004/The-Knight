@@ -14,13 +14,13 @@ Chương này xây dựng nền tảng lý thuyết cần thiết để hiểu t
 
 \begin{itemize}
     \item \textbf{Bố cục bản đồ thay đổi:} mỗi lượt chơi dùng một bản đồ PCGNN khác nhau, làm phân phối dữ liệu quan sát thay đổi liên tục. Tác nhân không thể chỉ ghi nhớ bố cục một bản đồ cụ thể; thay vào đó cần học các kỹ năng khái quát hóa được cho nhiều bản đồ khác nhau.
-    \item \textbf{Không gian hành động đa nhánh:} tác nhân phải phối hợp đồng thời hướng di chuyển, lệnh chiến đấu và góc ngắm bắn trong thời gian thực.
+    \item \textbf{Không gian hành động đa nhánh:} tác nhân phải phối hợp đồng thời hướng di chuyển, lệnh chiến đấu và góc tấn công trong thời gian thực.
     \item \textbf{Phần thưởng thưa và trễ:} tiêu diệt kẻ địch hay dọn phòng chỉ xảy ra sau khi hoàn thành chuỗi hành vi tiếp cận--né--căn hướng--tấn công. Trong giai đoạn đầu huấn luyện, tín hiệu phần thưởng quá thưa để dẫn dắt học hiệu quả.
 \end{itemize}
 
-\textbf{Quan sát và hành động trong đề tài.} Tác nhân sử dụng vector quan sát cấu trúc 207 chiều (thay vì ảnh pixel) để tiết kiệm chi phí tính toán, bao gồm thông tin về người chơi, kẻ địch, đạn và tường. Không gian hành động rời rạc nhiều nhánh $(3,3,3,9)$ biểu diễn điều khiển trục X, trục Y, lệnh chiến đấu và hướng ngắm. Đây là lý do đề tài cần học theo chương trình (curriculum learning) và các kỹ thuật khám phá thay vì chỉ dùng PPO đơn thuần.
+\textbf{Quan sát và hành động trong đề tài.} Tác nhân sử dụng vector quan sát cấu trúc 207 chiều (thay vì ảnh pixel) để tiết kiệm chi phí tính toán, bao gồm thông tin về người chơi, kẻ địch, đạn và tường. Không gian hành động rời rạc nhiều nhánh $(3,3,3,9)$ biểu diễn điều khiển trục X, trục Y, lệnh chiến đấu và hướng tấn công. Đây là lý do đề tài cần học theo chương trình (curriculum learning) và các kỹ thuật khám phá thay vì chỉ dùng PPO đơn thuần.
 
-\textbf{Luật chơi của game trong đề tài.} Trò chơi được xây dựng trên TopDown Engine và mở rộng từ demo Koala2D. Ở mỗi lượt chơi, nhân vật người chơi xuất hiện trong một phòng kín có tường bao quanh; phòng được sinh tự động bằng PCGNN với mật độ tường khoảng 32\%. Nhân vật có máu (HP), có vũ khí và kỹ năng lướt nhanh (dash) kèm cooldown. Một đến hai kẻ địch xuất hiện trên các ô sàn có thể đi tới được từ vị trí người chơi; kẻ địch tự động di chuyển và bắn đạn theo logic AI sẵn có. Lượt chơi kết thúc khi (a) người chơi tiêu diệt toàn bộ kẻ địch -- gọi là \emph{dọn phòng}, (b) người chơi mất hết máu, hoặc (c) hết thời gian. Tiêu chí thành công chính của tác nhân là tăng tỷ lệ dọn phòng (\emph{clear\_rate}) trên nhóm bản đồ Hard.
+\textbf{Luật chơi của game trong đề tài.} Trò chơi được xây dựng trên TopDown Engine và mở rộng từ demo Koala2D. Mỗi lượt chơi diễn ra trong một phòng kín sinh bằng PCGNN; người chơi có HP, vũ khí và kỹ năng dash, còn một đến hai kẻ địch xuất hiện trên các ô sàn có thể đi tới và tự di chuyển, bắn đạn theo AI có sẵn. Lượt chơi kết thúc khi người chơi dọn sạch kẻ địch, hết HP hoặc hết thời gian; tiêu chí thành công chính là tỷ lệ dọn phòng (\emph{clear\_rate}) trên nhóm bản đồ Hard.
 
 \textbf{Định vị trong các môi trường RL phổ biến.} Để người đọc quen với các môi trường đánh giá chuẩn (benchmark) trong RL có thể hình dung độ khó tương đối, Bảng~\ref{tab:rl_env_comparison} đối chiếu môi trường của đề tài với ba môi trường thường gặp.
 
@@ -66,6 +66,8 @@ Học tăng cường (RL) mô hình hóa bài toán dưới dạng Quy trình Qu
 
 Tác nhân không có dữ liệu có sẵn mà tự sinh dữ liệu qua tương tác, tạo ra ba khó khăn điển hình: khám phá và khai thác, phần thưởng trễ và tương quan thời gian giữa các mẫu.
 
+\textbf{Trường hợp quan sát một phần (POMDP).} Khi tác nhân không quan sát được toàn bộ trạng thái thật $s_t$ mà chỉ nhận một quan sát cục bộ $o_t$, bài toán được mô hình hóa dưới dạng POMDP $(S, A, O, P, R, \Omega, \gamma)$. Trong đề tài, tính quan sát một phần xuất hiện do tầm nhìn hữu hạn, đường ngắm bị tường chắn và giới hạn kích thước vector quan sát; cách đặc tả cụ thể được trình bày ở Chương~2.
+
 \subsection{Proximal Policy Optimization (PPO)}
 
 PPO được chọn làm thuật toán nền tảng vì hỗ trợ tốt không gian hành động rời rạc nhiều nhánh trong Unity ML-Agents và có độ ổn định cao \cite{Schulman2017}. PPO dùng kiến trúc Actor-Critic: Actor sinh phân phối xác suất $\pi_\theta(a|s)$, Critic ước lượng $V_\psi(s)$ làm mốc nền cho cập nhật chính sách.
@@ -106,7 +108,7 @@ PPO giới hạn mức thay đổi chính sách qua tỷ lệ xác suất $\rho_
     \right].
 \end{equation}
 
-Hàm mục tiêu của PPO gồm policy loss để cập nhật chính sách, value loss để huấn luyện bộ ước lượng giá trị, và entropy bonus nhằm duy trì khả năng khám phá:
+Hàm mục tiêu của PPO gồm mất mát chính sách (\emph{policy loss}) để cập nhật chính sách, mất mát giá trị (\emph{value loss}) để huấn luyện bộ ước lượng giá trị, và thành phần thưởng entropy (\emph{entropy bonus}) nhằm duy trì khả năng khám phá:
 \begin{equation} \label{eq:ppo_total}
     L_t(\theta) = L_t^{CLIP}(\theta) - c_1 L_t^{VF}(\theta) + c_2 S[\pi_\theta](s_t).
 \end{equation}
@@ -127,7 +129,7 @@ Tham số $\lambda \in [0,1]$ điều chỉnh cân bằng giữa độ lệch v�
 
 \subsection{Intrinsic Curiosity Module (ICM)}
 
-ICM bổ sung phần thưởng nội tại $r_t^{int}$ dựa trên sai số dự đoán chuyển trạng thái \cite{Pathak2017}. ICM gồm hai mô hình phụ trên không gian đặc trưng $\phi(s)$: inverse model suy ra hành động $a_t$ từ cặp trạng thái liên tiếp $(\phi(s_t), \phi(s_{t+1}))$, còn forward model dự đoán đặc trưng trạng thái kế tiếp $\hat{\phi}(s_{t+1})$ từ $(\phi(s_t), a_t)$. Sai số dự đoán của forward model trở thành phần thưởng khám phá:
+ICM bổ sung phần thưởng nội tại $r_t^{int}$ dựa trên sai số dự đoán chuyển trạng thái \cite{Pathak2017}. ICM gồm hai mô hình phụ trên không gian đặc trưng $\phi(s)$: mô hình nghịch (\emph{inverse model}) suy ra hành động $a_t$ từ cặp trạng thái liên tiếp $(\phi(s_t), \phi(s_{t+1}))$, còn mô hình thuận (\emph{forward model}) dự đoán đặc trưng trạng thái kế tiếp $\hat{\phi}(s_{t+1})$ từ $(\phi(s_t), a_t)$. Sai số dự đoán của mô hình thuận trở thành phần thưởng khám phá:
 \begin{equation}
     r_t^{ICM} = \tfrac{1}{2}\|\hat{\phi}(s_{t+1}) - \phi(s_{t+1})\|_2^2, \qquad
     L_{inv} = CE(a_t,\, g(\phi(s_t),\phi(s_{t+1}))).
@@ -136,23 +138,23 @@ ICM bổ sung phần thưởng nội tại $r_t^{int}$ dựa trên sai số dự
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{figures/icm.png}
-    \caption{Mô hình ICM: inverse model suy ra hành động, còn forward model tạo tín hiệu phần thưởng nội tại từ sai số dự đoán trạng thái kế tiếp.}
+    \caption{Mô hình ICM: mô hình nghịch suy ra hành động, còn mô hình thuận tạo tín hiệu phần thưởng nội tại từ sai số dự đoán trạng thái kế tiếp.}
     \label{fig:icm_original}
 \end{figure}
 
-Trong bài toán của đề tài, inverse model cần học quan hệ giữa chuyển trạng thái và tổ hợp hành động $(3,3,3,9)$. Không gian hành động đa nhánh này làm bài toán dự đoán hành động khó hơn, vì nhiều nhánh hành động có thể cùng ảnh hưởng đến kết quả chuyển trạng thái. Nếu inverse loss không giảm đủ và vẫn gần entropy ngẫu nhiên 5.49 nat, ICM khó khuyến khích đúng các chuyển tiếp hữu ích cho chiến đấu. Kết quả Chương~4 xác nhận inverse loss dừng ở 4.36 nat.
+Trong bài toán của đề tài, mô hình nghịch cần học quan hệ giữa chuyển trạng thái và tổ hợp hành động $(3,3,3,9)$. Không gian hành động đa nhánh này làm bài toán dự đoán hành động khó hơn, vì nhiều nhánh hành động có thể cùng ảnh hưởng đến kết quả chuyển trạng thái. Nếu mất mát nghịch (\emph{inverse loss}) không giảm đủ và vẫn gần entropy ngẫu nhiên 5.49 nat, ICM khó khuyến khích đúng các chuyển tiếp hữu ích cho chiến đấu. Kết quả Chương~4 xác nhận mất mát nghịch dừng ở 4.36 nat.
 
-Trong thực nghiệm, ICM được kết hợp với curriculum learning trong run50 để hai kỹ thuật bổ trợ cho nhau: curriculum tạo tín hiệu học sớm, còn ICM tăng cường khám phá trong từng bài học.
+Trong thực nghiệm, ICM được kết hợp với curriculum learning trong run50 để hai kỹ thuật bổ trợ cho nhau: curriculum tạo tín hiệu học sớm, còn ICM tăng cường khám phá trong từng giai đoạn độ khó.
 
 \subsection{Random Network Distillation (RND)}
 
-RND dùng hai mạng: mạng mục tiêu $f$ (cố định, ngẫu nhiên) và mạng dự đoán $\hat{f}_\theta$ (học). Phần thưởng nội tại là sai số bắt chước \cite{Burda2018}:
+RND dùng hai mạng: mạng mục tiêu $f$ (cố định, ngẫu nhiên) và mạng dự đoán $\hat{f}_\theta$ (học). Phần thưởng nội tại được tính từ sai số dự đoán \cite{Burda2018}:
 \begin{equation}
     r_t^{RND} = \|\hat{f}_\theta(s_t) - f(s_t)\|_2^2.
 \end{equation}
-Trạng thái ít gặp → sai số cao → phần thưởng cao. Khi trạng thái được thăm nhiều, sai số tự giảm.
+Trạng thái ít gặp tạo sai số cao, từ đó sinh phần thưởng cao. Khi trạng thái được thăm nhiều, sai số tự giảm.
 
-RND thưởng cho trạng thái mới lạ bất kể có liên quan đến chiến đấu hay không. Trong môi trường có tường phức tạp, tác nhân có thể khám phá góc phòng thay vì học tiếp cận kẻ địch. Do không có thành phần phụ thuộc hành động, tín hiệu RND không phản ánh trực tiếp tính hữu ích của từng chuyển tiếp đối với chiến đấu.
+RND gán thưởng cho trạng thái mới lạ bất kể trạng thái đó có liên quan đến chiến đấu hay không. Trong môi trường có tường phức tạp, tác nhân có thể khám phá góc phòng thay vì học tiếp cận kẻ địch. Do không có thành phần phụ thuộc hành động, tín hiệu RND không phản ánh trực tiếp tính hữu ích của từng chuyển tiếp đối với chiến đấu.
 
 Trong thực nghiệm, RND được so sánh trực tiếp với ICM qua thí nghiệm loại trừ (run35 vs run36) để xác định kiểu khám phá nào phù hợp hơn với môi trường Roguelike chiến đấu.
 
@@ -166,60 +168,60 @@ Thêm LSTM làm tăng chi phí tính toán và thường làm chậm hội tụ 
 
 \subsection{PCGNN và sinh bản đồ bằng neuroevolution}
 
-PCGNN (Procedural Content Generation using NEAT and novelty search) tiến hóa một mạng nơ-ron $f_\theta$ để sinh bản đồ theo từng ô \cite{Beukman2022}. Mỗi ô $(i,j)$ được sinh bởi:
+PCGNN (Procedural Content Generation using NEAT and novelty search) tiến hóa một mạng nơ-ron $f_\theta$ để sinh bản đồ theo từng ô \cite{Beukman2022}. Mỗi ô $(i,j)$ được xác định bởi:
 \begin{equation}
     t_{i,j} = \arg\max\, f_\theta(C(i,j),\, \mathbf{z}),
 \end{equation}
 trong đó $C(i,j)$ là ngữ cảnh lân cận $3\times3$ và $\mathbf{z}$ là nhiễu ngẫu nhiên để tạo đa dạng. Quá trình tiến hóa dùng novelty search để tránh hội tụ sớm về một mẫu bản đồ duy nhất.
 
-Bản đồ được đánh giá bằng bốn chỉ số thường dùng trong PCGNN: \textbf{Leniency} (tỷ lệ sàn), \textbf{A* Difficulty} (độ phức tạp đường đi), \textbf{Compression Distance} (độ khác biệt cấu trúc giữa các bản đồ) và \textbf{A* Diversity} (phương sai độ khó trong cùng một genome).
+Bản đồ được đánh giá bằng bốn chỉ số thường dùng trong PCGNN: \textbf{Leniency} (tỷ lệ sàn), \textbf{A* Difficulty} (độ khó A*), \textbf{Compression Distance} (khoảng cách nén, đo khác biệt cấu trúc giữa các bản đồ) và \textbf{A* Diversity} (độ đa dạng A*, đo phương sai độ khó trong cùng một genome).
 
-\textbf{Vì sao PCGNN gốc chưa phù hợp với chiến đấu Roguelike.} PCGNN gốc hướng tới bài toán mê cung (maze) -- mục tiêu là tồn tại đường đi giữa hai góc đối diện -- và đánh giá bằng \emph{leniency}, A* difficulty, compression distance. Ba hạn chế cụ thể khi áp dụng vào bài toán của đề tài:
+\textbf{Vì sao PCGNN gốc chưa phù hợp với chiến đấu Roguelike.} PCGNN gốc hướng tới bài toán mê cung (maze) -- mục tiêu là tồn tại đường đi giữa hai góc đối diện -- và đánh giá bằng \emph{leniency}, độ khó A* và khoảng cách nén. Ba hạn chế cụ thể khi áp dụng vào bài toán của đề tài:
 \begin{itemize}
     \item \textbf{Không bảo đảm tương tác chiến đấu hợp lệ.} Mê cung có thể có đường đi nhưng vị trí sinh của người chơi và kẻ địch có thể nằm trên các thành phần liên thông tách rời. Hậu quả: tác nhân chạy mãi vẫn không gặp kẻ địch, không học được hành vi tấn công.
     \item \textbf{Không gian chiến đấu có thể quá hẹp.} Bản đồ tối ưu cho mê cung thường có nhiều hành lang một ô; người chơi không có chỗ né đạn, khiến việc học né bị nhiễu bởi giới hạn vật lý của bản đồ.
-    \item \textbf{Chỉ số gốc không phản ánh độ khó chiến đấu.} Một bản đồ có A* difficulty cao (cấu trúc đường đi phức tạp) chưa chắc khó về mặt chiến đấu; ngược lại, một bản đồ ít ngõ cụt nhưng mật độ tường cao có thể khó hơn nhiều cho việc tiếp cận và né tránh.
+    \item \textbf{Chỉ số gốc không phản ánh độ khó chiến đấu.} Một bản đồ có độ khó A* cao (cấu trúc đường đi phức tạp) chưa chắc khó về mặt chiến đấu; ngược lại, một bản đồ ít ngõ cụt nhưng mật độ tường cao có thể khó hơn nhiều cho việc tiếp cận và né tránh.
 \end{itemize}
 
 \textbf{Ba điều chỉnh trong đề tài.} Tương ứng với ba hạn chế trên: (1) thêm bộ kiểm tra BFS đặt P/E trên cùng thành phần liên thông và xác nhận đường đi tồn tại; (2) bổ sung \textbf{reachable\_ratio} (đo không gian sàn thực sự dùng được) và \textbf{dead\_end\_ratio} (đo mật độ ngõ cụt gây kẹt) thay cho leniency, kèm \textbf{difficulty\_score} tổng hợp dùng để xếp hạng; (3) dùng PCGNN như bước tiền xử lý ngoại tuyến (offline) thay vì tích hợp trực tiếp vào vòng lặp huấn luyện để tránh rủi ro tích hợp Python--Unity. Chi tiết cài đặt và bảng so sánh hai thiết lập được trình bày ở Chương~3 (§3.2.1, Bảng~\ref{tab:pcgnn_improvements}).
 
 \subsection{Học theo chương trình (Curriculum Learning)}
 
-Curriculum learning tổ chức quá trình học từ dễ đến khó \cite{Bengio2009}. Tác nhân bắt đầu từ bản đồ Easy, chuyển sang Medium rồi Hard khi đạt ngưỡng hiệu quả. Điều kiện chuyển bài học dùng trung bình trượt EMA:
+Curriculum learning tổ chức quá trình học từ dễ đến khó \cite{Bengio2009}. Tác nhân bắt đầu từ bản đồ Easy, chuyển sang Medium rồi Hard khi đạt ngưỡng hiệu quả. Điều kiện chuyển mức độ khó dùng trung bình trượt EMA:
 \begin{equation}
     \bar{G}_t = (1-\alpha)\bar{G}_{t-1} + \alpha G_t.
     \label{eq:curriculum_ema}
 \end{equation}
 Khi $\bar{G}_t \geq \theta_\ell$, trình huấn luyện (trainer) tăng tham số \textbf{difficulty}, từ đó kích hoạt TilemapGenerator chuyển sang nhóm bản đồ tương ứng.
 
-Ngưỡng chuyển bài học $\theta_\ell$ cần được chỉnh tay theo từng môi trường, do chưa có cơ chế tự động điều chỉnh. Nếu ngưỡng quá thấp, tác nhân chuyển sang Hard quá sớm trước khi học xong kỹ năng cơ bản; nếu quá cao, tác nhân bị giữ lại ở Easy quá lâu.
+Ngưỡng chuyển mức độ khó $\theta_\ell$ cần được chỉnh tay theo từng môi trường, do chưa có cơ chế tự động điều chỉnh. Nếu ngưỡng quá thấp, tác nhân chuyển sang Hard quá sớm trước khi học xong kỹ năng cơ bản; nếu quá cao, tác nhân bị giữ lại ở Easy quá lâu.
 
-Trong đề tài, ngưỡng được chỉnh thực nghiệm qua các lần chạy trước khi thiết kế ma trận thí nghiệm loại trừ chính. Curriculum gắn trực tiếp với PCGNN: bản đồ được chia thành Easy/Medium/Hard theo percentile trước khi đưa vào TilemapGenerator. Kết quả Chương~4 cho thấy đây là kỹ thuật có ảnh hưởng lớn nhất, +85\% so với cấu hình PPO cơ sở.
+Trong đề tài, ngưỡng được chỉnh thực nghiệm qua các lần chạy trước khi thiết kế ma trận thí nghiệm loại trừ chính. Curriculum gắn trực tiếp với PCGNN: bản đồ được chia thành Easy/Medium/Hard theo phân vị trước khi đưa vào TilemapGenerator. Kết quả Chương~4 cho thấy đây là kỹ thuật có ảnh hưởng lớn nhất, +85\% so với cấu hình PPO cơ sở.
 
 \section{Tóm tắt chương}
 
-Chương này trình bày nền tảng RL (MDP, PPO, GAE), đặc trưng của Roguelike chiến đấu và năm kỹ thuật hỗ trợ (ICM, RND, LSTM, PCGNN, curriculum learning) kèm phân tích hạn chế và cách đề tài điều chỉnh. Bảng~\ref{tab:technique_summary} tóm tắt mối liên hệ giữa các kỹ thuật này với mục tiêu của đề tài.
+Chương này trình bày nền tảng RL (MDP, POMDP, PPO, GAE), đặc trưng của Roguelike chiến đấu và năm kỹ thuật hỗ trợ (ICM, RND, LSTM, PCGNN, curriculum learning) kèm phân tích hạn chế và cách đề tài điều chỉnh. Bảng~\ref{tab:technique_summary} tóm tắt mối liên hệ giữa các kỹ thuật này với mục tiêu của đề tài.
 
 \begin{table}[H]
     \centering
     \small
-    \caption{Tổng hợp kỹ thuật và mục tiêu đề tài}
+    \caption{Tổng hợp vai trò, hạn chế và cách xử lý của các kỹ thuật sử dụng trong đề tài}
     \label{tab:technique_summary}
-    \begin{tabular}{|p{2.0cm}|p{2.2cm}|p{4.5cm}|p{4.0cm}|}
+    \begin{tabular}{|p{2.0cm}|p{3.0cm}|p{4.4cm}|p{4.1cm}|}
         \hline
-        \textbf{Kỹ thuật} & \textbf{Mục tiêu} & \textbf{Hạn chế chính} & \textbf{Cách đề tài xử lý} \\
+        \textbf{Kỹ thuật} & \textbf{Vai trò trong đề tài} & \textbf{Hạn chế chính} & \textbf{Cách đề tài xử lý} \\
         \hline
-        PPO & chiến đấu & Cần nhiều bước để hội tụ trong môi trường có phần thưởng thưa & Kết hợp với curriculum learning \\
+        PPO & Thuật toán nền để huấn luyện tác nhân chiến đấu & Cần nhiều mẫu và khó học khi phần thưởng kết quả thưa & Kết hợp phần thưởng định hình và curriculum learning để tạo tín hiệu học sớm \\
         \hline
-        ICM & so sánh kỹ thuật & Inverse model khó với không gian hành động $(3,3,3,9)$ & Ablation run35, run50 \\
+        ICM & Kỹ thuật khám phá được kiểm tra trong thí nghiệm loại trừ & Mô hình nghịch khó học ổn định với không gian hành động đa nhánh $(3,3,3,9)$ & So sánh qua run35 và kiểm tra khả năng bổ trợ curriculum ở run50 \\
         \hline
-        RND & so sánh kỹ thuật & Thưởng trạng thái mới không liên quan chiến đấu & Ablation run36 \\
+        RND & Kỹ thuật khám phá đối chứng với ICM & Thưởng cho trạng thái mới lạ nhưng không bảo đảm liên quan trực tiếp đến chiến đấu & So sánh trực tiếp với PPO cơ sở và ICM qua run36 \\
         \hline
-        LSTM & so sánh kỹ thuật & Học chậm, có thể không cần nếu quan sát đã đủ thông tin & Ablation run42, run47 \\
+        LSTM & Kiểm tra vai trò của bộ nhớ tuần tự & Học chậm hơn MLP và có thể không tạo lợi ích rõ nếu quan sát hiện thời đã đủ thông tin & Đánh giá riêng ở run42 và khi kết hợp curriculum ở run47 \\
         \hline
-        PCGNN & curriculum/bản đồ & Thiết kế cho mê cung, chưa trực tiếp phục vụ chiến đấu & Điều chỉnh fitness và kiểm tra BFS \\
+        PCGNN & Sinh bản đồ và tạo phân phối huấn luyện đa dạng & Thiết kế gốc hướng tới mê cung, chưa bảo đảm phù hợp cho chiến đấu Roguelike & Bổ sung hậu xử lý đặt P/E, kiểm tra BFS và chỉ số độ khó phù hợp với không gian chiến đấu \\
         \hline
-        Curriculum & curriculum/bản đồ & Ngưỡng chuyển bài học cần chỉnh tay & Chỉnh thực nghiệm + EMA \\
+        Curriculum learning & Tổ chức quá trình học từ bản đồ dễ đến khó & Ngưỡng chuyển độ khó cần chỉnh tay và phụ thuộc vào thang phần thưởng & Chia bản đồ thành Easy/Medium/Hard và dùng EMA phần thưởng để chuyển mức \\
         \hline
     \end{tabular}
 \end{table}

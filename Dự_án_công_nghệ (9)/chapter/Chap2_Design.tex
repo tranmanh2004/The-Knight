@@ -4,9 +4,9 @@
 \setcounter{chapter}{1}
 \chapter[{PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG TÁC NHÂN}]{Phân tích và Thiết kế Hệ thống Tác nhân}
 
-Chương này thiết kế các thành phần phục vụ \textbf{MT1} (CombatAgent, hàm thưởng, kiến trúc PPO), \textbf{MT2} (PCGNN + curriculum) và làm tiền đề cho \textbf{MT4} (biểu diễn quan sát). Để người đọc nắm được câu chuyện thiết kế thay vì chỉ thấy danh sách thành phần, chương bắt đầu bằng tổng quan quy trình đầu cuối, sau đó ánh xạ rõ \emph{từng khối thiết kế giải quyết thách thức nào} của bài toán đã phát biểu ở chương mở đầu, sau đó đi vào chi tiết từng phần.
+Chương này thiết kế các thành phần phục vụ \textbf{MT1} (CombatAgent, hàm thưởng, kiến trúc PPO), \textbf{MT2} (PCGNN + curriculum) và làm tiền đề cho \textbf{MT4} (biểu diễn quan sát). Để người đọc nắm được câu chuyện thiết kế thay vì chỉ thấy danh sách thành phần, chương bắt đầu bằng tổng quan quy trình huấn luyện hoàn chỉnh, sau đó ánh xạ rõ \emph{từng khối thiết kế giải quyết thách thức nào} của bài toán đã phát biểu ở chương mở đầu, sau đó đi vào chi tiết từng phần.
 
-\section{Tổng quan quy trình đầu cuối}
+\section{Tổng quan quy trình huấn luyện hoàn chỉnh}
 \begin{figure}[H]
     \centering
     \begin{tikzpicture}[
@@ -45,7 +45,7 @@ Chương này thiết kế các thành phần phục vụ \textbf{MT1} (CombatAg
             at ([xshift=2.0cm]$(ppo.east)!0.5!(tile.east)$) 
             {lượt chơi mới};
     \end{tikzpicture}
-    \caption{Quy trình huấn luyện đầu cuối. Các khối xanh là hệ thống sinh bản đồ; khối cam là quan sát; khối xanh lá là thuật toán học. Mũi tên nét đứt biểu thị vòng lặp lượt chơi.}
+    \caption{Quy trình huấn luyện hoàn chỉnh. Các khối xanh là hệ thống sinh bản đồ; khối cam là quan sát; khối xanh lá là thuật toán học. Mũi tên nét đứt biểu thị vòng lặp lượt chơi.}
     \label{fig:pipeline_overview}
 \end{figure}
 
@@ -62,33 +62,54 @@ Bảng~\ref{tab:design_block_mapping} ánh xạ từng khối thiết kế với
         \hline
         \textbf{Khối thiết kế} & \textbf{Thách thức giải quyết} & \textbf{Mục đặc tả} & \textbf{MT} \\
         \hline
-        PCGNN + BFS & Phân phối bản đồ thay đổi mỗi lượt chơi & §2.6 & MT2 \\
-        \hline
-        Curriculum learning & Phần thưởng thưa và trễ & §2.7 & MT2 \\
-        \hline
         Quan sát 207D & Mô tả tình huống chiến đấu đủ giàu nhưng đủ gọn & §2.3 & MT1, MT4 \\
         \hline
         Hành động $(3,3,3,9)$ & Phối hợp đồng thời di chuyển--ngắm--chiến đấu & §2.4 & MT1 \\
         \hline
         Hàm thưởng định hình v1/v2 & Hướng dẫn học sớm khi tín hiệu kết quả còn thưa & §2.5 & MT1 \\
         \hline
+        PCGNN + BFS & Phân phối bản đồ thay đổi mỗi lượt chơi & §2.6 & MT2 \\
+        \hline
+        Curriculum learning & Phần thưởng thưa và trễ & §2.7 & MT2 \\
+        \hline
         PPO + Actor-Critic & Cập nhật chính sách ổn định trên không gian hành động đa nhánh & §2.8 & MT1, MT3 \\
         \hline
     \end{tabular}
 \end{table}
 
-\section{Mô hình hóa bài toán dưới dạng MDP}
+\section{Mô hình hóa bài toán dưới dạng POMDP}
 
-Theo mô hình học tăng cường đã trình bày ở Chương~1, bài toán được mô tả dưới dạng một Quy trình Quyết định Markov (Markov Decision Process -- MDP) với bộ thành phần $(S,A,P,R,\gamma)$ \cite{Schulman2017}. Tại mỗi bước quyết định, tác nhân quan sát trạng thái hiện tại $s_t$, chọn hành động $a_t$, nhận phần thưởng $r_t$, sau đó môi trường Unity cập nhật sang trạng thái $s_{t+1}$ theo logic gameplay, vật lý 2D và cách sinh bản đồ.
+Theo nền tảng ở Chương~1, môi trường chiến đấu trong khóa luận được mô hình hóa như một Quy trình Quyết định Markov Quan sát một phần (Partially Observable Markov Decision Process -- POMDP) với bộ thành phần $(S, A, O, P, R, \Omega, \gamma)$. Cách mô hình hóa này phù hợp hơn MDP đầy đủ vì tác nhân không được truy cập trực tiếp toàn bộ trạng thái của phòng chơi. Tương tự người chơi, CombatAgent chỉ nhận thông tin trong phạm vi tầm nhìn VisionRadius=20 và còn bị ràng buộc bởi yêu cầu đường ngắm RequireLineOfSightToTarget=\textit{true}. Do đó, kẻ địch hoặc đạn nằm ngoài tầm nhìn, hoặc bị tường che khuất, không được đưa vào dữ liệu nhận thức của game. Đây là đặc tính của môi trường Roguelike chiến đấu, không phải một giới hạn tùy ý được áp lên thuật toán học.
 
-Trong phạm vi khóa luận, $S$ là không gian quan sát vector của CombatAgent; $A$ là không gian hành động rời rạc nhiều nhánh gồm bốn nhánh; $R$ là hàm thưởng kết hợp giữa tín hiệu kết quả như tiêu diệt kẻ địch và tín hiệu định hình như tiếp cận mục tiêu; $\gamma=0.99$ là hệ số chiết khấu trong cấu hình PPO. Mục tiêu huấn luyện là tìm chính sách $\pi_{\theta}(a|s)$ tối đa hóa kỳ vọng tổng thưởng:
+Trong bối cảnh của đề tài, các thành phần POMDP được hiểu như sau:
+\begin{itemize}
+    \item $S$ -- \textbf{trạng thái thật của môi trường}: toàn bộ tilemap, vị trí và nội trạng của người chơi và kẻ địch (máu, hồi chiêu, vận tốc), vị trí và vận tốc của các viên đạn đang bay, cùng bộ đếm thời gian của lượt chơi. Trạng thái này tồn tại trong Unity nhưng tác nhân \emph{không quan sát trực tiếp}.
+    \item $A$ -- \textbf{không gian hành động}: không gian rời rạc nhiều nhánh $(3,3,3,9)$, tương ứng với di chuyển, chiến đấu và hướng tấn công (đặc tả ở §2.4).
+    \item $O$ -- \textbf{không gian quan sát}: vector đặc trưng mà CombatAgent nhận được tại mỗi bước. Cấu hình cơ sở dùng 207 chiều; run59 mở rộng thành 210 chiều bằng đặc trưng đường đi, còn run62 dùng 432 chiều với lưới cục bộ $15\times15$. Cấu trúc quan sát 207 chiều được trình bày ở §2.3.
+    \item $P(s_{t+1} \mid s_t, a_t)$ -- \textbf{hàm chuyển trạng thái}: được quyết định bởi logic gameplay, vật lý 2D, hành vi kẻ địch, đạn và cơ chế sinh bản đồ trong Unity.
+    \item $\Omega(o_t \mid s_t, a_{t-1})$ -- \textbf{hàm phát quan sát}: ánh xạ trạng thái thật $s_t$ thành quan sát $o_t$ thông qua các bộ trích đặc trưng của CombatAgent, như sắp xếp kẻ địch/đạn theo khoảng cách và dò tia ray tới tường.
+    \item $R$ -- \textbf{hàm phần thưởng}: kết hợp tín hiệu kết quả thưa với các tín hiệu định hình dày hơn nhằm hỗ trợ học trong giai đoạn đầu (đặc tả ở §2.5).
+    \item $\gamma = 0.99$ -- \textbf{hệ số chiết khấu}: giá trị dùng trong cấu hình PPO của các thí nghiệm chính.
+\end{itemize}
 
+Mục tiêu huấn luyện là tìm chính sách $\pi_{\theta}(a \mid o)$, tức chính sách ra quyết định dựa trên quan sát thay vì trạng thái thật, sao cho kỳ vọng tổng thưởng chiết khấu được tối đa hóa:
 \begin{equation}
     J(\pi_\theta) = \mathbb{E}_{\tau \sim \pi_\theta}
     \left[\sum_{t=0}^{T}\gamma^t r_t\right].
 \end{equation}
 
-Điểm khó của bài toán nằm ở chỗ phân phối trạng thái thay đổi theo từng lượt chơi. Bản đồ được chọn từ nhiều bản đồ văn bản (text map) khác nhau, vị trí sinh có thể cố định hoặc ngẫu nhiên theo bài học, kẻ địch và đạn di chuyển liên tục, còn phần thưởng hoàn thành phòng chỉ xuất hiện khi tác nhân tiêu diệt đủ mục tiêu. Vì vậy, hệ thống cần một biểu diễn trạng thái đủ giàu để mô tả chiến đấu, nhưng vẫn đủ gọn để học hiệu quả bằng PPO.
+\textbf{Nguồn gốc tính quan sát một phần.} Trong môi trường này, tính quan sát một phần xuất hiện từ ba nguồn chính:
+\begin{itemize}
+    \item \textbf{Tầm nhìn hữu hạn}: game dùng Physics2D.OverlapCircle với bán kính VisionRadius=20 để truy vấn kẻ địch và đạn xung quanh tác nhân. Những đối tượng nằm ngoài bán kính này không được đưa vào tập ứng viên quan sát.
+    \item \textbf{Đường ngắm bị tường chắn}: với RequireLineOfSightToTarget=\textit{true}, một kẻ địch chỉ được coi là mục tiêu hợp lệ khi giữa tác nhân và kẻ địch không có tường cản. Vì vậy, một đối tượng tuy ở gần nhưng khuất sau vật cản vẫn có thể vắng mặt khỏi quan sát hiện thời.
+    \item \textbf{Dung lượng hữu hạn của vector quan sát}: do quan sát có kích thước cố định, hệ thống chỉ truyền một số lượng đối tượng giới hạn: tối đa MaxEnemies=3 kẻ địch và MaxBullets=10 viên đạn gần nhất, kèm thông tin tường dạng cục bộ (16 tia ray ở cấu hình 207 chiều, hoặc lưới $15\times15$ ở run62). Các đối tượng vượt quá giới hạn này bị cắt bỏ ngay cả khi vẫn nằm trong vùng nhận thức.
+\end{itemize}
+
+Hai nguồn đầu là thuộc tính cố hữu của luật chơi Roguelike chiến đấu: tác nhân không thể thấy xuyên tường hoặc thấy vô hạn khoảng cách. Nguồn thứ ba thuộc về lựa chọn thiết kế biểu diễn quan sát. Đây là điểm mà đề tài chủ động kiểm tra trong \textbf{MT4}, thông qua việc bổ sung đặc trưng đường đi BFS ở run59 và thay quan sát tường bằng lưới cục bộ ở run62.
+
+Vì $o_t$ chỉ là lát cắt hữu hạn của $s_t$, chính sách MLP dạng $\pi_\theta(a \mid o_t)$ có thể thiếu thông tin về các sự kiện vừa rời khỏi tầm nhìn, trạng thái hồi chiêu trước đó hoặc chuyển động của đạn qua nhiều bước. Về nguyên tắc, một chính sách có bộ nhớ $\pi_\theta(a \mid o_{1:t})$ có khả năng tận dụng chuỗi quan sát tốt hơn. Nhận định này dẫn đến hai hướng kiểm tra ở các chương sau: bổ sung LSTM trong run42 và run47 để khai thác lịch sử quan sát, đồng thời mở rộng không gian quan sát trong run59 và run62 để giảm mức cắt cụt thông tin.
+
+Ngoài tính quan sát một phần, bài toán còn khó vì phân phối trạng thái thay đổi theo từng lượt chơi. Bản đồ được chọn từ nhiều bản đồ dạng văn bản khác nhau, vị trí sinh có thể cố định hoặc ngẫu nhiên theo giai đoạn curriculum, kẻ địch và đạn di chuyển liên tục, còn phần thưởng hoàn thành phòng chỉ xuất hiện sau khi tác nhân tiêu diệt đủ mục tiêu. Vì vậy, thiết kế $O$ phải cân bằng giữa hai yêu cầu: đủ giàu để mô tả tình huống chiến đấu tức thời, nhưng đủ gọn để PPO học hiệu quả trong ngân sách huấn luyện của đề tài.
 
 \section{Không gian quan sát}
 
@@ -133,11 +154,11 @@ Thiết kế này cố ý tách rõ thông tin người chơi, kẻ địch, đ�
 
 \section{Không gian hành động}
 
-Trong chiến đấu thời gian thực, tại mỗi bước tác nhân phải đồng thời quyết định: đi đâu, có tấn công/dash hay không, và nếu tấn công thì ngắm hướng nào. Một không gian hành động một chiều (ví dụ 81 hành động phẳng) sẽ buộc PPO học từng tổ hợp như một hành động riêng, trong khi các quyết định này có phần độc lập với nhau.
+Trong chiến đấu thời gian thực, tại mỗi bước tác nhân phải đồng thời quyết định: đi đâu, có tấn công/lướt hay không, và nếu tấn công thì ngắm hướng nào. Một không gian hành động một chiều (ví dụ 81 hành động phẳng) sẽ buộc PPO học từng tổ hợp như một hành động riêng, trong khi các quyết định này có phần độc lập với nhau.
 
 Vì vậy, đề tài dùng không gian hành động rời rạc đa nhánh, tách bốn quyết định gần như độc lập thành bốn nhánh riêng. Actor sinh bốn phân phối xác suất song song; tổ hợp tổng thể là 243 hành động nhưng tham số học cho mỗi nhánh nhỏ hơn nhiều so với một softmax 243 phần tử.
 
-CombatAgent sử dụng không gian hành động rời rạc nhiều nhánh gồm bốn nhánh với kích thước $(3,3,3,9)$. Cách biểu diễn này cho phép tách riêng các quyết định điều khiển quan trọng trong mỗi bước thời gian: di chuyển theo trục X, di chuyển theo trục Y, lệnh chiến đấu và hướng ngắm. Nhờ đó, tác nhân không chỉ chọn một hành vi tổng quát, mà có thể phối hợp đồng thời giữa di chuyển, tấn công, dash và ngắm bắn trong môi trường chiến đấu thời gian thực.
+CombatAgent sử dụng không gian hành động rời rạc nhiều nhánh gồm bốn nhánh với kích thước $(3,3,3,9)$. Cách biểu diễn này cho phép tách riêng các quyết định điều khiển quan trọng trong mỗi bước thời gian: di chuyển theo trục X, di chuyển theo trục Y, lệnh chiến đấu và hướng tấn công. Nhờ đó, tác nhân không chỉ chọn một hành vi tổng quát, mà có thể phối hợp đồng thời giữa di chuyển, tấn công, lướt và hướng tấn công trong môi trường chiến đấu thời gian thực.
 
 \begin{table}[H]
     \centering
@@ -152,7 +173,7 @@ CombatAgent sử dụng không gian hành động rời rạc nhiều nhánh g�
         \hline
         1 & 3 & moveY: không di chuyển theo trục Y, đi xuống, đi lên. \\
         \hline
-        2 & 3 & combat: không hành động, tấn công, dash. Các lựa chọn tấn công hoặc dash được loại bỏ bằng action mask khi vũ khí/kỹ năng chưa sẵn sàng. \\
+        2 & 3 & chiến đấu: không hành động, tấn công, lướt. Các lựa chọn tấn công hoặc lướt được lọc khỏi tập hành động hợp lệ khi vũ khí/kỹ năng chưa sẵn sàng. \\
         \hline
         3 & 9 & aim: giữ hướng cũ hoặc ngắm theo 8 hướng rời rạc. \\
         \hline
@@ -186,7 +207,7 @@ CombatAgent sử dụng không gian hành động rời rạc nhiều nhánh g�
 % Leaves
 \node[leafbox] (lX) at (-6.0,-3.6) {none\\left\\right};
 \node[leafbox] (lY) at (-2.0,-3.6) {none\\down\\up};
-\node[leafbox] (lC) at ( 2.0,-3.6) {none\\attack\\dash};
+\node[leafbox] (lC) at ( 2.0,-3.6) {không\\tấn công\\lướt};
 \node[leafbox] (lA) at ( 6.0,-3.6) {hold + 8 hướng:\\N, NE, E, SE,\\S, SW, W, NW};
 
 \draw[->, gray!70] (mX) -- (lX);
@@ -198,11 +219,10 @@ CombatAgent sử dụng không gian hành động rời rạc nhiều nhánh g�
 \node[totalbox] at (0,-5.0)
   {Tổng tổ hợp: $3 \times 3 \times 3 \times 9 = 243$\quad(81 tổ hợp \emph{di chuyển $\times$ ngắm} nếu bỏ qua combat)};
 \end{tikzpicture}
-\caption{Cấu trúc cây của không gian hành động $(3,3,3,9)$ của CombatAgent. Bốn nhánh được chọn độc lập tại mỗi bước, tạo 243 tổ hợp tổng cộng trước khi action mask loại bỏ các hành động không hợp lệ. Riêng tổ hợp di chuyển (9 hướng) $\times$ ngắm (9 hướng) đã đạt 81 trạng thái điều khiển.}
+\caption{Cấu trúc cây của không gian hành động $(3,3,3,9)$ của CombatAgent. Bốn nhánh được chọn độc lập tại mỗi bước, tạo 243 tổ hợp tổng cộng trước khi cơ chế lọc hành động hợp lệ loại bỏ các hành động không hợp lệ. Riêng tổ hợp di chuyển (9 hướng) $\times$ ngắm (9 hướng) đã đạt 81 trạng thái điều khiển.}
 \label{fig:action_space_tree}
 \end{figure}
 
-\newpage
 Tổ hợp hai nhánh moveX và moveY tạo ra 9 hướng di chuyển (bao gồm đứng yên), trong khi nhánh aim điều khiển hướng tấn công. Entropy cực đại lý thuyết của không gian hành động, nếu mọi lựa chọn đều hợp lệ và phân phối đều, là:
 
 \begin{equation}
@@ -210,7 +230,7 @@ Tổ hợp hai nhánh moveX và moveY tạo ra 9 hướng di chuyển (bao gồm
     \label{eq:max_entropy}
 \end{equation}
 
-Giá trị này được dùng lại trong Chương~4 khi phân tích hiện tượng bão hòa entropy. Lưu ý là action mask có thể làm entropy cực đại thực tế thấp hơn tại một số trạng thái, vì các hành động như tấn công hoặc dash không phải lúc nào cũng hợp lệ.
+Giá trị này được dùng lại trong Chương~4 khi phân tích hiện tượng bão hòa entropy. Lưu ý là cơ chế lọc hành động hợp lệ có thể làm entropy cực đại thực tế thấp hơn tại một số trạng thái, vì các hành động như tấn công hoặc lướt không phải lúc nào cũng hợp lệ.
 
 \section{Thiết kế hàm phần thưởng}
 
@@ -246,7 +266,7 @@ Hàm thưởng kết hợp phần thưởng kết quả thưa và phần thưở
     \end{tabular}
 \end{table}
 
-Bảng~\ref{tab:reward_components} chỉ liệt kê các thành phần chính. Trong hiện thực, mã nguồn còn có các tín hiệu nhỏ hơn như phạt theo thời gian, phạt nhận sát thương, thưởng dash hữu ích, phạt tấn công không hợp lệ và phần thưởng căn chỉnh hướng ngắm. Cấu hình v1 được dùng cho các lần chạy chính từ run34 đến run54. Cấu hình v2 được dùng trong run55 như một thí nghiệm thay đổi thang thưởng, vì vậy các giá trị phần thưởng trung bình của run55 không được so trực tiếp với các lần chạy v1.
+Bảng~\ref{tab:reward_components} chỉ liệt kê các thành phần chính. Trong hiện thực, mã nguồn còn có các tín hiệu nhỏ hơn như phạt theo thời gian, phạt nhận sát thương, thưởng lướt hữu ích, phạt tấn công không hợp lệ và phần thưởng căn chỉnh hướng tấn công. Cấu hình v1 được dùng cho các lần chạy chính từ run34 đến run54. Cấu hình v2 được dùng trong run55 như một thí nghiệm thay đổi thang thưởng, vì vậy các giá trị phần thưởng trung bình của run55 không được so trực tiếp với các lần chạy v1.
 
 \section{Sinh bản đồ bằng PCGNN và TilemapGenerator}
 
@@ -254,7 +274,7 @@ Bảng~\ref{tab:reward_components} chỉ liệt kê các thành phần chính. T
 
 Vì vậy, hệ thống được tách thành hai tầng: PCGNN chạy ngoại tuyến để sinh và kiểm tra hợp lệ, còn TilemapGenerator trong Unity chỉ đọc các bản đồ đã tuyển chọn. Cách này vừa giữ tính đa dạng vừa giảm rủi ro tích hợp lúc chạy.
 
-Môi trường huấn luyện dùng quy trình hai tầng. Tầng thứ nhất là PCGNN chạy ngoại tuyến ở phía Python để sinh nhiều bản đồ từ một genome đã huấn luyện. Tầng thứ hai là TilemapGenerator trong Unity, có nhiệm vụ đọc các bản đồ văn bản đã được tuyển chọn, chuyển thành tilemap, chọn vị trí sinh và đưa phòng vào lượt chơi huấn luyện. Thiết kế này giữ được tính đa dạng của PCGNN nhưng tránh việc gọi Python trực tiếp trong mỗi lượt chơi Unity, nhờ đó giảm rủi ro độ trễ và lỗi tích hợp trong quá trình huấn luyện.
+Môi trường huấn luyện dùng quy trình hai tầng. Tầng thứ nhất là PCGNN chạy ngoại tuyến ở phía Python để sinh nhiều bản đồ từ một genome đã huấn luyện. Tầng thứ hai là TilemapGenerator trong Unity, có nhiệm vụ đọc các bản đồ dạng văn bản đã được tuyển chọn, chuyển thành tilemap, chọn vị trí sinh và đưa phòng vào lượt chơi huấn luyện. Thiết kế này giữ được tính đa dạng của PCGNN nhưng tránh việc gọi Python trực tiếp trong mỗi lượt chơi Unity, nhờ đó giảm rủi ro độ trễ và lỗi tích hợp trong quá trình huấn luyện.
 
 NEAT tiến hóa quần thể genome qua nhiều thế hệ; mỗi genome mã hóa một mạng sinh tile. Fitness kết hợp tỷ lệ bản đồ hợp lệ, novelty nội bộ, novelty so với archive và độ phủ MAP-Elites. MAP-Elites chia không gian đặc trưng bản đồ (wall\_ratio, path\_length) thành các ô và lưu generator tốt nhất mỗi ô, ngăn quần thể hội tụ về một kiểu bản đồ duy nhất. Chi tiết cơ chế NEAT và novelty search trong \cite{Beukman2022}.
 
@@ -265,7 +285,7 @@ Mỗi bản đồ sau khi sinh được chuẩn hóa về định dạng văn b�
     \centering
     \begin{tikzpicture}[node distance=1.7cm, >=stealth, every node/.style={font=\small}]
         \node[draw, rounded corners, align=center, minimum width=2.7cm, minimum height=0.9cm] (pcgnn) {PCGNN\\genome};
-        \node[draw, rounded corners, align=center, right of=pcgnn, xshift=2.0cm, minimum width=2.9cm, minimum height=0.9cm] (adapter) {Bộ chuyển đổi\\text map};
+        \node[draw, rounded corners, align=center, right of=pcgnn, xshift=2.0cm, minimum width=2.9cm, minimum height=0.9cm] (adapter) {Bộ chuyển đổi\\dạng văn bản};
         \node[draw, rounded corners, align=center, right of=adapter, xshift=2.0cm, minimum width=3.0cm, minimum height=0.9cm] (metric) {BFS + chỉ số\\độ khó};
         \node[draw, rounded corners, align=center, below of=adapter, yshift=-0.4cm, minimum width=3.2cm, minimum height=0.9cm] (tiers) {Easy/Medium/Hard\\thư mục};
         \node[draw, rounded corners, align=center, right of=tiers, xshift=2.0cm, minimum width=3.0cm, minimum height=0.9cm] (unity) {TilemapGenerator\\lượt chơi Unity};
@@ -281,7 +301,7 @@ Mỗi bản đồ sau khi sinh được chuẩn hóa về định dạng văn b�
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.72\textwidth]{figures/map_gen.png}
-    \caption{Ví dụ bản đồ sau khi được dựng trong môi trường Unity từ text map}
+    \caption{Ví dụ bản đồ sau khi được dựng trong môi trường Unity từ bản đồ dạng văn bản}
     \label{fig:unity_generated_map_example}
 \end{figure}
 
@@ -317,7 +337,7 @@ Trong công thức~\ref{eq:map_difficulty_score}, \emph{wall\_ratio} được g�
     \end{tabular}
 \end{table}
 
-Trong Unity, TilemapGenerator không cần biết bản đồ được vẽ tay hay sinh bằng PCGNN. Thành phần này chỉ đọc text asset theo nhóm hiện tại, dựng tilemap và kiểm tra lại vùng có thể đi tới. Với các bài học dùng vị trí sinh cố định, TilemapGenerator ưu tiên ô sàn có độ phủ BFS tốt để tránh trường hợp người chơi hoặc kẻ địch bị cô lập. Với các bài học dùng vị trí sinh ngẫu nhiên, người chơi và kẻ địch được chọn từ các ô sàn hợp lệ nhằm tăng phương sai môi trường. Hình~\ref{fig:unity_tilemap_generator_inspector} minh họa cấu hình TilemapGenerator trong Inspector, trong đó Unity đang dùng chế độ curriculum với 5 bản đồ Easy, 5 bản đồ Medium và 50 bản đồ Hard.
+Trong Unity, TilemapGenerator không cần biết bản đồ được vẽ tay hay sinh bằng PCGNN. Thành phần này chỉ đọc \texttt{TextAsset} của Unity theo nhóm hiện tại, dựng tilemap và kiểm tra lại vùng có thể đi tới. Với các giai đoạn dùng vị trí sinh cố định, TilemapGenerator ưu tiên ô sàn có độ phủ BFS tốt để tránh trường hợp người chơi hoặc kẻ địch bị cô lập. Với các giai đoạn dùng vị trí sinh ngẫu nhiên, người chơi và kẻ địch được chọn từ các ô sàn hợp lệ nhằm tăng phương sai môi trường. Hình~\ref{fig:unity_tilemap_generator_inspector} minh họa cấu hình TilemapGenerator trong Inspector, trong đó Unity đang dùng chế độ curriculum với 5 bản đồ Easy, 5 bản đồ Medium và 50 bản đồ Hard.
 
 \begin{figure}[H]
     \centering
@@ -350,25 +370,25 @@ Bảng~\ref{tab:difficulty_spawn_policy} tóm tắt cách chọn bản đồ và
     }
 \end{table}
 
-Như vậy, độ khó không chỉ tăng vì bản đồ chuyển từ Easy sang Medium và Hard, mà còn vì phương sai vị trí sinh được mở rộng ở bài học Hard Random. Cách tách này giúp tác nhân học trước các kỹ năng cơ bản như tiếp cận, né đạn và căn hướng tấn công trong môi trường ít nhiễu hơn, rồi mới phải thích nghi với vị trí sinh thay đổi mạnh.
+Như vậy, độ khó không chỉ tăng vì bản đồ chuyển từ Easy sang Medium và Hard, mà còn vì phương sai vị trí sinh được mở rộng ở giai đoạn Hard Random. Cách tách này giúp tác nhân học trước các kỹ năng cơ bản như tiếp cận, né đạn và căn hướng tấn công trong môi trường ít nhiễu hơn, rồi mới phải thích nghi với vị trí sinh thay đổi mạnh.
 
 \section{Khung học theo chương trình}
 
 Khi tác nhân khởi tạo ngẫu nhiên và phải học ngay trên nhóm Hard, phần thưởng xuất hiện rất thưa; xác suất tình cờ dọn được phòng gần như bằng 0, nên PPO không có tín hiệu học hiệu quả. Để phục vụ MT2, hệ thống cần một cơ chế tạo tín hiệu học sớm mà không phải sửa thuật toán PPO.
 
-Curriculum learning tổ chức bài toán thành chuỗi từ dễ đến khó: bắt đầu ở Easy (mật độ tường thấp, không gian rộng) nơi tác nhân thường xuyên hoàn thành phòng, dùng EMA của phần thưởng làm điều kiện chuyển bài học sang Medium rồi Hard. ML-Agents cung cấp cơ chế truyền tham số \emph{difficulty} từ trainer xuống môi trường, gắn trực tiếp với TilemapGenerator.
+Curriculum learning tổ chức bài toán thành chuỗi từ dễ đến khó: bắt đầu ở Easy (mật độ tường thấp, không gian rộng) nơi tác nhân thường xuyên hoàn thành phòng, dùng EMA của phần thưởng làm điều kiện chuyển sang Medium rồi Hard. ML-Agents cung cấp cơ chế truyền tham số \emph{difficulty} từ trainer xuống môi trường, gắn trực tiếp với TilemapGenerator.
 
-Curriculum learning được dùng để giảm độ khó khám phá ban đầu \cite{Bengio2009}. Thay vì đưa tác nhân ngay vào toàn bộ nhóm Hard, hệ thống bắt đầu từ bản đồ dễ hơn, chuyển sang Medium khi phần thưởng làm mượt vượt ngưỡng, rồi mới chuyển sang nhóm bản đồ Hard. Tham số bài học được truyền qua Academy.Instance.EnvironmentParameters với tên difficulty.
+Curriculum learning được dùng để giảm độ khó khám phá ban đầu \cite{Bengio2009}. Thay vì đưa tác nhân ngay vào toàn bộ nhóm Hard, hệ thống bắt đầu từ bản đồ dễ hơn, chuyển sang Medium khi phần thưởng làm mượt vượt ngưỡng, rồi mới chuyển sang nhóm bản đồ Hard. Tham số độ khó được truyền qua Academy.Instance.EnvironmentParameters với tên difficulty.
 
 \begin{figure}[H]
     \centering
     \begin{tikzpicture}[>=stealth,
-        lesson/.style={draw, rounded corners, align=center, minimum width=3.0cm, minimum height=0.9cm, font=\small},
+        level/.style={draw, rounded corners, align=center, minimum width=3.0cm, minimum height=0.9cm, font=\small},
         transition/.style={font=\scriptsize, fill=white, inner sep=1.5pt}]
-        \node[lesson] (easy) at (0,0) {Lesson 0\\Easy};
-        \node[lesson] (medium) at (5.0,0) {Lesson 1\\Medium};
-        \node[lesson] (hard) at (10.0,0) {Lesson 2\\Hard};
-        \node[lesson, minimum width=3.2cm] (random) at (10.0,-1.8) {Lesson 3\\Hard Random};
+        \node[level] (easy) at (0,0) {Mức 0\\Easy};
+        \node[level] (medium) at (5.0,0) {Mức 1\\Medium};
+        \node[level] (hard) at (10.0,0) {Mức 2\\Hard};
+        \node[level, minimum width=3.2cm] (random) at (10.0,-1.8) {Mức 3\\Hard Random};
         \draw[->] (easy.east) -- node[transition, above]{thưởng $\geq T_0$} (medium.west);
         \draw[->] (medium.east) -- node[transition, above]{thưởng $\geq T_1$} (hard.west);
         \draw[->, dashed] (hard.south) -- node[transition, right]{thưởng $\geq T_2$} (random.north);
@@ -377,15 +397,15 @@ Curriculum learning được dùng để giảm độ khó khám phá ban đầu
     \label{fig:curriculum_structure}
 \end{figure}
 
-Trong run46, curriculum gồm 3 bài học: Easy, Medium và Hard. Trong run54, curriculum được mở rộng thành 4 bài học: \emph{Easy Fixed}, \emph{Medium Fixed}, \emph{Hard Fixed} và \emph{Hard Random}. Biến thể 4 bậc kiểm tra giả thuyết rằng việc giảm phương sai vị trí sinh ở giai đoạn đầu có thể giúp PPO ổn định hơn trước khi chuyển sang phân phối khó hơn.
+Trong run46, curriculum gồm 3 mức độ khó: Easy, Medium và Hard. Trong run54, curriculum được mở rộng thành 4 mức: \emph{Easy Fixed}, \emph{Medium Fixed}, \emph{Hard Fixed} và \emph{Hard Random}. Biến thể 4 bậc kiểm tra giả thuyết rằng việc giảm phương sai vị trí sinh ở giai đoạn đầu có thể giúp PPO ổn định hơn trước khi chuyển sang phân phối khó hơn.
 
-Cần phân biệt hai lớp tổ chức độ khó. Lớp thứ nhất là chia tập bản đồ PCGNN thành các thư mục Easy, Medium và Hard dựa trên chỉ số hình học. Lớp thứ hai là lịch chuyển bài học trong ML-Agents: trainer thay đổi tham số \emph{difficulty} khi phần thưởng làm mượt vượt ngưỡng, từ đó TilemapGenerator chọn thư mục bản đồ và chế độ sinh tương ứng.
+Cần phân biệt hai lớp tổ chức độ khó. Lớp thứ nhất là chia tập bản đồ PCGNN thành các thư mục Easy, Medium và Hard dựa trên chỉ số hình học. Lớp thứ hai là cơ chế chuyển mức độ khó trong ML-Agents: trainer thay đổi tham số \emph{difficulty} khi phần thưởng làm mượt vượt ngưỡng, từ đó TilemapGenerator chọn thư mục bản đồ và chế độ sinh tương ứng.
 
 \section{Kiến trúc mạng và cấu hình PPO}
 
-Để phục vụ MT1 và MT3, kiến trúc mạng và hyperparameter PPO cần đủ ổn định để các lần chạy ablation chỉ khác nhau ở \emph{đúng một biến} (curriculum, ICM, RND, LSTM\dots). Nếu không, chênh lệch kết quả có thể bị quy nhầm cho kỹ thuật được kiểm tra trong khi nguyên nhân thực sự nằm ở hyperparameter.
+Để phục vụ MT1 và MT3, kiến trúc mạng và các siêu tham số PPO cần đủ ổn định để các lần chạy thí nghiệm loại trừ chỉ khác nhau ở \emph{đúng một biến} (curriculum, ICM, RND, LSTM\dots). Nếu không, chênh lệch kết quả có thể bị quy nhầm cho kỹ thuật được kiểm tra trong khi nguyên nhân thực sự nằm ở siêu tham số.
 
-Cấu hình cơ sở vì vậy cố định MLP actor-critic hai lớp 256 đơn vị (hidden\_units=256, num\_layers=2) và giữ nguyên các hyperparameter PPO chính giữa các lần chạy ablation; chỉ thay đổi biến cần kiểm tra. Các lần chạy LSTM bổ sung bộ nhớ nhưng giữ phần MLP nền.
+Cấu hình cơ sở vì vậy cố định MLP actor-critic hai lớp 256 đơn vị (hidden\_units=256, num\_layers=2) và giữ nguyên các siêu tham số PPO chính giữa các lần chạy thí nghiệm loại trừ; chỉ thay đổi biến cần kiểm tra. Các lần chạy LSTM bổ sung bộ nhớ nhưng giữ phần MLP nền.
 
 Chính sách được huấn luyện bằng PPO trong Unity ML-Agents \cite{Juliani2018}. Cấu hình nền dùng mạng MLP actor-critic với hidden\_units=256, num\_layers=2, normalize=true. Actor head sinh phân phối xác suất cho bốn nhánh hành động, còn critic head ước lượng $V(s)$ để tính lợi thế theo GAE.
 
@@ -406,6 +426,6 @@ Chính sách được huấn luyện bằng PPO trong Unity ML-Agents \cite{Juli
     \label{fig:actor_critic_architecture}
 \end{figure}
 
-Một số lần chạy ablation bổ sung bộ nhớ LSTM với memory\_size=256 và sequence\_length=64 để kiểm tra giả thuyết rằng thông tin lịch sử có thể giúp tác nhân xử lý đạn, hồi chiêu và tình huống khuất tầm nhìn. Kết quả định lượng của các lựa chọn kiến trúc này được trình bày ở Chương~4.
+Một số lần chạy thí nghiệm loại trừ bổ sung bộ nhớ LSTM với memory\_size=256 và sequence\_length=64 để kiểm tra giả thuyết rằng thông tin lịch sử có thể giúp tác nhân xử lý đạn, hồi chiêu và tình huống khuất tầm nhìn. Kết quả định lượng của các lựa chọn kiến trúc này được trình bày ở Chương~4.
 
-Chính sách dùng MLP actor-critic (hidden\_units=256, num\_layers=2, normalize=true). Actor sinh phân phối xác suất cho 4 nhánh hành động; Critic ước lượng $V(s)$ làm mốc nền cho GAE. Các lần chạy LSTM bổ sung memory\_size=256, sequence\_length=64. Các hyperparameter PPO chính (learning\_rate=$3\times10^{-4}$, batch\_size=1024, buffer\_size=10240, num\_epoch=3, $\gamma$=0.99, $\lambda$=0.95, $\epsilon$=0.2, $\beta$=$5\times10^{-3}$) được giữ thống nhất giữa các lần chạy ablation run34--run54 để cô lập tác động của từng kỹ thuật. Chi tiết các thay đổi trong run62 được trình bày ở Chương~3.
+Chính sách dùng MLP actor-critic (hidden\_units=256, num\_layers=2, normalize=true). Actor sinh phân phối xác suất cho 4 nhánh hành động; Critic ước lượng $V(s)$ làm mốc nền cho GAE. Các lần chạy LSTM bổ sung memory\_size=256, sequence\_length=64. Các siêu tham số PPO chính (learning\_rate=$3\times10^{-4}$, batch\_size=1024, buffer\_size=10240, num\_epoch=3, $\gamma$=0.99, $\lambda$=0.95, $\epsilon$=0.2, $\beta$=$5\times10^{-3}$) được giữ thống nhất giữa các lần chạy thí nghiệm loại trừ run34--run54 để cô lập tác động của từng kỹ thuật. Chi tiết các thay đổi trong run62 được trình bày ở Chương~3.

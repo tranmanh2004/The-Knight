@@ -22,7 +22,7 @@ Chương này mô tả cách hiện thực hệ thống đã thiết kế ở Ch
         \hline
         run42 & + LSTM & Đánh giá vai trò bộ nhớ & MT3 \\
         \hline
-        run46 & + Curriculum (3 bài học) & Đánh giá curriculum learning & MT2 \\
+        run46 & + Curriculum (3 mức độ khó) & Đánh giá curriculum learning & MT2 \\
         \hline
         run47 & + Curriculum + LSTM & Đánh giá bổ trợ của LSTM & MT3 \\
         \hline
@@ -62,7 +62,7 @@ Môi trường game được xây dựng bằng Unity 6 và TopDown Engine. Ph�
         \hline
         Phần cứng & CPU 16 luồng, RAM 16GB, NVIDIA GeForce RTX 3050 6GB. \\
         \hline
-        Chế độ chạy & Build standalone, --no-graphics, time-scale=20, thường dùng 8 môi trường song song; một số run dùng 16 môi trường. \\
+        Chế độ chạy & Build standalone, --no-graphics, thường dùng 8 môi trường song song; một số run dùng 16 môi trường. \\
         \hline
     \end{tabular}
 \end{table}
@@ -71,7 +71,7 @@ Việc dùng build standalone thay vì chạy trực tiếp trong Editor giúp g
 
 \section{Hiện thực quy trình sinh bản đồ bằng PCGNN}
 
-Quy trình bản đồ được tách thành hai giai đoạn. Giai đoạn ngoại tuyến chạy trong môi trường Python của PCGNN để sinh, đánh giá và chia bản đồ theo độ khó. Giai đoạn trong Unity chạy thông qua TilemapGenerator để nạp bản đồ đã chọn vào lượt chơi huấn luyện. Cách tách này là cải tiến quan trọng so với phương án gọi bộ sinh trực tiếp từ Unity: quá trình huấn luyện ổn định hơn, bản đồ có thể được kiểm tra trước, và người thiết kế vẫn có quyền chọn những bản đồ phù hợp nhất trước khi đưa vào tập huấn luyện chính.
+Quy trình bản đồ được tách thành hai giai đoạn. Giai đoạn ngoại tuyến chạy trong môi trường Python của PCGNN để sinh, đánh giá và chia bản đồ theo độ khó. Giai đoạn trong Unity chạy thông qua TilemapGenerator để nạp bản đồ đã chọn vào lượt chơi huấn luyện. Cách tách này là cải tiến quan trọng so với phương án gọi bộ sinh trực tiếp từ Unity: quá trình huấn luyện ổn định hơn, bản đồ có thể được kiểm tra trước, và người thiết kế vẫn có quyền chọn những bản đồ phù hợp nhất trước khi đưa vào tập huấn luyện.
 
 Ở giai đoạn PCGNN, đề tài sử dụng genome đã huấn luyện \emph{winnerseed0.pkl}để sinh bản đồ. Mỗi ô bản đồ được sinh theo thứ tự quét từ trái sang phải, từ trên xuống dưới; mạng nhận ngữ cảnh cục bộ $3 \times 3$ xung quanh ô hiện tại cùng bốn đầu vào ngẫu nhiên, sau đó quyết định ô đó là tường hay sàn. Kết quả sau đó được bộ chuyển đổi chuyển sang text map của game.
 
@@ -103,7 +103,7 @@ Trong nghiên cứu gốc, PCGNN là bộ sinh level độc lập, được đá
         Xử lý vị trí người chơi và kẻ địch & Phụ thuộc vào biểu diễn của từng miền sinh bản đồ. & Adapter đặt P/E trên cùng thành phần liên thông lớn nhất và chọn hai vị trí cách xa nhau. \\
         Kiểm tra hợp lệ & Đánh giá bằng các chỉ số ngoại tuyến. & BFS xác nhận đường đi từ P tới E; TilemapGenerator kiểm tra lại vùng đi được khi nạp bản đồ. \\
         Chỉ số bổ sung & Các chỉ số PCGNN gồm leniency, A* difficulty, compression distance và A* diversity. & Bổ sung các chỉ số reachable\_ratio, dead\_end\_ratio và difficulty\_score để phục vụ chọn bản đồ cho curriculum. \\
-        Tổ chức dữ liệu & Không gắn với bài học của môi trường Unity. & Chia bản đồ thành Easy/Medium/Hard theo percentile để điều khiển độ khó huấn luyện. \\
+        Tổ chức dữ liệu & Không gắn với các giai đoạn độ khó của môi trường Unity. & Chia bản đồ thành Easy/Medium/Hard theo percentile để điều khiển độ khó huấn luyện. \\
         Tích hợp lúc chạy & Không hướng tới gọi trực tiếp trong Unity. & Tách bộ sinh ngoại tuyến và TilemapGenerator trong Unity để giảm độ trễ, tăng khả năng tái lập và cho phép kiểm tra bản đồ trước. \\
         \bottomrule
     \end{tabular}
@@ -166,7 +166,7 @@ Lưu ý là Bảng~\ref{tab:pcgnn_map_generation_summary} mô tả tập bản �
 
 \subsection{Kết quả sinh bản đồ}
 
-PCGNN được huấn luyện 200 thế hệ với NEAT. Fitness tốt nhất tăng nhanh trong 20 thế hệ đầu (0.208 → 0.413) rồi bão hòa ở vùng 0.42--0.44; novelty duy trì không về 0, cho thấy quần thể vẫn sinh ra nhiều kiểu bản đồ khác nhau. Genome \emph{inctyseed0.pkl} (seed 0) được chọn làm genome chính thức: reachable\_ratio trung bình 0.92 và A* difficulty 0.40, phản ánh cấu trúc bản đồ phức tạp hơn yêu cầu tìm đường cơ bản. Tập bản đồ cuối gồm 1000 bản đồ $14\times14$, 100\% hợp lệ theo BFS, chia 5 Easy / 5 Medium / 50 Hard đưa vào Unity.
+PCGNN được huấn luyện 200 thế hệ với NEAT. Fitness tốt nhất tăng nhanh trong 20 thế hệ đầu (0.208 → 0.413) rồi bão hòa ở vùng 0.42--0.44; novelty duy trì không về 0, cho thấy quần thể vẫn sinh ra nhiều kiểu bản đồ khác nhau. Genome \emph{winnerseed0.pkl} (seed 0) được chọn làm genome chính thức: reachable\_ratio trung bình 0.92 và A* difficulty 0.40, phản ánh cấu trúc bản đồ phức tạp hơn yêu cầu tìm đường cơ bản. Tập bản đồ cuối gồm 1000 bản đồ $14\times14$, 100\% hợp lệ theo BFS, chia 5 Easy / 5 Medium / 50 Hard đưa vào Unity.
 
 \begin{figure}[H]
     \centering
@@ -261,7 +261,7 @@ Các tham số PPO được chọn theo hướng ưu tiên ổn định hơn là
     \end{tabular}
 \end{table}
 
-Các cấu hình phần thưởng nội tại bổ sung tín hiệu nội tại từ ICM hoặc RND. Các cấu hình LSTM thêm bộ nhớ có kích thước 256 và chuỗi quan sát dài 64 bước. Các cấu hình curriculum thêm tham số \texttt{environment\_parameters.difficulty} để trainer tự chuyển bài học dựa trên phần thưởng đã làm mượt. Nhờ giữ nguyên phần lớn tham số PPO giữa các lần chạy, các khác biệt ở Chương~4 có thể được quy về yếu tố đang kiểm tra thay vì bị lẫn với thay đổi cấu hình huấn luyện.
+Các cấu hình phần thưởng nội tại bổ sung tín hiệu nội tại từ ICM hoặc RND. Các cấu hình LSTM thêm bộ nhớ có kích thước 256 và chuỗi quan sát dài 64 bước. Các cấu hình curriculum thêm tham số {environment\_parameters.difficulty} để trainer tự chuyển mức độ khó dựa trên phần thưởng đã làm mượt. Nhờ giữ nguyên phần lớn tham số PPO giữa các lần chạy, các khác biệt ở Chương~4 có thể được quy về yếu tố đang kiểm tra thay vì bị lẫn với thay đổi cấu hình huấn luyện.
 
 \section{Thiết kế thí nghiệm loại trừ}
 
@@ -301,7 +301,7 @@ Mỗi lần chạy trong ma trận trên được chạy một seed và dừng k
 Ngoài ma trận ablation chính, đề tài thực hiện thêm hai lần chạy mở rộng 
 về biểu diễn quan sát.
 
-\textbf{Run59 (path-informed).} Sau khi các lần chạy 207 chiều dừng ở vùng bão hòa entropy khoảng 4.40 nat, đề tài đặt giả thuyết giới hạn nằm ở biểu diễn quan sát, không phải thuật toán. Run59 kiểm tra giả thuyết này bằng cách bổ sung ba tín hiệu BFS vào vector quan sát (lên 210 chiều): hướng bước kế tiếp và khoảng cách chuẩn hóa tới kẻ địch gần nhất. Khác với 16 tia ray chỉ phản ánh tường tức thời, tín hiệu BFS mang thông tin đường đi toàn cục. Vì vậy run59 không được xem là cấu hình end-to-end thuần túy, mà là một ablation có chủ đích để đo xem thông tin điều hướng ảnh hưởng mạnh đến hiệu năng đến mức nào.
+\textbf{Run59 (path-informed).} Sau khi các lần chạy 207 chiều dừng ở vùng bão hòa entropy khoảng 4.40 nat, đề tài đặt giả thuyết giới hạn nằm ở biểu diễn quan sát, không phải thuật toán. Run59 kiểm tra giả thuyết này bằng cách bổ sung ba tín hiệu BFS vào vector quan sát (lên 210 chiều): hướng bước kế tiếp và khoảng cách chuẩn hóa tới kẻ địch gần nhất. Khác với 16 tia ray chỉ phản ánh tường tức thời, tín hiệu BFS mang thông tin đường đi toàn cục. Vì vậy run59 không được xem là cấu hình đầu cuối thuần túy, mà là một ablation có chủ đích để đo xem thông tin điều hướng ảnh hưởng mạnh đến hiệu năng đến mức nào.
 
 \textbf{Run62 (lưới cục bộ, 40.82M bước).} Run62 đi theo hướng thận trọng hơn run59: thay vì đưa trực tiếp hướng đi BFS vào quan sát, cấu hình này bổ sung lưới chiếm chỗ cục bộ $15\times15$ (225 chiều) để tác nhân tự khai thác cấu trúc sàn/tường quanh mình. Tổng kích thước quan sát tăng lên \textbf{432 chiều}. Cấu hình này đồng thời dùng curriculum 4 bậc, ICM (strength 0.001), bật tham số \texttt{aggressive\_seek}, chạy 8 môi trường song song và được huấn luyện 40.82M bước trong hai phiên liên tiếp. Vì run62 thay đổi nhiều yếu tố cùng lúc, kết quả của nó được xem là thí nghiệm thăm dò mở rộng: cho thấy hướng biểu diễn không gian có tiềm năng, nhưng chưa đủ để kết luận riêng lưới cục bộ là nguyên nhân duy nhất tạo cải thiện.
 

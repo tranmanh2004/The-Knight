@@ -1,0 +1,14 @@
+\clearpage
+\phantomsection
+
+\addcontentsline{toc}{chapter}{Tóm tắt}
+\chapter*{\fontsize{13}{13}\selectfont\textbf{TÓM TẮT}}
+
+\noindent\textbf{Tóm tắt:} Khóa luận nghiên cứu và triển khai một tác nhân học tăng cường sâu cho game hành động Roguelike góc nhìn từ trên xuống trong Unity. Tác nhân chính, CombatAgent, sử dụng quan sát vector 207 chiều và không gian hành động rời rạc nhiều nhánh $(3,3,3,9)$ để phối hợp di chuyển, chiến đấu, lướt (dash) và hướng tấn công. Môi trường huấn luyện được mở rộng bằng quy trình PCGNN sinh bản đồ ngoại tuyến, bộ chuyển đổi chuyển bản đồ sang định dạng của game, bộ kiểm tra khả năng đi tới và cơ chế chia bản đồ thành các mức Easy, Medium và Hard phục vụ học theo chương trình (curriculum learning).
+
+Trên nền PPO của Unity ML-Agents, khóa luận thực hiện ma trận thí nghiệm loại trừ (ablation) gồm chín cấu hình: ICM, RND, LSTM, curriculum learning và biến thể hàm thưởng. Curriculum learning cải thiện rõ nhất: phần thưởng tăng từ 2.073 ở cấu hình PPO cơ sở lên 3.843 ở vùng Hard (+85\%). Bổ sung tín hiệu tìm đường BFS vào quan sát (run59) làm tỷ lệ hoàn thành phòng tăng mạnh, cho thấy điều hướng là nút thắt chính của môi trường. Cấu hình mở rộng run62 -- quan sát lưới chiếm chỗ cục bộ, curriculum 4 bậc, ICM và huấn luyện dài 40.82M bước -- đạt clear\_rate 0.666 và entropy 3.048, vượt qua vùng bão hòa entropy 4.40 nat; do đa biến nên được hiểu như bằng chứng thăm dò.
+
+Do giới hạn tài nguyên, mỗi cấu hình mới chỉ được chạy một seed và quy mô huấn luyện giữa nhóm không dùng curriculum learning và nhóm dùng curriculum learning chưa hoàn toàn đồng nhất. Vì vậy, các kết luận định lượng được diễn giải như xu hướng thực nghiệm ban đầu, đồng thời khóa luận đề xuất các hướng mở rộng như chạy nhiều seed, bổ sung mốc so sánh dựa trên luật, đánh giá trên bản đồ chưa từng thấy và thiết kế lại không gian hành động.
+
+\vspace{0.5cm}
+\noindent{\textbf{Từ khóa:}} \textit{Học tăng cường sâu, Game Roguelike, Procedural Content Generation (PCG), PPO (Proximal Policy Optimization), curriculum learning, tác nhân tự chủ}
