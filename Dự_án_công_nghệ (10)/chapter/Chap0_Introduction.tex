@@ -1,0 +1,91 @@
+\clearpage
+\phantomsection
+
+\addcontentsline{toc}{chapter}{{Mở đầu}}
+\chapter*{Mở đầu}
+
+\noindent{\Large \textbf{Bài toán}}
+
+Game hành động Roguelike đặt ra ba thách thức đồng thời cho tác nhân học tăng cường. Thứ nhất, \textit{phân phối bản đồ thay đổi theo từng lượt chơi (episode)}: tác nhân không thể ghi nhớ bố cục cố định mà phải khái quát hóa qua nhiều cấu hình không gian, vị trí sinh và cách bố trí vật cản khác nhau. Thứ hai, \textit{không gian hành động đa nhánh $(3,3,3,9)$}: tác nhân phải phối hợp di chuyển, chiến đấu và hướng tấn công trong thời gian thực. Thứ ba, \textit{phần thưởng thưa thớt và bị trì hoãn}: các tín hiệu quan trọng như tiêu diệt kẻ địch hoặc dọn sạch phòng chỉ xuất hiện sau chuỗi tiếp cận, né tránh, căn hướng và tấn công.
+
+Sự kết hợp của ba thách thức này khiến các kỹ thuật đơn lẻ như phần thưởng nội tại (ICM, RND) hay bộ nhớ tuần tự (LSTM) chưa chắc tạo ra cải thiện rõ rệt, từ đó đặt ra câu hỏi: cần kết hợp cơ chế nào để tác nhân học được hành vi chiến đấu hiệu quả trên môi trường có bản đồ sinh tự động?
+
+\vspace{0.3cm}
+\noindent\textbf{Phát biểu bài toán.} Cho môi trường Unity tạo phòng chiến đấu Roguelike tự động ở mỗi lượt chơi, đề tài huấn luyện một tác nhân học tăng cường tự điều khiển nhân vật trong phòng. Mỗi lượt chơi diễn ra trong một phòng kín gồm các ô sàn có thể di chuyển, tường/vật cản và một số kẻ địch. Tác nhân có máu, vũ khí và kỹ năng lướt; kẻ địch có máu riêng và có thể tấn công bằng đạn. Lượt chơi kết thúc khi tác nhân dọn sạch toàn bộ kẻ địch, hết máu hoặc hết thời gian.
+
+Ở mỗi bước quyết định, tác nhân chỉ nhận quan sát hiện thời từ môi trường, tự chọn hành động di chuyển--chiến đấu--định hướng, sau đó nhận phản hồi từ trạng thái mới và phần thưởng tương ứng để tích lũy kinh nghiệm. Nói cách khác, tác nhân không được điều khiển bằng luật viết tay cho từng tình huống, mà học chính sách $\pi_\theta(a|s)$ thông qua quá trình tự chơi nhiều lượt trong môi trường huấn luyện và dần cải thiện hành vi qua dữ liệu tương tác.
+
+Bài toán cần tìm một chính sách $\pi_\theta(a|s)$ thỏa mãn:
+
+\begin{itemize}
+    \item \textbf{Đầu vào (quan sát $s_t$)}: vector cấu trúc mô tả trạng thái tác nhân, kẻ địch trong tầm nhìn, đạn đang bay và tường xung quanh (cấu hình cơ sở: 207 chiều).
+    \item \textbf{Đầu ra (hành động $a_t$)}: hành động rời rạc đa nhánh gồm bốn thành phần $(3,3,3,9)$. Hai nhánh đầu điều khiển di chuyển theo trục X và Y, mỗi nhánh có ba lựa chọn âm/không/dương. Nhánh thứ ba biểu diễn ý định chiến đấu gồm không hành động, tấn công hoặc lướt. Nhánh cuối biểu diễn hướng ngắm, gồm lựa chọn giữ hướng hiện tại hoặc một trong tám hướng rời rạc. Do đó, một hành động tại thời điểm $t$ không phải là một lệnh đơn lẻ, mà là tổ hợp đồng thời giữa di chuyển, lựa chọn kỹ năng và hướng tác động.
+    \item \textbf{Hàm thưởng $r_t$}: kết hợp tín hiệu kết quả thưa (hạ kẻ địch, dọn phòng) và tín hiệu định hình dày (tiếp cận, căn hướng tấn công).
+    \item \textbf{Mục tiêu tối ưu}: tìm chính sách $\pi_\theta$ cực đại hóa kỳ vọng tổng phần thưởng qua nhiều lượt tự chơi, qua đó học hành vi sống sót, né đạn, tấn công và dọn sạch kẻ địch trong phòng.
+\end{itemize}
+
+\vspace{0.5cm}
+\noindent{\Large \textbf{Mục tiêu đề tài}}
+
+\textbf{Mục tiêu tổng quát.} Đề tài hướng tới xây dựng và đánh giá một tác nhân học tăng cường sâu có khả năng chiến đấu hiệu quả trong môi trường game Roguelike với bản đồ sinh tự động. Mục tiêu định lượng chính là đạt tỷ lệ dọn phòng tail-50 tối thiểu $0.5$ trên nhóm bản đồ Khó, đồng thời làm rõ vai trò của học theo lộ trình, phần thưởng nội tại, bộ nhớ tuần tự và biểu diễn quan sát đối với hiệu năng của tác nhân.
+
+Từ mục tiêu tổng quát trên, đề tài xác định bốn mục tiêu cụ thể sau:
+
+\renewcommand{\labelitemi}{$-$}
+\begin{itemize}
+    \item \textbf{MT1}: Xây dựng tác nhân RL có thể dọn phòng ổn định trên nhóm bản đồ Khó, với mục tiêu đạt \textit{clear\_rate} tail-50 tối thiểu $0.5$ và tăng số kẻ địch bị tiêu diệt trung bình mỗi lượt (\textit{kills/episode}).
+    \item \textbf{MT2}: Giảm ảnh hưởng của phần thưởng thưa thớt và phân phối bản đồ thay đổi bằng cách kết hợp học theo lộ trình (\emph{curriculum learning}, CL) với bản đồ do PCGNN sinh; cấu hình có CL được kỳ vọng cải thiện phần thưởng hoặc \textit{clear\_rate} trên nhóm Khó ít nhất $20\%$ so với PPO cơ sở.
+    \item \textbf{MT3}: Xác định kỹ thuật hỗ trợ nào trong ICM, RND và LSTM tạo ra cải thiện đáng kể thông qua ma trận thí nghiệm cô lập biến; một kỹ thuật được xem là có tác động rõ khi cải thiện phần thưởng hoặc \textit{clear\_rate} trên $20\%$ so với cấu hình đối chứng phù hợp.
+    \item \textbf{MT4}: Khảo sát ảnh hưởng của biểu diễn quan sát và tín hiệu điều hướng đến hiệu năng của tác nhân; mục tiêu là xác định liệu việc bổ sung thông tin không gian phù hợp hơn có giúp giảm entropy chính sách, cải thiện \textit{clear\_rate} và tiến gần hơn tới mục tiêu dọn phòng trên nhóm bản đồ Khó hay không.
+\end{itemize}
+
+\vspace{0.5cm}
+\noindent{\Large \textbf{Giải pháp đề xuất}}
+
+Để đạt được các mục tiêu này, đề tài xây dựng một quy trình huấn luyện hoàn chỉnh gồm bốn thành phần chính: (1) PCGNN sinh bản đồ và BFS kiểm tra tính hợp lệ; (2) bộ phân loại độ khó chia bản đồ thành Dễ/Trung bình/Khó và TilemapGenerator nạp vào Unity theo CL; (3) CombatAgent với vector quan sát cấu trúc và không gian hành động đa nhánh huấn luyện bằng PPO; (4) các thí nghiệm mở rộng về biểu diễn quan sát và tín hiệu điều hướng nhằm khảo sát nút thắt không gian của bài toán. Ma trận thí nghiệm cô lập biến gồm 9 lần chạy chính để đánh giá các kỹ thuật huấn luyện; các cấu hình mở rộng được trình bày chi tiết ở Chương~3 và phân tích ở Chương~4.
+
+\textbf{Cải tiến từ bài báo PCGNN \cite{Beukman2022}.} Quy trình sinh bản đồ kế thừa NEAT + novelty search của Beukman và cộng sự, nhưng được điều chỉnh ba điểm để phục vụ bài toán chiến đấu Roguelike thay vì sinh mê cung: (i) bộ hậu xử lý đặt vị trí tác nhân/kẻ địch (P/E) trên cùng thành phần liên thông và kiểm tra BFS để bảo đảm tương tác chiến đấu hợp lệ; (ii) thay nhóm chỉ số gốc (leniency, A* difficulty, compression distance) bằng \emph{reachable\_ratio}, \emph{dead\_end\_ratio} và \emph{difficulty\_score} -- ba chỉ số phản ánh trực tiếp không gian di chuyển và né đạn; (iii) tách generator chạy ngoại tuyến để tránh phụ thuộc Python--Unity lúc huấn luyện, đồng thời cho phép kiểm tra bản đồ trước khi đưa vào tập huấn luyện. Chi tiết các cải tiến này được trình bày ở Chương~3.
+
+\vspace{0.5cm}
+\noindent{\Large \textbf{Câu hỏi nghiên cứu}}
+
+Từ các mục tiêu trên, đề tài xác định ba câu hỏi nghiên cứu chính:
+
+\renewcommand{\labelitemi}{$-$}
+\begin{itemize}
+    \item \textbf{Q1}: Trong số ICM, RND, LSTM và CL, kỹ thuật nào tạo ra cải thiện lớn nhất khi huấn luyện tác nhân chiến đấu trong môi trường Roguelike có bản đồ sinh tự động?
+    \item \textbf{Q2}: Khi kết hợp CL với các kỹ thuật trên, có xuất hiện hiệu ứng bổ trợ rõ rệt hay không?
+    \item \textbf{Q3}: Biểu diễn quan sát và tín hiệu điều hướng ảnh hưởng như thế nào đến khả năng học hành vi dọn phòng của tác nhân?
+\end{itemize}
+
+Để trả lời các câu hỏi này, đề tài triển khai ma trận thí nghiệm cô lập biến gồm chín lần chạy chính và một số thí nghiệm mở rộng về biểu diễn quan sát. Do nhóm không dùng CL chủ yếu dừng ở 1M bước còn nhóm dùng CL chạy đến 3M bước, các so sánh được hiểu là xu hướng giữa các cấu hình đã thực nghiệm, chưa phải so sánh tuyệt đối tại cùng số bước huấn luyện. Mỗi cấu hình chỉ được chạy một seed; vì vậy kết luận chưa có khoảng tin cậy thống kê.
+
+\vspace{0.3cm}
+
+\noindent{\Large \textbf{Đóng góp của đề tài}}
+
+Thông qua quá trình nghiên cứu, triển khai và thực nghiệm, đề tài đạt được các đóng góp chính sau:
+
+\renewcommand{\labelitemi}{$-$}
+\begin{itemize}
+    \item Xây dựng quy trình huấn luyện DRL cho game Roguelike trong Unity kết hợp PCGNN, CL và PPO.
+    \item \textbf{Cải tiến PCGNN cho bài toán chiến đấu} so với thiết lập gốc của Beukman \cite{Beukman2022}: bổ sung bộ hậu xử lý đặt P/E + kiểm tra BFS, thay nhóm chỉ số gốc bằng \emph{reachable\_ratio}/\emph{dead\_end\_ratio}/\emph{difficulty\_score} phù hợp với không gian chiến đấu, và tách generator ngoại tuyến để tăng độ ổn định huấn luyện.
+    \item Thiết kế CombatAgent với quan sát 207 chiều và không gian hành động đa nhánh $(3,3,3,9)$, phù hợp cho bài toán di chuyển--ngắm--chiến đấu đồng thời.
+    \item Bằng chứng thực nghiệm cho thấy CL cải thiện phần thưởng trung bình \textbf{+85\%} (2.073 → 3.843) so với cấu hình PPO cơ sở trong phạm vi các lần chạy đã thực hiện; kết luận này cần được kiểm tra thêm ở cùng số bước huấn luyện.
+    \item Phát hiện vùng bão hòa entropy 4.40 nat nhất quán trên nhóm thí nghiệm cô lập biến 207 chiều, cho thấy quan sát thiếu đặc trưng không gian và quy mô huấn luyện là hai yếu tố cần được kiểm tra sâu hơn.
+    \item Run59 (bổ sung tín hiệu dẫn đường BFS) cho thấy tìm đường là một nút thắt quan trọng; run62 (432 chiều, 40.82M bước) đưa entropy xuống 3.048 nat và đạt tỷ lệ dọn phòng 0.666 dù không được cung cấp trực tiếp hướng đi tối ưu, nhưng vẫn là cấu hình mở rộng nhiều biến.
+\end{itemize}
+
+\vspace{0.3cm}
+
+\noindent{\Large \textbf{Bố cục của dự án}}
+
+\renewcommand{\labelitemi}{$-$}
+\begin{itemize}
+	\item \textbf{Mở đầu}: Bài toán, mục tiêu của đề tài, giải pháp tổng quan và câu hỏi nghiên cứu.
+	\item \textbf{Chương 1}: Cơ sở lý thuyết -- RL, PPO, GAE và các kỹ thuật hỗ trợ (ICM, RND, LSTM, PCGNN, CL), phân tích hạn chế và cách đề tài xử lý. Giới thiệu đặc trưng của Roguelike làm nền tảng cho thiết kế.
+	\item \textbf{Chương 2}: Thiết kế hệ thống -- Tổng quan quy trình huấn luyện hoàn chỉnh, đặc tả POMDP, quan sát, không gian hành động, hàm phần thưởng, quy trình PCGNN và khung học theo lộ trình.
+	\item \textbf{Chương 3}: Cài đặt và thực nghiệm -- Môi trường phần cứng/phần mềm, CombatAgent, cấu hình PPO, ma trận thí nghiệm cô lập biến chính và hai thí nghiệm mở rộng run59/run62.
+	\item \textbf{Chương 4}: Kết quả thực nghiệm -- Độ đo và tiêu chí đánh giá, sau đó phân tích kết quả theo câu hỏi nghiên cứu: kỹ thuật khám phá, CL, vùng bão hòa entropy và nút thắt quan sát.
+	\item \textbf{Chương 5}: Tổng kết kết quả, hạn chế và hướng nghiên cứu tiếp theo.
+\end{itemize}

@@ -1,0 +1,81 @@
+\clearpage
+\phantomsection
+
+\addcontentsline{toc}{chapter}{{Kết luận và hướng nghiên cứu tiếp theo}}
+\chapter*{Kết luận và hướng nghiên cứu tiếp theo}
+
+\noindent{\Large \textbf{Tổng kết kết quả}}
+
+Khóa luận đã xây dựng và đánh giá một tác nhân học tăng cường sâu cho môi trường game Roguelike sinh bản đồ tự động. Hệ thống kết hợp CombatAgent trong Unity ML-Agents, huấn luyện PPO, quy trình sinh bản đồ PCGNN, kiểm tra BFS và học theo lộ trình để xử lý bài toán chiến đấu trong môi trường có bản đồ thay đổi theo từng lượt chơi.
+
+Đối chiếu với các mục tiêu ở phần Mở đầu, kết quả đạt được có thể tóm tắt ngắn gọn như sau:
+
+\renewcommand{\labelitemi}{$-$}
+\begin{itemize}
+    \item \textbf{MT1}: Cấu hình mở rộng run62 đạt \textit{clear\_rate} tail-50 là 0.666, vượt ngưỡng mục tiêu 0.5 trong phạm vi tập bản đồ thực nghiệm.
+    \item \textbf{MT2}: Học theo lộ trình (CL) là kỹ thuật cải thiện rõ nhất trong nhóm thí nghiệm chính, giúp tăng phần thưởng trung bình khoảng 85\% so với PPO cơ sở.
+    \item \textbf{MT3}: ICM, RND và LSTM cung cấp thêm tín hiệu khám phá hoặc bộ nhớ, nhưng chưa tạo cải thiện lớn khi chạy độc lập trên quan sát 207 chiều.
+    \item \textbf{MT4/Q3}: Run59 và run62 cho thấy biểu diễn không gian là nút thắt quan trọng; khi bổ sung thông tin điều hướng hoặc lưới cục bộ, chính sách học ổn định hơn và entropy giảm rõ hơn.
+\end{itemize}
+
+Nhìn chung, đề tài đạt được mục tiêu xây dựng một quy trình RL hoàn chỉnh và thu được bằng chứng thực nghiệm ban đầu về vai trò của CL, tín hiệu điều hướng và biểu diễn quan sát. Kết quả cho thấy tác nhân có thể học các hành vi chiến đấu cơ bản và cải thiện rõ khi huấn luyện được tổ chức theo độ khó bản đồ hoặc khi quan sát cung cấp thông tin không gian phù hợp hơn. Tuy nhiên, các kết quả cần được hiểu thận trọng vì mỗi cấu hình mới chạy một seed, số bước huấn luyện chưa hoàn toàn đồng nhất và một số cấu hình mở rộng thay đổi nhiều yếu tố cùng lúc.
+
+\vspace{0.5cm}
+\noindent{\Large \textbf{Đóng góp của khóa luận}}
+
+Khóa luận đem lại bốn đóng góp chính:
+
+\renewcommand{\labelitemi}{$-$}
+\begin{itemize}
+    \item \textbf{Xây dựng quy trình RL hoàn chỉnh cho Roguelike sinh bản đồ}: từ sinh bản đồ, kiểm tra tính hợp lệ, chia độ khó, nạp bản đồ vào Unity đến huấn luyện CombatAgent bằng PPO.
+
+    \item \textbf{Điều chỉnh PCGNN cho bài toán chiến đấu}: bổ sung hậu xử lý đặt vị trí tác nhân/kẻ địch, kiểm tra đường đi bằng BFS và dùng các chỉ số độ khó phù hợp hơn với không gian di chuyển trong Roguelike.
+
+    \item \textbf{Thiết kế CombatAgent cho điều khiển đồng thời}: tác nhân sử dụng quan sát vector và không gian hành động rời rạc đa nhánh $(3,3,3,9)$ để phối hợp di chuyển, ngắm, tấn công và lướt.
+
+    \item \textbf{Phân tích thực nghiệm các kỹ thuật hỗ trợ}: kết quả chỉ ra CL là hướng hiệu quả nhất trong nhóm thí nghiệm chính, đồng thời phát hiện vùng bão hòa entropy và nút thắt biểu diễn không gian.
+\end{itemize}
+
+\vspace{0.5cm}
+\noindent{\Large \textbf{Hạn chế}}
+
+Khóa luận còn một số hạn chế chính:
+
+\renewcommand{\labelitemi}{$-$}
+\begin{itemize}
+    \item \textbf{Độ tin cậy thống kê còn hạn chế}: mỗi cấu hình chỉ chạy một seed, nên các chênh lệch nhỏ chưa đủ để kết luận chắc chắn.
+
+    \item \textbf{Ngân sách huấn luyện chưa đồng nhất}: nhóm không dùng CL và nhóm dùng CL có số bước huấn luyện khác nhau, còn run62 được huấn luyện dài hơn đáng kể.
+
+    \item \textbf{Khả năng khái quát hóa chưa được kiểm tra đầy đủ}: khóa luận chưa có tập bản đồ giữ riêng đủ lớn để đánh giá tác nhân trên các bố cục hoàn toàn chưa thấy.
+
+    \item \textbf{Một số nguyên nhân chưa được cô lập}: run59 dùng hỗ trợ BFS, còn run62 thay đổi đồng thời quan sát, CL, ICM, siêu tham số và thời lượng huấn luyện.
+\end{itemize}
+
+\vspace{0.5cm}
+\noindent{\Large \textbf{Hướng nghiên cứu tiếp theo}}
+
+Từ các kết quả và hạn chế trên, khóa luận đề xuất các hướng phát triển sau:
+
+\renewcommand{\labelitemi}{$-$}
+\begin{itemize}
+    \item \textbf{Chạy lại các cấu hình quan trọng với nhiều seed và cùng ngân sách} để kiểm tra độ ổn định của kết luận về CL, ICM/RND/LSTM và run62.
+
+    \item \textbf{Tách riêng các yếu tố của run62} bằng các thí nghiệm chỉ thay đổi một thành phần như lưới quan sát, số bước huấn luyện, ICM hoặc siêu tham số PPO.
+
+    \item \textbf{Bổ sung đánh giá khái quát hóa} trên tập bản đồ giữ riêng, đồng thời dùng thêm tác nhân heuristic làm mốc so sánh cho điều hướng và chiến đấu.
+
+    \item \textbf{Cải tiến biểu diễn quan sát và không gian hành động} thông qua lưới cục bộ, đặc trưng đường đi học được, lọc hành động hợp lệ theo ngữ cảnh hoặc học bắt chước để khởi tạo chính sách.
+
+    \item \textbf{Mở rộng quy trình sinh bản đồ} theo hướng CL thích ứng, trong đó độ khó bản đồ được điều chỉnh dựa trên năng lực hiện tại của tác nhân.
+\end{itemize}
+
+\vspace{0.5cm}
+\noindent{\Large \textbf{Mã nguồn}}
+
+Mã nguồn và tài liệu liên quan được cập nhật tại:
+\renewcommand{\labelitemi}{$-$}
+\begin{itemize}
+    \item Tác nhân và môi trường Unity: \url{https://github.com/tranmanh2004/The-Knight}
+    \item Bộ sinh bản đồ PCGNN: \url{https://github.com/tranmanh2004/pcgnn}
+\end{itemize}
