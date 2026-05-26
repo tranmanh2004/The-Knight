@@ -11,7 +11,7 @@ using System.Collections.Generic;
 /// 
 /// OBSERVATION SPECIFICATION:
 /// ===========================
-/// Total observation size: 210 dimensions
+/// Total observation size: 432 dimensions
 ///
 /// Player Features (13 dims):
 ///   - Health (1), Ammo (1), Cooldown (1), WeaponReady (1), Speed (1)
@@ -31,10 +31,10 @@ using System.Collections.Generic;
 /// Wall Features (16 dims = WALL_RAY_COUNT rays × 1):
 ///   - 16 rays every 22.5°: normalized distance to nearest wall (0=touching, 1=nothing in range)
 ///
-/// Path-to-Enemy Features (3 dims):
-///   - BFS next-step direction X,Y (2), normalized shortest-path distance to nearest living enemy (1)
+/// Local Occupancy Grid (225 dims = 15x15 walkability cells):
+///   - Agent-centered floor/wall grid, 1=walkable floor and 0=wall/outside/unknown
 ///
-/// Total = 13 + 4 + 3 + 54 + 120 + 16 = 210 dims
+/// Total = 13 + 4 + 225 + 54 + 120 + 16 = 432 dims
 ///
 /// CRITICAL: If changing MaxEnemies, MaxBullets, or WALL_RAY_COUNT,
 /// update BehaviorParameters.VectorObservationSize in the Unity Inspector to match!
@@ -51,17 +51,28 @@ public class CombatAgent : Agent
 {
     // Reward tuning is intentionally code-only. Keeping these non-serialized
     // prevents scenes/prefabs from silently overriding training experiments.
+    // --- A. Terminal / Kết quả thật ---
     private const float DealDamageReward = 1.0f;
+    private const float DamageRewardPerPoint = 0.04f;
     private const float TakeDamagePenalty = -0.3f;
+    private const float DamageTakenPenaltyPerPoint = 0.006f;
     private const float KillEnemyReward = 3.0f;
     private const float AllEnemiesKilledReward = 5.0f;
     private const float AgentDiedPenalty = -2.0f;
-    private const float TimePenalty = -0.0005f;
-    private const float DodgeSuccessReward = 0.1f;
-    private const float DamageRewardPerPoint = 0.04f;
-    private const float DamageTakenPenaltyPerPoint = 0.006f;
+
+    // --- B. Định vị & Tiếp cận ---
     private const float ApproachTargetReward = 0.008f;
     private const float MoveAwayFromTargetPenalty = -0.001f;
+    private const float IdleNearEnemyPenalty = -0.0005f;
+    private const float AggressiveSeekProgressReward = 0.1f;
+    private const float AggressiveSeekProgressRewardCap = 0.12f;
+    private const float AggressiveSeekDirectionReward = 0.01f;
+    private const float AggressiveSeekMoveAwayPenalty = -0.02f;
+    private const float AggressiveSeekIdlePenalty = -0.008f;
+    private const float AggressiveSeekTargetAcquiredReward = 0.05f;
+    private const float CloseTargetNoAttackPenalty = -0.008f;
+
+    // --- C. Thực thi Tấn công ---
     private const float AimAtTargetReward = 0.001f;
     private const float ReadyAttackIntentWithTargetReward = 0.002f;
     private const float CooldownPatienceReward = 0.0001f;
@@ -69,21 +80,21 @@ public class CombatAgent : Agent
     private const float InvalidAttackPenalty = -0.003f;
     private const float MissedAttackPenalty = -0.12f;
     private const float RepeatedAttackWhilePendingPenalty = -0.02f;
-    private const int MissedAttackGraceDecisions = 6;
+
+    // --- D. Né tránh ---
+    private const float DodgeSuccessReward = 0.1f;
     private const float UsefulDashReward = 0.04f;
     private const float WastefulDashPenalty = -0.002f;
-    private const float IdleNearEnemyPenalty = -0.0005f;
-    private const float AggressiveSeekProgressReward = 0.04f;
-    private const float AggressiveSeekProgressRewardCap = 0.06f;
-    private const float AggressiveSeekDirectionReward = 0.01f;
-    private const float AggressiveSeekMoveAwayPenalty = -0.008f;
-    private const float AggressiveSeekIdlePenalty = -0.004f;
-    private const float AggressiveSeekTargetAcquiredReward = 0.05f;
-    private const float CloseTargetNoAttackPenalty = -0.008f;
-    private const int AggressiveSeekClosePathDistance = 2;
+
+    // --- E. Điều hòa / Meta ---
+    private const float TimePenalty = -0.0005f;
     private const float EpisodicCoverageReward = 0f;
+
+    // --- Tham số phụ trợ (không phải reward) ---
+    private const int MissedAttackGraceDecisions = 6;
+    private const float AggressiveSeekCloseDistance = 2.5f;
     private const float CoverageGridCellSize = 1f;
-    private const bool AutoAimAttackAtCurrentTarget = false;
+    private const bool AutoAimAttackAtCurrentTarget = true;   // nguồn [AUTOAIM]: snap aim vào target khi bắn
     private const bool RequireLineOfSightToTarget = true;
 
     [Header("Vision Settings")]
@@ -193,8 +204,9 @@ public class CombatAgent : Agent
     public float TrainingAttackMaxDistance = 2.8f;
 
     // --- Hằng số định danh hành động ---
-    public const int VectorObservationSize = 210;
-    private const float MaxPathObservationDistance = 64f;
+    public const int VectorObservationSize = 432;
+    private const int LOCAL_GRID_SIZE = 15;
+    private const int LOCAL_GRID_RADIUS = LOCAL_GRID_SIZE / 2;
     private const int WALL_RAY_COUNT = 16;   // 16 rays × 22.5° — adds 16 dims to observation
     private const int BRANCH_MOVE_X = 0;
     private const int BRANCH_MOVE_Y = 1;
@@ -234,8 +246,8 @@ public class CombatAgent : Agent
     private float _previousTotalEnemyHealth = 0f;
     private int _previousEnemyCount = 0;
     private float _previousTargetDistance = -1f;
-    private Vector2 _lastMoveDirection = Vector2.zero;
-    private Vector2 _lastAimDirection = Vector2.zero;
+    private Vector2 _lastMoveDirection = Vector2.right;
+    private Vector2 _lastAimDirection = Vector2.right;
     private Vector3 agentStartingPosition;
     private int _decisionLogCounter = 0;
     private Vector3 _lastDebugPosition;
@@ -420,8 +432,8 @@ public class CombatAgent : Agent
         _isDodging = false;
         _tookDamageDuringDodge = false;
         _visitedCells.Clear();
-        _lastMoveDirection = Vector2.zero;
-        _lastAimDirection = Vector2.zero;
+        _lastMoveDirection = Vector2.right;
+        _lastAimDirection = Vector2.right;
 
         _currentWeapon = characterHandleWeapon.CurrentWeapon;
         _currentTarget = null;
@@ -706,8 +718,8 @@ public class CombatAgent : Agent
         // === GLOBAL FEATURES (4 dims) ===
         CollectGlobalFeatures(sensor);
 
-        // === PATH-TO-ENEMY FEATURES (3 dims) ===
-        CollectPathToEnemyFeatures(sensor);
+        // === LOCAL OCCUPANCY GRID (225 dims) ===
+        CollectLocalOccupancyGrid(sensor);
 
         // === VARIABLE-LENGTH OBJECT LISTS ===
         CollectEnemyFeatures(sensor);
@@ -861,32 +873,36 @@ public class CombatAgent : Agent
         sensor.AddObservation(0.0f);
     }
 
-    private void CollectPathToEnemyFeatures(VectorSensor sensor)
+    private void CollectLocalOccupancyGrid(VectorSensor sensor)
     {
-        if (!TryGetNearestLivingEnemy(out Transform nearestEnemy))
+        if (EpisodeRoomGenerator == null)
         {
-            sensor.AddObservation(0.0f);
-            sensor.AddObservation(0.0f);
-            sensor.AddObservation(1.0f);
+            AddEmptyLocalOccupancyGrid(sensor);
             return;
         }
 
-        if (TryGetPathDistanceToEnemy(nearestEnemy, out int pathDistance, out Vector2 nextStepDirection))
+        for (int y = LOCAL_GRID_RADIUS; y >= -LOCAL_GRID_RADIUS; y--)
         {
-            sensor.AddObservation(Mathf.Clamp(nextStepDirection.x, -1f, 1f));
-            sensor.AddObservation(Mathf.Clamp(nextStepDirection.y, -1f, 1f));
-            sensor.AddObservation(Mathf.Clamp01(pathDistance / MaxPathObservationDistance));
-            return;
+            for (int x = -LOCAL_GRID_RADIUS; x <= LOCAL_GRID_RADIUS; x++)
+            {
+                if (EpisodeRoomGenerator.TryGetWalkableAtCellOffset(transform.position, x, y, out bool walkable))
+                {
+                    sensor.AddObservation(walkable ? 1.0f : 0.0f);
+                }
+                else
+                {
+                    sensor.AddObservation(0.0f);
+                }
+            }
         }
+    }
 
-        Vector2 fallbackToEnemy = nearestEnemy.position - transform.position;
-        Vector2 fallbackDirection = fallbackToEnemy.sqrMagnitude > 0.0001f
-            ? fallbackToEnemy.normalized
-            : Vector2.zero;
-
-        sensor.AddObservation(fallbackDirection.x);
-        sensor.AddObservation(fallbackDirection.y);
-        sensor.AddObservation(Mathf.Clamp01(fallbackToEnemy.magnitude / Mathf.Max(1f, VisionRadius)));
+    private void AddEmptyLocalOccupancyGrid(VectorSensor sensor)
+    {
+        for (int i = 0; i < LOCAL_GRID_SIZE * LOCAL_GRID_SIZE; i++)
+        {
+            sensor.AddObservation(0.0f);
+        }
     }
 
     /// <summary>
@@ -1336,16 +1352,10 @@ public class CombatAgent : Agent
         float distance = toEnemy.magnitude;
         float seekDistance = distance;
         Vector2 seekDirection = toEnemy.sqrMagnitude > 0.0001f ? toEnemy.normalized : Vector2.zero;
-        int pathDistance;
-        Vector2 pathDirection;
-        bool hasPathDistance = TryGetPathDistanceToEnemy(nearestEnemy, out pathDistance, out pathDirection);
+        bool hasPathDistance = TryGetPathDistanceToEnemy(nearestEnemy, out int pathDistance);
         if (hasPathDistance)
         {
             seekDistance = pathDistance;
-            if (pathDirection.sqrMagnitude > 0.0001f)
-            {
-                seekDirection = pathDirection;
-            }
         }
 
         if (distance <= 0.0001f)
@@ -1376,8 +1386,8 @@ public class CombatAgent : Agent
         }
 
         bool closeEnoughToFight = hasPathDistance
-            ? pathDistance <= AggressiveSeekClosePathDistance
-            : distance <= 2.5f;
+            ? pathDistance <= AggressiveSeekCloseDistance
+            : distance <= AggressiveSeekCloseDistance;
         bool weaponReady = IsWeaponReady();
         if (hasTarget && closeEnoughToFight && weaponReady && !isAttacking)
         {
@@ -1391,7 +1401,7 @@ public class CombatAgent : Agent
         {
             AddReward(AggressiveSeekIdlePenalty);
         }
-        else if (madeProgress || (hasPathDistance && !closeEnoughToFight))
+        else if (madeProgress || !closeEnoughToFight)
         {
             float moveDot = seekDirection.sqrMagnitude > 0.0001f
                 ? Vector2.Dot(movement.normalized, seekDirection.normalized)
@@ -1422,14 +1432,20 @@ public class CombatAgent : Agent
             && Academy.Instance.EnvironmentParameters.GetWithDefault("aggressive_seek", 0f) >= 0.5f;
     }
 
-    private bool TryGetPathDistanceToEnemy(Transform enemy, out int pathDistance, out Vector2 nextStepDirection)
+    private bool TryGetPathDistanceToEnemy(Transform enemy, out int pathDistance)
     {
         pathDistance = -1;
-        nextStepDirection = Vector2.zero;
 
-        return enemy != null
-            && EpisodeRoomGenerator != null
-            && EpisodeRoomGenerator.TryGetShortestPathInfo(transform.position, enemy.position, out pathDistance, out nextStepDirection);
+        if (enemy == null || EpisodeRoomGenerator == null)
+        {
+            return false;
+        }
+
+        return EpisodeRoomGenerator.TryGetShortestPathInfo(
+            transform.position,
+            enemy.position,
+            out pathDistance,
+            out _);
     }
 
     private void RegisterPendingAttack()
@@ -2237,17 +2253,9 @@ public class CombatAgent : Agent
             return aimDirection.normalized;
         }
 
-        if (_lastAimDirection.sqrMagnitude > 0.0001f)
-        {
-            return _lastAimDirection.normalized;
-        }
-
-        if (_lastMoveDirection.sqrMagnitude > 0.0001f)
-        {
-            return _lastMoveDirection.normalized;
-        }
-
-        return Vector2.zero;
+        return _lastAimDirection.sqrMagnitude > 0.0001f
+            ? _lastAimDirection.normalized
+            : Vector2.right;
     }
 
     private Vector2 GetCombatAimDirection(Vector2 aimDirection, int combat)
@@ -2635,7 +2643,7 @@ public class CombatAgent : Agent
 
         if (attackDirection.sqrMagnitude <= 0.0001f)
         {
-            return;
+            attackDirection = Vector2.right;
         }
 
         _lastAimDirection = attackDirection.normalized;

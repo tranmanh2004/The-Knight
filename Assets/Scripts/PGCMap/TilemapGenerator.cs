@@ -20,14 +20,6 @@ public class TilemapGenerator : MonoBehaviour
         Curriculum
     }
 
-    public enum MapGenerationMode
-    {
-        TextAsset,
-        BSP,
-        CellularAutomata,
-        RandomWalk
-    }
-
     [Header("Tilemap References")]
     public Tilemap tilemap;
     public Tilemap collisionTilemap;
@@ -106,26 +98,6 @@ public class TilemapGenerator : MonoBehaviour
     [Tooltip("Use continuous collision detection on spawned enemy rigidbodies to reduce wall tunneling during training.")]
     public bool enforceContinuousCollisionForEnemies = true;
 
-    [Header("Generation Mode")]
-    [Tooltip("TextAsset = đọc file .txt có sẵn. BSP/CellularAutomata/RandomWalk = sinh map runtime.")]
-    public MapGenerationMode generationMode = MapGenerationMode.TextAsset;
-
-    [Header("BSP Settings")]
-    public Vector2Int bspMapSize = new Vector2Int(40, 30);
-    [Range(2, 8)] public int bspDepth = 4;
-    [Min(3)] public int bspMinRoomSize = 5;
-
-    [Header("Cellular Automata Settings")]
-    public Vector2Int caMapSize = new Vector2Int(40, 30);
-    [Range(0.35f, 0.6f)] public float caFillRatio = 0.45f;
-    [Range(1, 10)] public int caIterations = 4;
-    [Range(3, 6)] public int caBirthThreshold = 5;
-    [Range(3, 6)] public int caDeathThreshold = 4;
-
-    [Header("Random Walk Settings")]
-    public Vector2Int rwMapSize = new Vector2Int(40, 30);
-    [Range(100, 10000)] public int rwSteps = 1200;
-
     // --- Map parsing state ---
     private bool _hasPlayerSpawn;
     private Vector3Int _playerSpawnCell;
@@ -167,10 +139,10 @@ public class TilemapGenerator : MonoBehaviour
             return;
         }
 
-        int[,] roomGrid = BuildGrid();
+        int[,] roomGrid = BuildGridFromText();
         if (roomGrid == null)
         {
-            Debug.LogWarning("Không build được map.", this);
+            Debug.LogWarning("Không đọc được dữ liệu map từ file text.", this);
             return;
         }
 
@@ -522,7 +494,7 @@ public class TilemapGenerator : MonoBehaviour
             return;
         }
 
-        _lastRoomGrid = BuildGrid();
+        _lastRoomGrid = BuildGridFromText();
     }
 
     /// <summary>
@@ -1281,299 +1253,6 @@ public class TilemapGenerator : MonoBehaviour
         {
             case '#': return 1;   // Wall
             default:  return 0;   // Floor (includes '.', 'P', 'E')
-        }
-    }
-
-    // -------------------------------------------------------------------------
-    //  Procedural grid builders
-    // -------------------------------------------------------------------------
-
-    private int[,] BuildGrid()
-    {
-        switch (generationMode)
-        {
-            case MapGenerationMode.BSP:             return BuildGridBSP();
-            case MapGenerationMode.CellularAutomata: return BuildGridCellularAutomata();
-            case MapGenerationMode.RandomWalk:      return BuildGridRandomWalk();
-            default:                                return BuildGridFromText();
-        }
-    }
-
-    private int[,] BuildGridBSP()
-    {
-        int width  = Mathf.Max(10, bspMapSize.x);
-        int height = Mathf.Max(10, bspMapSize.y);
-        int[,] grid = new int[width, height];
-
-        for (int x = 0; x < width; x++)
-            for (int y = 0; y < height; y++)
-                grid[x, y] = 1;
-
-        _hasPlayerSpawn = false;
-        _enemySpawnCells.Clear();
-        _reachableFromPlayerSpawnCache = null;
-        _currentMapKey = $"BSP_{width}x{height}_{Random.Range(0, 99999)}";
-
-        BSPNode root = new BSPNode(1, 1, width - 2, height - 2);
-        root.Split(bspDepth, bspMinRoomSize);
-        root.CarveRooms(grid);
-        RemoveOrphanedWalls(grid, width, height);
-
-        _lastRoomGrid = grid;
-        SelectRandomPlayerSpawnCell(grid);
-        if (clearPlayerSpawnArea && _hasPlayerSpawn)
-            ClearSpawnArea(grid, _playerSpawnCell, spawnAreaClearanceCells, false, "player");
-
-        _reachableFromPlayerSpawnCache = BuildReachableFromPlayerSpawnCache(grid);
-        return grid;
-    }
-
-    private int[,] BuildGridCellularAutomata()
-    {
-        int width  = Mathf.Max(10, caMapSize.x);
-        int height = Mathf.Max(10, caMapSize.y);
-        int[,] grid = new int[width, height];
-
-        _hasPlayerSpawn = false;
-        _enemySpawnCells.Clear();
-        _reachableFromPlayerSpawnCache = null;
-        _currentMapKey = $"CA_{width}x{height}_{Random.Range(0, 99999)}";
-
-        // Random fill
-        for (int x = 0; x < width; x++)
-            for (int y = 0; y < height; y++)
-                grid[x, y] = (x == 0 || y == 0 || x == width - 1 || y == height - 1)
-                    ? 1 : (Random.value < caFillRatio ? 1 : 0);
-
-        // Smooth iterations
-        for (int i = 0; i < caIterations; i++)
-            grid = ApplyCARules(grid, width, height);
-
-        if (CountFloorCells(grid) == 0)
-        {
-            Debug.LogWarning("[CellularAutomata] Map không có ô sàn nào — thử tăng caMapSize, giảm caFillRatio, hoặc tăng caDeathThreshold.", this);
-            return grid;
-        }
-
-        _lastRoomGrid = grid;
-        SelectRandomPlayerSpawnCell(grid);
-        if (clearPlayerSpawnArea && _hasPlayerSpawn)
-            ClearSpawnArea(grid, _playerSpawnCell, spawnAreaClearanceCells, false, "player");
-
-        _reachableFromPlayerSpawnCache = BuildReachableFromPlayerSpawnCache(grid);
-        return grid;
-    }
-
-    // Xóa ô tường có ≥3 láng giềng cardinal là sàn (lặp đến khi ổn định)
-    private static void RemoveOrphanedWalls(int[,] grid, int width, int height)
-    {
-        bool changed = true;
-        while (changed)
-        {
-            changed = false;
-            for (int x = 1; x < width - 1; x++)
-            {
-                for (int y = 1; y < height - 1; y++)
-                {
-                    if (grid[x, y] != 1) continue;
-                    int floorNeighbors = 0;
-                    if (grid[x + 1, y] == 0) floorNeighbors++;
-                    if (grid[x - 1, y] == 0) floorNeighbors++;
-                    if (grid[x, y + 1] == 0) floorNeighbors++;
-                    if (grid[x, y - 1] == 0) floorNeighbors++;
-                    if (floorNeighbors >= 3)
-                    {
-                        grid[x, y] = 0;
-                        changed = true;
-                    }
-                }
-            }
-        }
-    }
-
-    private int[,] ApplyCARules(int[,] grid, int width, int height)
-    {
-        int[,] next = new int[width, height];
-        for (int x = 0; x < width; x++)
-        {
-            for (int y = 0; y < height; y++)
-            {
-                if (x == 0 || y == 0 || x == width - 1 || y == height - 1)
-                {
-                    next[x, y] = 1;
-                    continue;
-                }
-                int walls = CountNeighborWalls(grid, x, y, width, height);
-                if (grid[x, y] == 1)
-                    next[x, y] = walls >= caDeathThreshold ? 1 : 0;
-                else
-                    next[x, y] = walls >= caBirthThreshold ? 1 : 0;
-            }
-        }
-        return next;
-    }
-
-    private int CountNeighborWalls(int[,] grid, int x, int y, int width, int height)
-    {
-        int count = 0;
-        for (int nx = x - 1; nx <= x + 1; nx++)
-        {
-            for (int ny = y - 1; ny <= y + 1; ny++)
-            {
-                if (nx == x && ny == y) continue;
-                if (nx < 0 || ny < 0 || nx >= width || ny >= height) count++;
-                else count += grid[nx, ny];
-            }
-        }
-        return count;
-    }
-
-    private int[,] BuildGridRandomWalk()
-    {
-        int width  = Mathf.Max(10, rwMapSize.x);
-        int height = Mathf.Max(10, rwMapSize.y);
-        int[,] grid = new int[width, height];
-
-        _hasPlayerSpawn = false;
-        _enemySpawnCells.Clear();
-        _reachableFromPlayerSpawnCache = null;
-        _currentMapKey = $"RW_{width}x{height}_{Random.Range(0, 99999)}";
-
-        for (int x = 0; x < width; x++)
-            for (int y = 0; y < height; y++)
-                grid[x, y] = 1;
-
-        int[] dx = { 0, 0, 1, -1 };
-        int[] dy = { 1, -1, 0, 0 };
-        int cx = width / 2, cy = height / 2;
-
-        for (int i = 0; i < rwSteps; i++)
-        {
-            grid[cx, cy] = 0;
-            int dir = Random.Range(0, 4);
-            cx = Mathf.Clamp(cx + dx[dir], 1, width - 2);
-            cy = Mathf.Clamp(cy + dy[dir], 1, height - 2);
-        }
-        grid[cx, cy] = 0;
-
-        _lastRoomGrid = grid;
-        SelectRandomPlayerSpawnCell(grid);
-        if (clearPlayerSpawnArea && _hasPlayerSpawn)
-            ClearSpawnArea(grid, _playerSpawnCell, spawnAreaClearanceCells, false, "player");
-
-        _reachableFromPlayerSpawnCache = BuildReachableFromPlayerSpawnCache(grid);
-        return grid;
-    }
-
-    // -------------------------------------------------------------------------
-    //  BSP Node (used by BuildGridBSP)
-    // -------------------------------------------------------------------------
-
-    private class BSPNode
-    {
-        public int x, y, w, h;
-        private BSPNode _left, _right;
-        private RectInt _room;
-
-        public BSPNode(int x, int y, int w, int h)
-        {
-            this.x = x; this.y = y; this.w = w; this.h = h;
-        }
-
-        public void Split(int depth, int minSize)
-        {
-            if (depth == 0) return;
-
-            bool horizontal;
-            if (w > h && w >= minSize * 2)      horizontal = false;
-            else if (h >= minSize * 2)           horizontal = true;
-            else if (w >= minSize * 2)           horizontal = false;
-            else return;
-
-            if (horizontal)
-            {
-                int split = Random.Range(minSize, h - minSize);
-                _left  = new BSPNode(x, y,          w, split);
-                _right = new BSPNode(x, y + split,  w, h - split);
-            }
-            else
-            {
-                int split = Random.Range(minSize, w - minSize);
-                _left  = new BSPNode(x,         y, split,     h);
-                _right = new BSPNode(x + split, y, w - split, h);
-            }
-
-            _left.Split(depth - 1, minSize);
-            _right.Split(depth - 1, minSize);
-        }
-
-        public void CarveRooms(int[,] grid)
-        {
-            if (_left == null && _right == null)
-            {
-                int pad = 1;
-                int maxRw = w - pad * 2;
-                int maxRh = h - pad * 2;
-                int rw = Mathf.Max(3, maxRw - Random.Range(0, Mathf.Max(1, maxRw / 3)));
-                int rh = Mathf.Max(3, maxRh - Random.Range(0, Mathf.Max(1, maxRh / 3)));
-                // Căn giữa phòng trong partition để tránh tường lồi
-                int rx = x + pad + (maxRw - rw) / 2;
-                int ry = y + pad + (maxRh - rh) / 2;
-                _room = new RectInt(rx, ry, rw, rh);
-
-                int gw = grid.GetLength(0), gh = grid.GetLength(1);
-                for (int cx = rx; cx < rx + rw && cx < gw; cx++)
-                    for (int cy = ry; cy < ry + rh && cy < gh; cy++)
-                        grid[cx, cy] = 0;
-                return;
-            }
-
-            if (_left  != null) _left.CarveRooms(grid);
-            if (_right != null) _right.CarveRooms(grid);
-
-            if (_left != null && _right != null)
-                ConnectRooms(grid, _left.GetRoom(), _right.GetRoom());
-        }
-
-        private RectInt GetRoom()
-        {
-            if (_left == null && _right == null) return _room;
-            if (_left  == null) return _right.GetRoom();
-            if (_right == null) return _left.GetRoom();
-            return Random.value > 0.5f ? _left.GetRoom() : _right.GetRoom();
-        }
-
-        private static void ConnectRooms(int[,] grid, RectInt a, RectInt b)
-        {
-            int ax = a.x + a.width  / 2, ay = a.y + a.height / 2;
-            int bx = b.x + b.width  / 2, by = b.y + b.height / 2;
-            int gw = grid.GetLength(0), gh = grid.GetLength(1);
-
-            // Horizontal segment (2 tiles tall)
-            int cx = ax, cy = ay;
-            while (cx != bx)
-            {
-                Carve(grid, cx, cy,     gw, gh);
-                Carve(grid, cx, cy + 1, gw, gh);
-                cx += bx > cx ? 1 : -1;
-            }
-            // Vertical segment (2 tiles wide)
-            while (cy != by)
-            {
-                Carve(grid, cx,     cy, gw, gh);
-                Carve(grid, cx + 1, cy, gw, gh);
-                cy += by > cy ? 1 : -1;
-            }
-            // Corner patch
-            Carve(grid, cx,     cy,     gw, gh);
-            Carve(grid, cx + 1, cy,     gw, gh);
-            Carve(grid, cx,     cy + 1, gw, gh);
-            Carve(grid, cx + 1, cy + 1, gw, gh);
-        }
-
-        private static void Carve(int[,] grid, int x, int y, int gw, int gh)
-        {
-            if (x >= 0 && y >= 0 && x < gw && y < gh) grid[x, y] = 0;
         }
     }
 
