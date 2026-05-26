@@ -51,27 +51,18 @@ public class CombatAgent : Agent
 {
     // Reward tuning is intentionally code-only. Keeping these non-serialized
     // prevents scenes/prefabs from silently overriding training experiments.
+    // --- A. Terminal / Kết quả thật ---
     private const float DealDamageReward = 1.0f;
+    private const float DamageRewardPerPoint = 0.04f;
     private const float TakeDamagePenalty = -0.3f;
+    private const float DamageTakenPenaltyPerPoint = 0.006f;
     private const float KillEnemyReward = 3.0f;
     private const float AllEnemiesKilledReward = 5.0f;
     private const float AgentDiedPenalty = -2.0f;
-    private const float TimePenalty = -0.0005f;
-    private const float DodgeSuccessReward = 0.1f;
-    private const float DamageRewardPerPoint = 0.04f;
-    private const float DamageTakenPenaltyPerPoint = 0.006f;
+
+    // --- B. Định vị & Tiếp cận ---
     private const float ApproachTargetReward = 0.008f;
     private const float MoveAwayFromTargetPenalty = -0.001f;
-    private const float AimAtTargetReward = 0.001f;
-    private const float ReadyAttackIntentWithTargetReward = 0.002f;
-    private const float CooldownPatienceReward = 0.0001f;
-    private const float AttackAlignedReward = 0.015f;
-    private const float InvalidAttackPenalty = -0.003f;
-    private const float MissedAttackPenalty = -0.12f;
-    private const float RepeatedAttackWhilePendingPenalty = -0.02f;
-    private const int MissedAttackGraceDecisions = 6;
-    private const float UsefulDashReward = 0.04f;
-    private const float WastefulDashPenalty = -0.002f;
     private const float IdleNearEnemyPenalty = -0.0005f;
     private const float AggressiveSeekProgressReward = 0.1f;
     private const float AggressiveSeekProgressRewardCap = 0.12f;
@@ -80,10 +71,30 @@ public class CombatAgent : Agent
     private const float AggressiveSeekIdlePenalty = -0.008f;
     private const float AggressiveSeekTargetAcquiredReward = 0.05f;
     private const float CloseTargetNoAttackPenalty = -0.008f;
-    private const float AggressiveSeekCloseDistance = 2.5f;
+
+    // --- C. Thực thi Tấn công ---
+    private const float AimAtTargetReward = 0.001f;
+    private const float ReadyAttackIntentWithTargetReward = 0.002f;
+    private const float CooldownPatienceReward = 0.0001f;
+    private const float AttackAlignedReward = 0.015f;
+    private const float InvalidAttackPenalty = -0.003f;
+    private const float MissedAttackPenalty = -0.12f;
+    private const float RepeatedAttackWhilePendingPenalty = -0.02f;
+
+    // --- D. Né tránh ---
+    private const float DodgeSuccessReward = 0.1f;
+    private const float UsefulDashReward = 0.04f;
+    private const float WastefulDashPenalty = -0.002f;
+
+    // --- E. Điều hòa / Meta ---
+    private const float TimePenalty = -0.0005f;
     private const float EpisodicCoverageReward = 0f;
+
+    // --- Tham số phụ trợ (không phải reward) ---
+    private const int MissedAttackGraceDecisions = 6;
+    private const float AggressiveSeekCloseDistance = 2.5f;
     private const float CoverageGridCellSize = 1f;
-    private const bool AutoAimAttackAtCurrentTarget = true;
+    private const bool AutoAimAttackAtCurrentTarget = true;   // nguồn [AUTOAIM]: snap aim vào target khi bắn
     private const bool RequireLineOfSightToTarget = true;
 
     [Header("Vision Settings")]

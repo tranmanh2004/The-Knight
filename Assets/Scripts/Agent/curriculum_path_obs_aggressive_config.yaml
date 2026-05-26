@@ -23,12 +23,6 @@ behaviors:
         gamma: 0.99
         encoding_size: 256
         learning_rate: 2.0e-4
-    # New 210-dim observation run:
-    #   Adds BFS next-step direction and shortest-path distance to the nearest
-    #   living enemy, so the policy can see the route instead of only being
-    #   rewarded after guessing it from wall rays.
-    #
-    # Do not initialize this run from older 207-dim checkpoints.
     max_steps: 1000000
     time_horizon: 64
     summary_freq: 10000
