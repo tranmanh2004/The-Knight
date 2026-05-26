@@ -83,7 +83,7 @@ public class CombatAgent : Agent
     private const int AggressiveSeekClosePathDistance = 2;
     private const float EpisodicCoverageReward = 0f;
     private const float CoverageGridCellSize = 1f;
-    private const bool AutoAimAttackAtCurrentTarget = true;
+    private const bool AutoAimAttackAtCurrentTarget = false;
     private const bool RequireLineOfSightToTarget = true;
 
     [Header("Vision Settings")]
@@ -234,8 +234,8 @@ public class CombatAgent : Agent
     private float _previousTotalEnemyHealth = 0f;
     private int _previousEnemyCount = 0;
     private float _previousTargetDistance = -1f;
-    private Vector2 _lastMoveDirection = Vector2.right;
-    private Vector2 _lastAimDirection = Vector2.right;
+    private Vector2 _lastMoveDirection = Vector2.zero;
+    private Vector2 _lastAimDirection = Vector2.zero;
     private Vector3 agentStartingPosition;
     private int _decisionLogCounter = 0;
     private Vector3 _lastDebugPosition;
@@ -420,8 +420,8 @@ public class CombatAgent : Agent
         _isDodging = false;
         _tookDamageDuringDodge = false;
         _visitedCells.Clear();
-        _lastMoveDirection = Vector2.right;
-        _lastAimDirection = Vector2.right;
+        _lastMoveDirection = Vector2.zero;
+        _lastAimDirection = Vector2.zero;
 
         _currentWeapon = characterHandleWeapon.CurrentWeapon;
         _currentTarget = null;
@@ -2237,9 +2237,17 @@ public class CombatAgent : Agent
             return aimDirection.normalized;
         }
 
-        return _lastAimDirection.sqrMagnitude > 0.0001f
-            ? _lastAimDirection.normalized
-            : Vector2.right;
+        if (_lastAimDirection.sqrMagnitude > 0.0001f)
+        {
+            return _lastAimDirection.normalized;
+        }
+
+        if (_lastMoveDirection.sqrMagnitude > 0.0001f)
+        {
+            return _lastMoveDirection.normalized;
+        }
+
+        return Vector2.zero;
     }
 
     private Vector2 GetCombatAimDirection(Vector2 aimDirection, int combat)
@@ -2627,7 +2635,7 @@ public class CombatAgent : Agent
 
         if (attackDirection.sqrMagnitude <= 0.0001f)
         {
-            attackDirection = Vector2.right;
+            return;
         }
 
         _lastAimDirection = attackDirection.normalized;
