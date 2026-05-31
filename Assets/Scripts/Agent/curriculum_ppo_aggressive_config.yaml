@@ -18,17 +18,6 @@ behaviors:
       extrinsic:
         gamma: 0.99
         strength: 1.0
-    # run48: PPO + Curriculum + AGGRESSIVE hyperparameters
-    # Issue identified across run46+run47: entropy plateau at 4.40 (only -0.06 drop in 3M steps).
-    # Policy never converges -> reward stuck around 3.8 ceiling.
-    # Hypothesis: beta too high (entropy bonus = 0.004) blocks convergence.
-    #
-    # Changes vs run46 (curriculum_ppo_config.yaml):
-    #   beta:          0.004 -> 0.001   (4x weaker entropy bonus, allow convergence)
-    #   learning_rate: 3.0e-5 -> 1.0e-4 (3.3x stronger gradient to overcome residual entropy)
-    # No LSTM (run47 confirmed memory does NOT stack with curriculum: 3.77 vs 3.84 on Hard).
-    #
-    # Init-from run46_cir to skip Easy/Medium relearning, target Hard convergence directly.
     max_steps: 3000000
     time_horizon: 64
     summary_freq: 10000
