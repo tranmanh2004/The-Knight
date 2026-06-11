@@ -1,5 +1,6 @@
 \clearpage
 \phantomsection
+\setcounter{secnumdepth}{3}
 
 \setcounter{chapter}{3}
 \chapter[{KẾT QUẢ THỰC NGHIỆM VÀ ĐÁNH GIÁ}]{Kết quả thực nghiệm và đánh giá}
@@ -58,8 +59,8 @@ Tất cả chỉ số được trích từ log TensorBoard. Dưới đây là đ
 
 \textit{Hạn chế so sánh}: run34--run42 dừng ở 1.0M bước; run46+ chạy đến 3.0M bước. So sánh liên nhóm là so sánh giữa cấu hình hoàn chỉnh, không phải tại cùng số bước.
 
-\subsection{Quy ước đánh giá thực nghiệm}
-\label{sec:eval_thresholds}
+\phantomsection\label{sec:eval_thresholds}
+\textbf{Quy ước đánh giá thực nghiệm.}
 
 Các mục tiêu MT1--MT4 đã được xác định ở phần Mở đầu. Trong chương này, các mục tiêu đó được đối chiếu bằng một số quy ước định lượng để việc diễn giải kết quả nhất quán và hạn chế phụ thuộc vào nhận định chủ quan:
 
@@ -138,7 +139,12 @@ Trong Bảng~\ref{tab:run_metrics_main}, cột Reward là \textbf{reward\_tail50
 
 Các lần chạy không dùng CL kết thúc ở 1M bước nên được hiển thị bằng đoạn nằm ngang sau mốc này để thuận tiện so sánh trực quan trên cùng một trục thời gian. Do nhóm không dùng CL chủ yếu dừng ở 1M bước còn nhóm dùng CL chạy đến 3M bước, các so sánh cuối quá trình phản ánh hiệu quả của cấu hình hoàn chỉnh đã thực nghiệm, chưa phải so sánh tuyệt đối tại cùng số bước huấn luyện. Riêng run55 sử dụng hàm thưởng v2, do đó giá trị phần thưởng tuyệt đối của run này không được so sánh trực tiếp với các lần chạy dùng hàm thưởng v1; hình chủ yếu nhằm quan sát xu hướng học và vị trí tương đối giữa các nhóm thí nghiệm.
 
-\section{Ảnh hưởng của các kỹ thuật khám phá}
+\section{Kỹ thuật khám phá và bộ nhớ}
+\label{sec:exploration_group}
+
+Nhóm thí nghiệm đầu tiên trả lời Q1 bằng cách cô lập từng kỹ thuật bổ sung vào PPO cơ sở: phần thưởng nội tại ICM và RND để thúc đẩy khám phá, và bộ nhớ LSTM để khai thác lịch sử quan sát. Tất cả các lần chạy trong nhóm này đều được huấn luyện đến 1M bước mà không dùng CL.
+
+\subsection{Ảnh hưởng của các kỹ thuật khám phá}
 \label{sec:exploration_techniques}
 
 Nhóm thí nghiệm đầu tiên trả lời phần đầu của Q1: liệu phần thưởng nội tại có giúp tác nhân vượt qua giai đoạn khám phá ban đầu hay không. Run34 là cấu hình PPO cơ sở, chưa áp dụng CL. Sau 1 triệu bước huấn luyện, phần thưởng tích lũy trung bình trên 50 lượt chơi cuối đạt 2.073, tỷ lệ dọn phòng trung bình đạt 0.129 và tỷ lệ dọn phòng cao nhất đạt 0.50. Kết quả này cho thấy tác nhân đã học được một số hành vi cơ bản như tiếp cận và tấn công kẻ địch, nhưng chưa duy trì ổn định khả năng dọn phòng trên nhóm bản đồ khó.
@@ -152,7 +158,7 @@ Hai biến thể phần thưởng nội tại được đánh giá là ICM ở r
 %     \label{fig:baseline_intrinsic_reward}
 % \end{figure}
 
-\subsection{ICM và dấu hiệu biểu diễn chưa ổn định}
+\subsubsection{ICM và dấu hiệu biểu diễn chưa ổn định}
 
 ICM học một mô hình ngược dự đoán hành động từ trạng thái trước và sau \cite{Pathak2017}. Với không gian hành động rời rạc nhiều nhánh $(3,3,3,9)$, tổng số tổ hợp hành động là 243, tương ứng entropy ngẫu nhiên lý thuyết khoảng 5.49 nat nếu mọi tổ hợp được chọn đều. Trong run35, mất mát của mô hình ngược dao động quanh 4.36, thấp hơn mức ngẫu nhiên lý thuyết. Điều này cho thấy ICM không hoàn toàn dự đoán ngẫu nhiên, mà đã học được một phần quan hệ giữa thay đổi trạng thái và hành động của tác nhân. Tuy nhiên, giá trị này vẫn gần vùng entropy chính sách khoảng 4.40 nat quan sát ở nhiều lần chạy 207 chiều, nên biểu diễn học được chưa đủ ổn định để tạo cải thiện hành vi rõ rệt.
 
@@ -167,7 +173,7 @@ Khó khăn của ICM đến từ đặc thù môi trường chiến đấu có b
 
 RND không cần dự đoán hành động nên tránh được hiện tượng mất mát của mô hình ngược suy giảm chất lượng \cite{Burda2018}, nhưng phần thưởng nội tại của run36 giảm nhanh về mức nhỏ khi mô hình dự đoán quen với phân phối quan sát. Vì vậy, RND nhỉnh hơn ICM nhẹ ở phần thưởng tail-50, nhưng vẫn chưa vượt mốc so sánh đáng kể.
 
-\section{Vai trò của bộ nhớ LSTM}
+\subsection{Vai trò của bộ nhớ LSTM}
 \label{sec:lstm_results}
 
 Phần tiếp theo của Q1 kiểm tra liệu bộ nhớ tuần tự có giúp tác nhân xử lý hồi chiêu, đạn và trạng thái khuất tầm nhìn hay không. Run42 thêm LSTM với bộ nhớ kích thước 256 và chuỗi quan sát dài 64 bước. Khác với ICM/RND, LSTM có xu hướng học chậm nhưng tăng dần về cuối. Phần thưởng trung bình trượt 200k bước tăng từ 1.64 ở mốc 100k lên 2.71 ở mốc 1M. Xu hướng này phù hợp với giả thuyết bộ nhớ có ích cho hồi chiêu, đạn và trạng thái khuất tầm nhìn; tuy nhiên lợi ích chưa đủ lớn để tạo cải thiện đáng chú ý trong quy mô huấn luyện hiện tại.
@@ -181,7 +187,12 @@ Phần tiếp theo của Q1 kiểm tra liệu bộ nhớ tuần tự có giúp t
 
 Như vậy, kiến trúc bộ nhớ có thể là hướng cải tiến phụ, nhưng chưa giải quyết được vấn đề chính của môi trường: tác nhân vẫn phải học từ nhóm Khó quá rộng và khó nhận được chuỗi phần thưởng thành công đủ thường xuyên.
 
-\section{Vai trò của học theo lộ trình}
+\section{Học theo lộ trình và các biến thể}
+\label{sec:curriculum_group}
+
+Nhóm thí nghiệm thứ hai trả lời Q2: sau khi phần thưởng nội tại và bộ nhớ chỉ tạo cải thiện nhẹ, CL được kiểm tra như cơ chế chính giảm độ khó ban đầu của môi trường. Nhóm này bao gồm cấu hình CL cơ sở, kết hợp với LSTM hoặc ICM, biến thể chiến lược vị trí sinh, và thử nghiệm thiết kế lại hàm thưởng.
+
+\subsection{Vai trò của học theo lộ trình}
 \label{sec:curriculum_results}
 
 Sau khi ICM, RND và LSTM chỉ tạo cải thiện nhẹ trong nhóm chạy 1M bước, CL được kiểm tra như cơ chế giảm độ khó ban đầu của môi trường. Run46 là cấu hình thể hiện rõ nhất tác động này trong phạm vi các lần chạy đã thực hiện. Thay vì đưa tác nhân vào ngay nhóm bản đồ Khó, CL bắt đầu ở mức Dễ, chuyển sang Trung bình tại khoảng 70k bước và chuyển sang Khó tại khoảng 140k bước. Cách tổ chức này giúp tác nhân có thêm cơ hội học các hành vi cơ bản như tiếp cận kẻ địch, căn hướng tấn công và né tránh trước khi gặp các bố cục khó hơn.
@@ -247,7 +258,7 @@ Phần thưởng theo từng mức độ khó của run46 cho thấy trung bình
 
 Trong các lần chạy đã thực hiện, đây là xu hướng rõ nhất của khóa luận: CL không chỉ tăng phần thưởng trung bình mà còn cải thiện các chỉ số hành vi. Tail-50 của run46 đạt 0.994 kẻ địch bị tiêu diệt/lượt và tỷ lệ dọn phòng tail-50 đạt 0.267, cao hơn rõ rệt so với mốc so sánh. Về mặt cơ chế, CL hỗ trợ tín hiệu học theo từng giai đoạn: ở mức Dễ, tác nhân gặp các lượt chơi thành công đủ thường xuyên để học chuỗi tiếp cận -- ngắm -- tấn công; khi sang Trung bình và Khó, chính sách đã có kỹ năng cơ bản thay vì khám phá từ gần như ngẫu nhiên. Tuy nhiên, do số bước huấn luyện của nhóm CL dài hơn nhóm không dùng CL, kết luận này cần được hiểu trong phạm vi cấu hình đã chạy và cần xác nhận thêm bằng các lần chạy cùng số bước, nhiều seed.
 
-\section{Kết hợp CL với LSTM và ICM}
+\subsection{Kết hợp CL với LSTM và ICM}
 \label{sec:curriculum_combinations}
 
 Nhóm thí nghiệm này trả lời Q2: sau khi CL tạo nền học ban đầu, LSTM hoặc ICM có còn đem lại lợi ích bổ sung hay không. Run47 thêm LSTM vào CL. Trung bình trên nhóm Khó đạt 3.765, thấp hơn nhẹ so với 3.843 của run46. Chênh lệch này nhỏ, chưa đủ để kết luận LSTM làm giảm hiệu năng chính sách, nhưng đủ cho thấy bộ nhớ không tạo thêm cải thiện rõ ràng khi CL đã cung cấp nền tảng để khám phá và quan sát hiện tại đã chứa phần lớn thông tin cần cho quyết định ngắn hạn.
@@ -276,7 +287,7 @@ Run50 bổ sung ICM trên nền CL và được huấn luyện đủ 3.00M bư�
 
 Kết quả này cho phép diễn giải thận trọng hơn: CL vẫn là yếu tố nền quan trọng nhất trong các cấu hình đã chạy, còn ICM có thể tạo thêm lợi ích khi tác nhân đã có kỹ năng cơ bản từ các mức dễ hơn. Tuy vậy, mất mát của mô hình ngược vẫn chưa thấp hơn rõ vùng entropy chính sách -- tín hiệu nội tại chủ yếu hỗ trợ khám phá/hành vi ở mức thực nghiệm, chưa chứng minh rằng biểu diễn của ICM đã học tốt quan hệ hành động--chuyển trạng thái trong môi trường này.
 
-\section{Ảnh hưởng của chiến lược vị trí sinh}
+\subsection{Ảnh hưởng của chiến lược vị trí sinh}
 \label{sec:spawn_strategy_results}
 
 Để phân tích thêm MT2, run54 kiểm tra liệu việc giảm phương sai vị trí sinh ở đầu quá trình học có giúp CL ổn định hơn hay không. Run54 mở rộng CL thành 4 mức độ khó: \emph{Dễ cố định}, \emph{Trung bình cố định}, \emph{Khó cố định} và \emph{Khó ngẫu nhiên}. Mức \emph{Khó ngẫu nhiên} bắt đầu khoảng 280k bước. Phần thưởng trung bình trên nhóm Khó đạt 3.925, số lần tiêu diệt cuối quá trình huấn luyện đạt 0.945 và sát thương gây ra đạt 33.673. Các chỉ số này gần run46 nhưng không vượt rõ, nên kết quả này được xem là tương đương với mức cải thiện nhỏ.
@@ -290,7 +301,7 @@ Kết quả này cho phép diễn giải thận trọng hơn: CL vẫn là yếu
 
 Vị trí sinh cố định giúp giảm phương sai ở giai đoạn đầu, nhưng khi chuyển sang mức Khó ngẫu nhiên thì tác nhân vẫn phải xử lý cùng nhóm bản đồ khó. Vì vậy, run54 chỉ cải thiện nhẹ ở hành vi chiến đấu và không làm thay đổi xu hướng tổng quát: CL là yếu tố chính trong nhóm thí nghiệm này, còn chuyển từ vị trí sinh cố định sang ngẫu nhiên là một biến thể thiết kế môi trường có tác động nhỏ hơn so với chính CL.
 
-\section{Hàm thưởng v2 và thay đổi thang đo}
+\subsection{Hàm thưởng v2 và thay đổi thang đo}
 \label{sec:reward_v2_results}
 
 Gắn với MT1, run55 kiểm tra liệu việc tăng trọng số phần thưởng kết quả có làm hành vi chiến đấu quyết đoán hơn hay không. Run55 thay đổi cấu trúc hàm thưởng: tăng mạnh phần thưởng tiêu diệt/dọn phòng/sát thương/tấn công đúng hướng, giảm phần thưởng tiếp cận và phạt mạnh hơn hành vi đứng gần địch không hành động. Run55 được huấn luyện đến 3.00M bước. Phần thưởng tail-50 đạt 9.600 và trung bình trên nhóm Khó đạt 9.337, nhưng không thể so sánh trực tiếp với run46 vì thang thưởng đã thay đổi.
@@ -306,7 +317,12 @@ Do đó, run55 được tách khỏi nhóm so sánh dùng hàm thưởng v1 khi 
     \label{fig:reward_v2_clear_peak}
 \end{figure}
 
-\section{Hiện tượng bão hòa entropy}
+\section{Bão hòa entropy và nút thắt quan sát}
+\label{sec:entropy_group}
+
+Sau khi so sánh các kỹ thuật huấn luyện, một hiện tượng xuyên suốt hầu hết cấu hình là entropy chính sách bão hòa quanh 4.40 nat và không giảm dù đã áp dụng ICM, RND, LSTM, CL hoặc thiết kế lại phần thưởng. Nhóm thí nghiệm này phân tích nguyên nhân và kiểm tra giả thuyết rằng nút thắt chính nằm ở biểu diễn quan sát.
+
+\subsection{Hiện tượng bão hòa entropy}
 \label{sec:entropy_plateau_results}
 
 Sau khi so sánh các kỹ thuật huấn luyện, một hiện tượng lặp lại trên hầu hết cấu hình là entropy của chính sách gần như không giảm khỏi vùng 4.40 nat. Với entropy cực đại lý thuyết $H_{\max}\approx 5.49$ nat ở phương trình~\ref{eq:max_entropy}, mức 4.40 tương đương khoảng 80\% của cực đại. Do cơ chế lọc hành động hợp lệ có thể làm cực đại thực tế thấp hơn, không nên diễn giải đây là chính sách hoàn toàn ngẫu nhiên; tuy vậy, chính sách vẫn giữ mức ngẫu nhiên cao. Hiện tượng này gắn trực tiếp với MT3 và mở đường cho phân tích nút thắt quan sát ở MT4.
@@ -320,7 +336,7 @@ Sau khi so sánh các kỹ thuật huấn luyện, một hiện tượng lặp l
 
 Trong các thí nghiệm cô lập biến chính giữ nguyên quan sát 207 chiều, vùng bão hòa này không được giải quyết bởi ICM, RND, LSTM, CL, giảm phương sai vị trí sinh hay thiết kế lại phần thưởng. Khi run62 kết hợp lưới không gian cục bộ với CL 4 bậc, ICM và được huấn luyện đến 40.82M bước, entropy giảm bền vững xuống 3.05 nat và duy trì ở mức này. Diễn giải thận trọng là: vùng bão hòa không phải giới hạn cứng của PPO hay không gian hành động hiện tại. Tuy nhiên, do chưa có cấu hình 207 chiều được huấn luyện tới 40M bước, khóa luận chưa thể loại trừ hoàn toàn khả năng vùng bão hòa ở các run trước một phần đến từ quy mô huấn luyện chưa đủ.
 
-\section{Tác động của tín hiệu dẫn đường}
+\subsection{Tác động của tín hiệu dẫn đường}
 \label{sec:run59_path_informed}
 
 Nhóm thí nghiệm mở rộng này trả lời Q3, tức kiểm tra vai trò của biểu diễn quan sát và tín hiệu điều hướng đối với khả năng dọn phòng. Sau các thí nghiệm cô lập biến chính, đề tài thực hiện thêm run59 để kiểm tra giả thuyết rằng giới hạn lớn nằm ở biểu diễn quan sát chứ không chỉ ở thuật toán học. Ở các cấu hình 207 chiều trước đó, tác nhân chỉ nhận các đặc trưng cục bộ về bản thân, kẻ địch, đạn và tường xung quanh; do đó, khi bản đồ có nhiều vật cản, chính sách phải tự suy ra hướng tiếp cận mục tiêu từ tín hiệu gián tiếp và phần thưởng bị trì hoãn. Run59 bổ sung ba chiều tín hiệu BFS vào CombatAgent: hướng bước kế tiếp trên đường đi ngắn nhất, khoảng cách đường đi ngắn nhất đã chuẩn hóa tới kẻ địch còn sống gần nhất và thông tin hỗ trợ tiếp cận mục tiêu, làm vector quan sát tăng từ 207 lên 210 chiều. Các tín hiệu này không trực tiếp quyết định hành động thay cho tác nhân, nhưng làm rõ cấu trúc đường đi trong bản đồ có tường và giảm gánh nặng suy luận điều hướng từ quan sát thô. Vì vậy, run59 không được xem là cấu hình RL thuần hay thí nghiệm cô lập biến ngang hàng với các lần chạy chính. Thay vào đó, run này được dùng như thí nghiệm mở rộng nhằm ước lượng hiệu năng khi nút thắt điều hướng được hỗ trợ, trong khi tác nhân vẫn phải tự học cách phối hợp di chuyển, ngắm, tấn công, lướt và lựa chọn thời điểm giao tranh phù hợp.
@@ -355,10 +371,10 @@ Bảng~\ref{tab:run59_bfs_assisted} cho thấy khi bổ sung tín hiệu dẫn �
 
 Run59 mang lại bước cải thiện lớn nhất về hiệu năng thực nghiệm, nhưng bản chất của cải thiện đến từ thay đổi biểu diễn quan sát chứ không chỉ từ thuật toán học. Kết quả không chứng minh tác nhân đã tự học tìm đường hoàn toàn; nó chỉ cho thấy khi được cung cấp tín hiệu dẫn đường phù hợp hơn, chính sách có thể học hành vi chiến đấu và tiếp cận mục tiêu ổn định hơn.
 
-\section{Lưới không gian cục bộ trong huấn luyện trực tiếp}
+\subsection{Lưới không gian cục bộ trong huấn luyện trực tiếp}
 \label{sec:run62_local_grid}
 
-Sau khi run59 cho thấy tín hiệu điều hướng tạo cải thiện rõ rệt, run62 được thiết kế như một cấu hình mở rộng để kiểm tra liệu tác nhân có thể tiến gần mức hiệu năng đó mà không nhận trực tiếp hướng đi tối ưu hay không. Mục tiêu là để tác nhân tự khai thác bố cục cục bộ thay vì dựa vào BFS. Cấu hình này thay quan sát 207 chiều bằng lưới cục bộ $15 \times 15$ (432 chiều), dùng CL 4 bậc, bật ICM với hệ số 0.001 và đặt \textbf{aggressive\_seek} để kẻ địch truy đuổi chủ động hơn. Run62 được huấn luyện trên 8 môi trường song song qua hai phiên chạy, tổng cộng \textbf{40.82M bước}. Vì thay đổi đồng thời quan sát, CL, ICM, siêu tham số, thời lượng huấn luyện và một số yếu tố môi trường, run62 được xem là bằng chứng thăm dò của một cấu hình kết hợp, không phải thí nghiệm đơn biến cho riêng lưới không gian cục bộ.
+Sau khi run59 cho thấy tín hiệu điều hướng tạo cải thiện rõ rệt, run62 được thiết kế như một cấu hình mở rộng để kiểm tra liệu tác nhân có thể tiến gần mức hiệu năng đó mà không nhận trực tiếp hướng đi tối ưu hay không -- mục tiêu là để tác nhân tự khai thác bố cục không gian cục bộ thay vì dựa vào BFS. Cấu hình này thay quan sát 207 chiều bằng lưới cục bộ $15 \times 15$ (432 chiều), kết hợp CL 4 bậc, ICM hệ số 0.001 và \textbf{aggressive\_seek} để kẻ địch truy đuổi chủ động hơn, huấn luyện trên 8 môi trường song song qua hai phiên chạy tổng cộng \textbf{40.82M bước}. Vì thay đổi đồng thời quan sát, CL, ICM, siêu tham số và thời lượng huấn luyện, run62 được xem là bằng chứng thăm dò của một cấu hình kết hợp, không phải thí nghiệm đơn biến cho riêng lưới không gian cục bộ.
 
 \begin{figure}[H]
     \centering

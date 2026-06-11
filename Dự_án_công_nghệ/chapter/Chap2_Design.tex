@@ -6,7 +6,7 @@
 
 Chương này thiết kế các thành phần phục vụ \textbf{MT1} (CombatAgent, hàm thưởng, kiến trúc PPO), \textbf{MT2} (PCGNN + CL) và làm tiền đề cho \textbf{MT4} (biểu diễn quan sát). Để người đọc nắm được câu chuyện thiết kế thay vì chỉ thấy danh sách thành phần, chương bắt đầu bằng tổng quan quy trình huấn luyện hoàn chỉnh, sau đó ánh xạ rõ \emph{từng khối thiết kế giải quyết thách thức nào} của bài toán đã phát biểu ở chương mở đầu, sau đó đi vào chi tiết từng phần.
 
-\section{Tổng quan quy trình huấn luyện hoàn chỉnh}
+\section{Tổng quan và mô hình bài toán}
 \begin{figure}[H]
     \centering
     \begin{tikzpicture}[
@@ -62,22 +62,22 @@ Bảng~\ref{tab:design_block_mapping} ánh xạ từng khối thiết kế với
         \hline
         \textbf{Khối thiết kế} & \textbf{Thách thức giải quyết} & \textbf{Mục đặc tả} & \textbf{MT} \\
         \hline
-        Quan sát 207D & Mô tả tình huống chiến đấu đủ giàu nhưng đủ gọn & §2.3 & MT1, MT4 \\
+        Quan sát 207D & Mô tả tình huống chiến đấu đủ giàu nhưng đủ gọn & §2.2.1 & MT1, MT4 \\
         \hline
-        Hành động $(3,3,3,9)$ & Phối hợp đồng thời di chuyển--ngắm--chiến đấu & §2.4 & MT1 \\
+        Hành động $(3,3,3,9)$ & Phối hợp đồng thời di chuyển--ngắm--chiến đấu & §2.2.2 & MT1 \\
         \hline
-        Hàm thưởng định hình v1/v2 & Hướng dẫn học sớm khi tín hiệu kết quả còn thưa & §2.5 & MT1 \\
+        Hàm thưởng định hình v1/v2 & Hướng dẫn học sớm khi tín hiệu kết quả còn thưa & §2.2.3 & MT1 \\
         \hline
-        PCGNN + BFS & Phân phối bản đồ thay đổi mỗi lượt chơi & §2.6 & MT2 \\
+        PCGNN + BFS & Phân phối bản đồ thay đổi mỗi lượt chơi & §2.3.1 & MT2 \\
         \hline
-        Học theo lộ trình (CL) & Phần thưởng thưa thớt và trễ & §2.7 & MT2 \\
+        Học theo lộ trình (CL) & Phần thưởng thưa thớt và trễ & §2.3.2 & MT2 \\
         \hline
-        PPO + Actor-Critic & Cập nhật chính sách ổn định trên không gian hành động đa nhánh & §2.8 & MT1, MT3 \\
+        PPO + Actor-Critic & Cập nhật chính sách ổn định trên không gian hành động đa nhánh & §2.4 & MT1, MT3 \\
         \hline
     \end{tabular}
 \end{table}
 
-\section{Mô hình hóa bài toán dưới dạng POMDP}
+\subsection{Mô hình hóa dưới dạng POMDP}
 
 Theo nền tảng ở Chương~1, môi trường chiến đấu được mô hình hóa như POMDP với bộ thành phần $(S, A, O, P, R, \Omega, \gamma)$, vì tác nhân không truy cập trực tiếp toàn bộ trạng thái của phòng chơi. CombatAgent chỉ nhận thông tin trong tầm nhìn VisionRadius=20 và bị ràng buộc bởi yêu cầu đường ngắm RequireLineOfSightToTarget=\textit{true}; do đó, kẻ địch hoặc đạn nằm ngoài tầm nhìn hay bị tường che khuất không xuất hiện trong quan sát. Đây là đặc tính của môi trường Roguelike chiến đấu, không phải một giới hạn tùy ý áp lên thuật toán học.
 
@@ -136,11 +136,15 @@ Vì $o_t$ chỉ là lát cắt hữu hạn của $s_t$, chính sách MLP dạng 
 
 Ngoài tính quan sát một phần, bài toán còn khó vì phân phối trạng thái thay đổi theo từng lượt chơi. Bản đồ được chọn từ nhiều bản đồ dạng văn bản khác nhau, vị trí sinh có thể cố định hoặc ngẫu nhiên theo giai đoạn CL, kẻ địch và đạn di chuyển liên tục, còn phần thưởng hoàn thành phòng chỉ xuất hiện sau khi tác nhân tiêu diệt đủ mục tiêu. Vì vậy, thiết kế $O$ phải cân bằng giữa hai yêu cầu: đủ giàu để mô tả tình huống chiến đấu tức thời, nhưng đủ gọn để PPO học hiệu quả trong ngân sách huấn luyện của đề tài.
 
-\section{Không gian quan sát}
+\section{Thiết kế không gian bài toán}
+
+Phần này đặc tả ba thành phần cốt lõi xác định không gian bài toán của tác nhân: vector quan sát mô tả những gì tác nhân nhận được từ môi trường, không gian hành động rời rạc nhiều nhánh xác định những gì tác nhân có thể làm, và hàm phần thưởng định hướng quá trình học hướng tới mục tiêu chiến đấu.
+
+\subsection{Không gian quan sát}
 
 \textbf{Yêu cầu thiết kế.} Biểu diễn quan sát cần đủ giàu để mô tả tình huống chiến đấu (vị trí kẻ địch, đạn đang bay, tường gần), nhưng vẫn đủ gọn để PPO học được trong 1--3 triệu bước trên phần cứng đã có. Đây là phần thiết kế phục vụ trực tiếp MT1 và tạo nền cho phân tích nút thắt quan sát ở MT4.
 
-Cách tiếp cận được chọn là tách bốn nhóm thông tin (tác nhân, kẻ địch, đạn, tường) thành các đoạn có kích thước cố định, dùng tia ray cho tường thay vì lưới chiếm chỗ để giảm chiều, và đệm bằng 0 khi số kẻ địch/đạn thay đổi giữa các lượt chơi. Nhờ đó, kích thước đầu vào luôn ổn định dù trạng thái trong phòng thay đổi theo từng lượt.
+Cách tiếp cận được chọn là tách bốn nhóm thông tin (tác nhân, kẻ địch, đạn, tường) thành các đoạn cố định: kẻ địch và đạn mã hóa theo tọa độ tương đối; tường dùng 16 tia ray thay vì lưới để giảm chiều; vị trí thiếu đối tượng đệm bằng 0. Nhờ đó, vector đầu vào luôn cố định ở 207 chiều dù số lượng đối tượng thay đổi theo từng lượt chơi.
 
 Hệ thống sử dụng quan sát dạng vector thay vì ảnh pixel. Lựa chọn này giúp giảm chi phí mẫu, tránh phải học lại các đặc trưng thị giác cơ bản, đồng thời phù hợp với mục tiêu nghiên cứu là đánh giá ảnh hưởng của CL và các kỹ thuật khám phá trên một môi trường có cấu trúc. Trong Unity Inspector, kích thước quan sát vector của behavior CombatAgentConfig được cấu hình là 207 chiều.
 
@@ -177,7 +181,7 @@ Hệ thống sử dụng quan sát dạng vector thay vì ảnh pixel. Lựa ch�
 
 Thiết kế này cố ý tách rõ thông tin tác nhân, kẻ địch, đạn và tường. Tác nhân không cần suy luận vị trí đạn từ ảnh thô, nhưng vẫn phải học cách kết hợp nhiều nguồn nguy cơ: vừa tiếp cận kẻ địch để gây sát thương, vừa tránh đạn và không mắc vào tường. Vì số lượng kẻ địch và đạn trong cảnh chơi có thể thay đổi, các nhóm đặc trưng được giới hạn bởi MaxEnemies=3 và MaxBullets=10; nếu thiếu đối tượng thì hệ thống thêm giá trị 0 để vector luôn có kích thước cố định.
 
-\section{Không gian hành động}
+\subsection{Không gian hành động}
 
 Trong chiến đấu thời gian thực, tại mỗi bước tác nhân phải đồng thời quyết định: đi đâu, có tấn công/lướt hay không, và nếu tấn công thì ngắm hướng nào. Một không gian hành động một chiều (ví dụ 81 hành động phẳng) sẽ buộc PPO học từng tổ hợp như một hành động riêng, trong khi các quyết định này có phần độc lập với nhau.
 
@@ -259,7 +263,7 @@ Tổ hợp hai nhánh moveX và moveY tạo ra 9 hướng di chuyển (bao gồm
 
 Giá trị này được dùng lại trong Chương~4 khi phân tích hiện tượng bão hòa entropy. Lưu ý là cơ chế lọc hành động hợp lệ có thể làm entropy cực đại thực tế thấp hơn tại một số trạng thái, vì các hành động như tấn công hoặc lướt không phải lúc nào cũng hợp lệ.
 
-\section{Thiết kế hàm phần thưởng}
+\subsection{Thiết kế hàm phần thưởng}
 
 Tín hiệu kết quả thật (hạ kẻ địch, dọn phòng) xuất hiện quá thưa để PPO khám phá hiệu quả trong giai đoạn đầu. Ngược lại, nếu phần thưởng định hình quá lớn, tác nhân có thể tối ưu hành vi trung gian như chỉ tiếp cận kẻ địch mà không thực sự tấn công.
 
@@ -295,7 +299,11 @@ Hàm thưởng kết hợp phần thưởng kết quả thưa và phần thưở
 
 Bảng~\ref{tab:reward_components} chỉ liệt kê các thành phần chính. Trong hiện thực, mã nguồn còn có các tín hiệu nhỏ hơn như phạt theo thời gian, phạt nhận sát thương, thưởng lướt hữu ích, phạt tấn công không hợp lệ và phần thưởng căn chỉnh hướng tấn công. Cấu hình v1 được dùng cho các lần chạy chính từ run34 đến run54. Cấu hình v2 được dùng trong run55 như một thí nghiệm thay đổi thang thưởng, vì vậy các giá trị phần thưởng trung bình của run55 không được so trực tiếp với các lần chạy v1.
 
-\section{Sinh bản đồ bằng PCGNN và TilemapGenerator}
+\section{Hệ thống sinh bản đồ và lộ trình học}
+
+Để tác nhân học khái quát hóa qua nhiều cấu hình phòng (MT2), hệ thống cần vừa tạo ra đa dạng bản đồ, vừa tổ chức thứ tự tiếp xúc theo lộ trình từ dễ đến khó. Hai mục dưới đây đặc tả lần lượt cơ chế sinh và phân loại bản đồ bằng PCGNN, và khung học theo lộ trình tích hợp với ML-Agents.
+
+\subsection{Sinh bản đồ bằng PCGNN và TilemapGenerator}
 
 Để giải quyết thách thức bản đồ thay đổi qua từng lượt chơi (MT2), tác nhân cần được huấn luyện trên nhiều bản đồ thay vì một bố cục cố định. Tuy nhiên, gọi trực tiếp generator Python từ Unity ở mỗi lượt chơi tạo độ trễ và rủi ro lỗi tích hợp; mặt khác sinh bản đồ không kiểm tra có thể tạo ra bố cục nơi tác nhân và kẻ địch nằm trên hai vùng tách rời.
 
@@ -399,7 +407,7 @@ Bảng~\ref{tab:difficulty_spawn_policy} tóm tắt cách chọn bản đồ và
 
 Như vậy, độ khó không chỉ tăng vì bản đồ chuyển từ Dễ sang Trung bình và Khó, mà còn vì phương sai vị trí sinh được mở rộng ở giai đoạn Khó ngẫu nhiên. Cách tách này giúp tác nhân học trước các kỹ năng cơ bản như tiếp cận, né đạn và căn hướng tấn công trong môi trường ít nhiễu hơn, rồi mới phải thích nghi với vị trí sinh thay đổi mạnh.
 
-\section{Khung học theo lộ trình}
+\subsection{Khung học theo lộ trình}
 
 Khi tác nhân khởi tạo ngẫu nhiên và phải học ngay trên nhóm Khó, phần thưởng xuất hiện rất thưa; xác suất tình cờ dọn được phòng gần như bằng 0, nên PPO không có tín hiệu học hiệu quả. Để phục vụ MT2, hệ thống cần một cơ chế tạo tín hiệu học sớm mà không phải sửa thuật toán PPO.
 
@@ -428,7 +436,7 @@ Trong run46, CL gồm 3 mức độ khó: Dễ, Trung bình và Khó. Trong run5
 
 Cần phân biệt hai lớp tổ chức độ khó. Lớp thứ nhất là chia tập bản đồ PCGNN thành các thư mục Dễ, Trung bình và Khó dựa trên chỉ số hình học. Lớp thứ hai là cơ chế chuyển mức độ khó trong ML-Agents: trainer thay đổi tham số \emph{difficulty} khi phần thưởng làm mượt vượt ngưỡng, từ đó TilemapGenerator chọn thư mục bản đồ và chế độ sinh tương ứng.
 
-\section{Kiến trúc mạng và cấu hình PPO}
+\section{Kiến trúc mạng và cấu hình huấn luyện}
 
 Để phục vụ MT1 và MT3, kiến trúc mạng và các siêu tham số PPO cần đủ ổn định để các lần chạy thí nghiệm cô lập biến chỉ khác nhau ở \emph{đúng một biến} (CL, ICM, RND, LSTM\dots). Nếu không, chênh lệch kết quả có thể bị quy nhầm cho kỹ thuật được kiểm tra trong khi nguyên nhân thực sự nằm ở siêu tham số.
 

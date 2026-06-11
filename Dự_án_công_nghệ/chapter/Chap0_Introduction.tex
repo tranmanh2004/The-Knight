@@ -19,7 +19,7 @@ Bài toán cần tìm một chính sách $\pi_\theta(a|s)$ thỏa mãn:
 
 \begin{itemize}
     \item \textbf{Đầu vào (quan sát $s_t$)}: vector cấu trúc mô tả trạng thái tác nhân, kẻ địch trong tầm nhìn, đạn đang bay và tường xung quanh (cấu hình cơ sở: 207 chiều).
-    \item \textbf{Đầu ra (hành động $a_t$)}: hành động rời rạc đa nhánh gồm bốn thành phần $(3,3,3,9)$. Hai nhánh đầu điều khiển di chuyển theo trục X và Y, mỗi nhánh có ba lựa chọn âm/không/dương. Nhánh thứ ba biểu diễn ý định chiến đấu gồm không hành động, tấn công hoặc lướt. Nhánh cuối biểu diễn hướng ngắm, gồm lựa chọn giữ hướng hiện tại hoặc một trong tám hướng rời rạc. Do đó, một hành động tại thời điểm $t$ không phải là một lệnh đơn lẻ, mà là tổ hợp đồng thời giữa di chuyển, lựa chọn kỹ năng và hướng tác động.
+    \item \textbf{Đầu ra (hành động $a_t$)}: hành động rời rạc đa nhánh gồm bốn thành phần $(3,3,3,9)$. Hai nhánh đầu điều khiển di chuyển theo trục X và Y, mỗi nhánh có ba lựa chọn: di chuyển theo chiều âm, không di chuyển, hoặc di chuyển theo chiều dương. Nhánh thứ ba biểu diễn ý định chiến đấu gồm không hành động, tấn công hoặc lướt. Nhánh cuối biểu diễn hướng ngắm, gồm lựa chọn giữ hướng hiện tại hoặc một trong tám hướng rời rạc. Do đó, một hành động tại thời điểm $t$ không phải là một lệnh đơn lẻ, mà là tổ hợp đồng thời giữa di chuyển, lựa chọn kỹ năng và hướng tác động.
     \item \textbf{Hàm thưởng $r_t$}: kết hợp tín hiệu kết quả thưa (hạ kẻ địch, dọn phòng) và tín hiệu định hình dày (tiếp cận, căn hướng tấn công).
     \item \textbf{Mục tiêu tối ưu}: tìm chính sách $\pi_\theta$ cực đại hóa kỳ vọng tổng phần thưởng qua nhiều lượt tự chơi, qua đó học hành vi sống sót, né đạn, tấn công và dọn sạch kẻ địch trong phòng.
 \end{itemize}

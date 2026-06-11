@@ -15,7 +15,7 @@ Khóa luận đã xây dựng và đánh giá một tác nhân học tăng cư�
     \item \textbf{MT1}: Cấu hình mở rộng run62 đạt \textit{clear\_rate} tail-50 là 0.666, vượt ngưỡng mục tiêu 0.5 trong phạm vi tập bản đồ thực nghiệm.
     \item \textbf{MT2}: Học theo lộ trình (CL) là kỹ thuật cải thiện rõ nhất trong nhóm thí nghiệm chính, giúp tăng phần thưởng trung bình khoảng 85\% so với PPO cơ sở.
     \item \textbf{MT3}: ICM, RND và LSTM cung cấp thêm tín hiệu khám phá hoặc bộ nhớ, nhưng chưa tạo cải thiện lớn khi chạy độc lập trên quan sát 207 chiều.
-    \item \textbf{MT4/Q3}: Run59 và run62 cho thấy biểu diễn không gian là nút thắt quan trọng; khi bổ sung thông tin điều hướng hoặc lưới cục bộ, chính sách học ổn định hơn và entropy giảm rõ hơn.
+    \item \textbf{MT4}: Run59 và run62 cho thấy biểu diễn không gian là nút thắt quan trọng; khi bổ sung thông tin điều hướng hoặc lưới cục bộ, chính sách học ổn định hơn và entropy giảm rõ hơn.
 \end{itemize}
 
 Nhìn chung, đề tài đạt được mục tiêu xây dựng một quy trình RL hoàn chỉnh và thu được bằng chứng thực nghiệm ban đầu về vai trò của CL, tín hiệu điều hướng và biểu diễn quan sát. Kết quả cho thấy tác nhân có thể học các hành vi chiến đấu cơ bản và cải thiện rõ khi huấn luyện được tổ chức theo độ khó bản đồ hoặc khi quan sát cung cấp thông tin không gian phù hợp hơn. Tuy nhiên, các kết quả cần được hiểu thận trọng vì mỗi cấu hình mới chạy một seed, số bước huấn luyện chưa hoàn toàn đồng nhất và một số cấu hình mở rộng thay đổi nhiều yếu tố cùng lúc.
